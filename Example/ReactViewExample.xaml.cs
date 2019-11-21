@@ -4,6 +4,7 @@ using System.Windows;
 using WebViewControl;
 
 namespace Example {
+
     /// <summary>
     /// Interaction logic for ReactViewExample.xaml
     /// </summary>
@@ -23,8 +24,29 @@ namespace Example {
             exampleView.AddCustomResourceRequestedHandler(InnerViewName, OnInnerViewResourceRequested);
         }
 
-        private void OnExampleViewClick(SomeType arg) {
-            AppendLog("Clicked on a button inside the React view");
+        private MenuItem[] OnGetMenuItems() {
+            void Execute(string label) {
+                AppendLog($"Clicked on ${label} inside the React view");
+            }
+            return new[] {
+                new MenuItem("Button 1", () => Execute("Button 1")),
+                new MenuItem("Button 2", () => Execute("Button 2")),
+            };
+        }
+
+        private SubMenuItem[] SubView_GetMenuItems() {
+            void Execute(string label)
+            {
+                AppendLog($"Clicked on ${label} inside the React sub view");
+            }
+            return new[] {
+                new SubMenuItem("Button 1", () => Execute("Button 1")),
+                new SubMenuItem("Button 2", () => Execute("Button 2")),
+            };
+        }
+
+        private void OnExampleViewClick(MenuItem menu) {
+            menu.Execute();
         }
 
         private void OnCallMainViewMenuItemClick(object sender, RoutedEventArgs e) {
@@ -56,6 +78,7 @@ namespace Example {
             subView = new SubExampleViewModule();
             subView.ConstantMessage = "This is a sub view";
             subView.GetTime += () => DateTime.Now.AddHours(1).ToShortTimeString() + $"(Id: {subViewId})";
+            subView.GetMenuItems += SubView_GetMenuItems;
             exampleView.AttachInnerView(subView, InnerViewName);
             exampleView.WithPlugin<ViewPlugin>(InnerViewName).NotifyViewLoaded += (viewName) => AppendLog($"On sub view loaded (Id: {subViewId}): {viewName}");
             subView.CallMe();

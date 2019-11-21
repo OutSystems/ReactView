@@ -3,15 +3,22 @@ import ViewPlugin from "./ViewPlugin";
 import { IPluginsContext, PluginsContext } from "PluginsProvider";
 import "./SubExampleView.scss";
 import { ResourceLoader } from "ResourceLoader";
+import { TrackId, ITrackable } from "Trackable";
 
 export interface ISubExampleViewProperties {
     click(): void;
+    getMenuItems(): Promise<SubMenuItem[]>;
     getTime(): Promise<string>;
     readonly constantMessage: string;
 }
 
 export interface ISubExampleViewBehaviors {
     callMe(): void;
+}
+
+export interface SubMenuItem extends ITrackable {
+    trackId: TrackId;
+    label: string;
 }
 
 class SubExampleComponent extends React.Component<{}, {}, IPluginsContext> {
@@ -27,7 +34,7 @@ class SubExampleComponent extends React.Component<{}, {}, IPluginsContext> {
     }
 }
 
-export default class SubExampleView extends React.Component<ISubExampleViewProperties, { time: string; dotNetCallCount: number, buttonClicksCount: number }> implements ISubExampleViewBehaviors {
+export default class SubExampleView extends React.Component<ISubExampleViewProperties, { time: string; dotNetCallCount: number, buttonClicksCount: number, menuItems: SubMenuItem[] }> implements ISubExampleViewBehaviors {
 
     private viewplugin: ViewPlugin;
 
@@ -41,10 +48,12 @@ export default class SubExampleView extends React.Component<ISubExampleViewPrope
         this.state = {
             time: "-",
             dotNetCallCount: 0,
-            buttonClicksCount: 0
+            buttonClicksCount: 0,
+            menuItems: []
         };
+        let items = await this.props.getMenuItems();
         let time = await this.props.getTime();
-        this.setState({ time: time });
+        this.setState({ time: time, menuItems: items });
     }
 
     public callMe(): void {
@@ -76,8 +85,8 @@ export default class SubExampleView extends React.Component<ISubExampleViewPrope
                 <ResourceLoader.Consumer>
                     {url => <img src={url("Completed.png", "size=normal")} />}
                 </ResourceLoader.Consumer>
-                <br/>
-                <button onClick={() => this.setState(s => { return { buttonClicksCount: s.buttonClicksCount + 1 }; })}>Click me!</button>&nbsp;
+                <br />
+                {this.state.menuItems.map(mi => (<button onClick={() => this.setState(s => { return { buttonClicksCount: s.buttonClicksCount + 1 }; })}>{mi.label}</button>))}
             </div>
         );
     }

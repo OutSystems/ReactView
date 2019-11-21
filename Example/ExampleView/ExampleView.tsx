@@ -1,5 +1,6 @@
 ﻿import * as React from "react";
 import { ViewFrame } from "ViewFrame";
+import { TrackId, ITrackable } from "Trackable";
 import ViewPlugin from "./ViewPlugin";
 import { IPluginsContext } from "PluginsProvider";
 import "./ExampleView.scss";
@@ -15,8 +16,14 @@ export enum ImageKind {
     Beach
 }
 
+export interface MenuItem extends ITrackable {
+    trackId: TrackId;
+    label: string;
+}
+
 export interface IExampleViewProperties {
-    click(arg: ISomeType): void;
+    click(arg: MenuItem): void;
+    getMenuItems(): Promise<MenuItem[]>;
     getTime(): Promise<string>;
     viewMounted(): void;
     readonly constantMessage: string;
@@ -33,7 +40,7 @@ enum SubViewShowStatus {
     Hide
 }
 
-export default class ExampleView extends React.Component<IExampleViewProperties, { time: string; subViewShowStatus: SubViewShowStatus }> implements IExampleViewBehaviors {
+export default class ExampleView extends React.Component<IExampleViewProperties, { time: string; subViewShowStatus: SubViewShowStatus, menuItems: MenuItem[] }> implements IExampleViewBehaviors {
 
     private viewplugin: ViewPlugin;
 
@@ -46,10 +53,12 @@ export default class ExampleView extends React.Component<IExampleViewProperties,
     private async initialize(): Promise<void> {
         this.state = {
             time: "-",
-            subViewShowStatus: SubViewShowStatus.Show
+            subViewShowStatus: SubViewShowStatus.Show,
+            menuItems: []
         };
+        let items = await this.props.getMenuItems();
         let time = await this.props.getTime();
-        this.setState({ time: time });
+        this.setState({ time: time, menuItems: items });
     }
 
     public callMe(): void {
@@ -96,7 +105,7 @@ export default class ExampleView extends React.Component<IExampleViewProperties,
                 {this.props.image === ImageKind.Beach ? <img className="image" src={Image} /> : null}
                 <br />
                 <div className="buttons-bar">
-                    <button onClick={() => this.props.click(null)}>Click me!</button>&nbsp;
+                    {this.state.menuItems.map(mi => (<button onClick={() => this.props.click(mi)}>{mi.label}</button>))}
                     <button onClick={this.onMountSubViewClick}>Mount/Wrap/Hide child view</button>
                 </div>
                 Custom resource:
