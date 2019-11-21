@@ -9,6 +9,10 @@ const BaseModuleAliasName = "BaseModule";
 const PropertiesClassName = "Properties";
 const PropertiesInterfaceSuffix = "Properties";
 const BehaviorsInterfaceSuffix = "Behaviors";
+const ExecutionEnginePropertyName = "ExecutionEngine";
+const TrackIdPropertyName = "trackId";
+const TrackIdPropertyType = "TrackId";
+const TrackableInterfaceName = "ITrackable";
 
 function f(input: string) {
     if (!input) {
@@ -25,6 +29,14 @@ function normalizePath(path: string): string {
     return path.replace(/\\/g, "/")
 }
 
+function isTrackIdType(type: Types.ITsType) {
+    return type.name === TrackIdPropertyType;
+}
+
+function isTrackIdProperty(prop: Units.TsProperty) {
+    return prop.name === TrackIdPropertyName && isTrackIdType(prop.type);
+}
+
 class Generator {
 
     private propsInterface: Units.TsInterface | null;
@@ -34,6 +46,7 @@ class Generator {
     private enums: Units.TsEnum[];
     private propsInterfaceCoreName: string;
     private componentName: string;
+    private trackableObjectsNames: { [key: string]: boolean };
 
     constructor(
         module: Units.TsModule,
@@ -56,6 +69,7 @@ class Generator {
 
         this.propsInterfaceCoreName = this.propsInterface ? this.propsInterface.name.substring(1, this.propsInterface.name.length - PropertiesInterfaceSuffix.length) : "";
         this.componentName = this.component ? this.component.name : this.propsInterfaceCoreName;
+        this.trackableObjectsNames = this.objects.filter(o => o.properties.some(isTrackIdProperty)).map(o => o.name).reduce((o, name) => { o[name] = true; return o; }, {});
     }
 
     private get moduleName() {
@@ -81,6 +95,10 @@ class Generator {
             case "void":
                 return "void";
             default:
+                if (isTrackIdType(tsType)) {
+                    return "string";
+                }
+
                 if (tsType instanceof Types.TsArrayType) {
                     return this.getTypeName(tsType.getInner()) + "[]";
                 }
@@ -107,9 +125,24 @@ class Generator {
     private generateNativeApi() {
         const ownerPropertyName = "Owner";
         const generateNativeApiMethod = (func: Units.TsFunction) => {
+            const trackObject = (body: string) => {
+                if (this.trackableObjectsNames[this.getFunctionReturnType(func).replace(/\[\]/g, "")]) {
+                    return `${ownerPropertyName}.${ExecutionEnginePropertyName}.TrackObject(${body})`;
+                }
+                return body;
+            };
+
+            const getTrackedObject = (param: Units.TsParameter) => {
+                if (this.trackableObjectsNames[param.type.name]) {
+                    return `${ownerPropertyName}.${ExecutionEnginePropertyName}.GetTrackedObject(${param.name})`;
+                }
+                return param.name;
+            };
+
             let isVoid = func.returnType.name === Types.TsVoidType.name;
+            let body = `${ownerPropertyName}.${toPascalCase(func.name)}?.Invoke(${func.parameters.map(p => getTrackedObject(p)).join(", ")})${isVoid ? "" : " ?? default"}`;
             return (
-                `public ${this.generateMethodSignature(func)} => ${ownerPropertyName}.${toPascalCase(func.name)}?.Invoke(${func.parameters.map(p => p.name).join(", ")})${isVoid ? "" : ` ?? default(${this.getFunctionReturnType(func)})`};\n`
+                `public ${this.generateMethodSignature(func)} => ${trackObject(body)};\n`
             );
         }
 
@@ -119,7 +152,7 @@ class Generator {
             `}\n` +
             `\n` +
             `private class ${PropertiesClassName} : I${PropertiesClassName} {\n` +
-            `    protected ${this.moduleName} Owner { get; }\n` +
+            `    protected ${this.moduleName} ${ownerPropertyName} { get; }\n` +
             `    public ${PropertiesClassName}(${this.moduleName} owner) => ${ownerPropertyName} = owner;\n` +
             `    ${f(this.propsInterface ? (this.propsInterface.functions.length > 0 ? this.propsInterface.functions.map(f => generateNativeApiMethod(f)).join("\n") : "// the interface does not contain methods") : "")}\n` +
             `}`
@@ -133,9 +166,30 @@ class Generator {
     }
 
     private generateNativeApiObject(objInterface: Units.TsInterface) {
+        let objectName = this.getTypeNameAlias(objInterface.name);
+        let isTrackable = this.trackableObjectsNames[objInterface.name];
+        let generateMerge = () => {
+            return f(
+                `\n` +
+                `private string __${TrackIdPropertyName};\n` +
+                `public string ${TrackIdPropertyName} {\n` +
+                `    get => __${TrackIdPropertyName} = __${TrackIdPropertyName} ?? System.Guid.NewGuid().ToString();\n` +
+                `    set => __${TrackIdPropertyName} = value;\n` +
+                `}\n` +
+                `\n` +
+                `void ${TrackableInterfaceName}.Merge(object other) {\n` +
+                `    var otherObj = (${objectName}) other;\n` +
+                `    this.__${TrackIdPropertyName} = ((${TrackableInterfaceName}) other).${TrackIdPropertyName};\n` +
+                `    ${f(objInterface.properties.filter(p => !isTrackIdProperty(p)).map(p => `this.${p.name} = otherObj.${p.name};`).join("\n"))}\n` +
+                `}`
+            ) + "\n";
+        };
         return (
-            `public struct ${this.getTypeNameAlias(objInterface.name)} {\n` +
-            `    ${f(objInterface.properties.map(p => `public ${this.getTypeName(p.type)} ${p.name} { get; set; }`).join("\n"))}\n` +
+            `#pragma warning disable CS0282\n` +
+            `public partial struct ${objectName} ${isTrackable ? `: ${TrackableInterfaceName} ` : ""}{\n` +
+            `#pragma warning restore CS0282\n` +
+            `    ${f(objInterface.properties.filter(p => !isTrackIdProperty(p)).map(p => `public ${this.getTypeName(p.type)} ${p.name} { get; set; }`).join("\n"))}\n` +
+            (isTrackable ? generateMerge() : "") +
             `}`
         );
     }
@@ -213,9 +267,9 @@ class Generator {
             let body = "";
             if (func.returnType != Types.TsVoidType) {
                 let returnType = this.getFunctionReturnType(func);
-                body = `ExecutionEngine.EvaluateMethod<${returnType}>(this, ${params})`;
+                body = `${ExecutionEnginePropertyName}.EvaluateMethod<${returnType}>(this, ${params})`;
             } else {
-                body = `ExecutionEngine.ExecuteMethod(this, ${params})`;
+                body = `${ExecutionEnginePropertyName}.ExecuteMethod(this, ${params})`;
             }
 
             return (
@@ -303,7 +357,8 @@ class Generator {
         const generateAliases = () => {
             return (
                 (this.isModule ? "" : `using ${BaseComponentAliasName} = ${this.baseComponentClass || "ReactViewControl.ReactView"};\n`) +
-                `using ${BaseModuleAliasName} = ${this.baseModuleClass || "ReactViewControl.ViewModuleContainer"};`
+                `using ${BaseModuleAliasName} = ${this.baseModuleClass || "ReactViewControl.ViewModuleContainer"};\n` +
+                (Object.entries(this.trackableObjectsNames).length > 0 ? `using ${TrackableInterfaceName} = ReactViewControl.${TrackableInterfaceName};` : "")
             );
         };
 
