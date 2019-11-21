@@ -59,7 +59,11 @@
     <None Remove="AMDLoader\tsconfig.json" />
     <None Remove="index.html" />
     <None Remove="Loader.js" />
+    <None Remove="Loader\FinalizationGroup.d.ts" />
+    <None Remove="Loader\ObjectTracker.ts" />
     <None Remove="Loader\tsconfig.json" />
+    <None Remove="Loader\WeakRef.d.ts" />
+    <None Remove="Loader\WindowExtensions.d.ts" />
     <None Remove="Loader\_Loader.js" />
     <None Remove="node_modules\prop-types\CHANGELOG.md" />
     <None Remove="node_modules\prop-types\checkPropTypes.js" />

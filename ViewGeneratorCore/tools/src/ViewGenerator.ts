@@ -69,7 +69,9 @@ class Generator {
 
         this.propsInterfaceCoreName = this.propsInterface ? this.propsInterface.name.substring(1, this.propsInterface.name.length - PropertiesInterfaceSuffix.length) : "";
         this.componentName = this.component ? this.component.name : this.propsInterfaceCoreName;
-        this.trackableObjectsNames = this.objects.filter(o => o.properties.some(isTrackIdProperty)).map(o => o.name).reduce((o, name) => { o[name] = true; return o; }, {});
+
+        // build a dictionary of objects names that have a track id property (and include the object[] version too)
+        this.trackableObjectsNames = this.objects.filter(o => o.properties.some(isTrackIdProperty)).map(o => o.name).reduce((o, name) => { o[name] = true; o[name + "[]"] = true; return o; }, {});
     }
 
     private get moduleName() {
@@ -126,7 +128,7 @@ class Generator {
         const ownerPropertyName = "Owner";
         const generateNativeApiMethod = (func: Units.TsFunction) => {
             const trackObject = (body: string) => {
-                if (this.trackableObjectsNames[this.getFunctionReturnType(func).replace(/\[\]/g, "")]) {
+                if (this.trackableObjectsNames[this.getFunctionReturnType(func)]) {
                     return `${ownerPropertyName}.${ExecutionEnginePropertyName}.TrackObject(${body})`;
                 }
                 return body;
@@ -296,6 +298,11 @@ class Generator {
             );
         };
 
+        const formatEventName = (func: Units.TsFunction) => {
+            // tracked events name is prefixed with # by convention
+            return (this.trackableObjectsNames[this.getFunctionReturnType(func)] ? "#" : "") + func.name;
+        };
+
         return (
             `public partial class ${this.moduleName} : ${BaseModuleAliasName}, I${this.moduleName} {\n` +
             `    \n` +
@@ -307,7 +314,7 @@ class Generator {
             `    protected override string NativeObjectName => \"${this.propsInterfaceCoreName}\";\n` +
             `    protected override string ModuleName => \"${this.filename}\";\n` +
             `    protected override object CreateNativeObject() => new ${PropertiesClassName}(this);\n` +
-            `    protected override string[] Events => ${this.propsInterface ? `new string[] { ${this.propsInterface.functions.map(p => `"${p.name}"`).join(",")} }` : ``};\n` +
+            `    protected override string[] Events => ${this.propsInterface ? `new string[] { ${this.propsInterface.functions.map(f => `"${formatEventName(f)}"`).join(",")} }` : ``};\n` +
             `    protected override ${keyValuePairType}[] PropertiesValues {\n` +
             `        get { \n` +
             `            return new ${keyValuePairType}[] {\n` +

@@ -4,6 +4,7 @@ import { getStylesheets, webViewRootId, mainFrameName } from "./LoaderCommon";
 import { ObservableListCollection } from "./ObservableCollection";
 import { Task } from "./Task";
 import { ViewMetadata } from "./ViewMetadata";
+import * as ObjectTracker from "./ObjectTracker";
 
 declare function define(name: string, dependencies: string[], definition: Function);
 
@@ -202,7 +203,7 @@ export function loadComponent(
     maxPreRenderedCacheEntries: number,
     hasStyleSheet: boolean,
     hasPlugins: boolean,
-    componentNativeObject: any,
+    componentNativeObjectProps: {},
     frameName: string,
     componentHash: string): void {
 
@@ -253,7 +254,7 @@ export function loadComponent(
             const renderTask = shouldStoreComponentHtml ? new Task<void>() : undefined;
 
             // create proxy for properties obj to delay its methods execution until native object is ready
-            const properties = createPropertiesProxy(componentNativeObject, componentNativeObjectName, renderTask);
+            const properties = createPropertiesProxy(componentNativeObjectProps, componentNativeObjectName, renderTask);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
             const componentClass = window[viewsBundleName][componentName].default;
@@ -361,20 +362,35 @@ async function loadFramework(): Promise<void> {
 
 function createPropertiesProxy(basePropertiesObj: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void>): {} {
     const proxy = Object.assign({}, basePropertiesObj);
+
     Object.keys(proxy).forEach(key => {
         const value = basePropertiesObj[key];
         if (value !== undefined) {
             proxy[key] = value;
         } else {
+            const shallTrackResult = key.startsWith("#");
+            if (shallTrackResult) {
+                key = key.substring(1);
+            }
+
             proxy[key] = async function () {
                 let nativeObject = window[nativeObjName];
                 if (!nativeObject) {
+                    // TODO discard promise result when component is unmounted
                     nativeObject = await new Promise(async (resolve) => {
                         const nativeObject = await bindNativeObject(nativeObjName);
                         resolve(nativeObject);
                     });
                 }
-                const result = nativeObject[key].apply(window, arguments);
+                const result = nativeObject[key].apply(window, arguments) as Promise<any>;
+                if (shallTrackResult && result && result.then) {
+                    result.then((value) => {
+                        if (value) {
+                            ObjectTracker.track(value);
+                        }
+                        return value;
+                    });
+                }
                 if (componentRenderedWaitTask) {
                     // wait until component is rendered, first render should only render static data
                     await componentRenderedWaitTask.promise;
