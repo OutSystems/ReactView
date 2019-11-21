@@ -108,10 +108,11 @@ namespace WebViewControl {
             cefSettings.UncaughtExceptionStackSize = 100; // enable stack capture
             cefSettings.CachePath = CachePath; // enable cache for external resources to speedup loading
             cefSettings.BrowserSubprocessPath = CefLoader.GetBrowserSubProcessPath();
+            cefSettings.JavaScriptFlags = "--harmony-weak-refs --expose-gc"; // react view depends on these apis
 
             var customSchemes = CustomSchemes.Select(s => new CustomScheme() { SchemeName = s, SchemeHandlerFactory = new SchemeHandlerFactory() }).ToArray();
 
-            CefRuntimeLoader.Initialize(cefSettings, customSchemes);
+            CefRuntimeLoader.Initialize(settings: cefSettings, customSchemes: customSchemes);
 
             AppDomain.CurrentDomain.ProcessExit += delegate { Cleanup(); };
         }
