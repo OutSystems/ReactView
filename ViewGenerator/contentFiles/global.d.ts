@@ -64,3 +64,10 @@ declare module "ViewFrame" {
 
     export class ViewFrame extends React.Component<IViewFrameProps> { }
 }
+
+declare module "Trackable" {
+    export type TrackId = string;
+    export interface ITrackable {
+        trackId: TrackId;
+    }
+}
