@@ -1,20 +1,78 @@
-﻿using System.Windows;
+﻿using System;
+using System.IO;
+using System.Windows;
+using WebViewControl;
 
-namespace Example {
+namespace Example
+{
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for ReactViewExample.xaml
     /// </summary>
     public partial class MainWindow : Window {
+
+        private int subViewCounter;
+
         public MainWindow() {
             InitializeComponent();
+
+            exampleView.WithPlugin<ViewPlugin>().NotifyViewLoaded += OnNotifyViewLoaded;
+            exampleView.CustomResourceRequested += OnViewResourceRequested;
         }
 
-        private void OnShowWebViewClick(object sender, RoutedEventArgs e) {
-            new WebViewExample().Show();
+        private void OnExampleViewClick(SomeType arg) {
+            AppendLog("Clicked on a button inside the React view");
         }
 
-        private void OnShowReactViewClick(object sender, RoutedEventArgs e) {
-            new ReactViewExample().Show();
+        private void OnCallMainViewMenuItemClick(object sender, RoutedEventArgs e) {
+            exampleView.CallMe();
+        }
+
+        private void OnCallInnerViewMenuItemClick(object sender, RoutedEventArgs e) {
+            exampleView.SubView.CallMe();
+        }
+
+        private void OnCallInnerViewPluginMenuItemClick(object sender, RoutedEventArgs e) {
+            ((SubExampleViewModule)exampleView.SubView).WithPlugin<ViewPlugin>().Test();
+        }
+
+        private void OnToggleDefaultStyleSheetMenuItemClick(object sender, RoutedEventArgs e) {
+            Settings.IsBorderLessPreference = !Settings.IsBorderLessPreference;
+        }
+
+        private void OnShowDevTools(object sender, RoutedEventArgs e) {
+            exampleView.ShowDeveloperTools();
+        }
+
+        private string OnExampleViewGetTime() {
+            return DateTime.Now.ToShortTimeString();
+        }
+
+        private void OnNotifyViewLoaded(string viewName) {
+            AppendLog("On view loaded: " + viewName);
+        }
+
+        private void OnViewMounted() {
+            var subViewId = subViewCounter++;
+
+            var subView = (SubExampleViewModule) exampleView.SubView;
+            subView.ConstantMessage = "This is a sub view";
+            subView.GetTime += () => DateTime.Now.AddHours(1).ToShortTimeString() + $"(Id: {subViewId})";
+            subView.CustomResourceRequested += OnInnerViewResourceRequested;
+            subView.CallMe();
+            subView.WithPlugin<ViewPlugin>().NotifyViewLoaded += (viewName) => AppendLog($"On sub view loaded (Id: {subViewId}): {viewName}");
+            subView.Load();
+        }
+
+        private void AppendLog(string log) {
+            Application.Current.Dispatcher.Invoke(() => status.Text = log + Environment.NewLine + status.Text);
+        }
+
+        private Stream OnViewResourceRequested(string resourceKey, params string[] options) {
+            return ResourcesManager.TryGetResource(GetType().Assembly, new[] { "ExampleView", "ExampleView", resourceKey });
+        }
+
+        private Stream OnInnerViewResourceRequested(string resourceKey, params string[] options) {
+            return ResourcesManager.GetResource(GetType().Assembly, new[] { "ExampleView", "SubExampleView", resourceKey });
         }
     }
 }

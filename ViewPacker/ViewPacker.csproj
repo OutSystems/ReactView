@@ -1,69 +1,51 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{32029674-D85B-4ECD-8A0F-9C3EA9061A6B}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ViewPacker</RootNamespace>
-    <AssemblyName>ViewPacker</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>$(MSBuildProjectDirectory)\..\nuget</PackageOutputPath>
+    <AssemblyTitle>ViewPacker</AssemblyTitle>
+    <Product>ViewPacker</Product>
+    <Description>Creates bundles for view files using webpack</Description>
+    <Copyright>Copyright ©  2019</Copyright>
+    <Version>1.0.14</Version>
+    <PackageId>ViewPacker</PackageId>
+    <Authors>OutSystems</Authors>
+    <PackageTags>Library</PackageTags>
+
+    <NuspecFile>ViewPacker.nuspec</NuspecFile>
+    <NuspecProperties>$(NuspecProperties);configuration=$(Configuration)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);version=$(Version)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);id=$(PackageId)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);authors=$(Authors)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);PackageProjectUrl=$(PackageProjectUrl)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);Description=$(Description)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);PackageReleaseNotes=$(PackageReleaseNotes)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);Copyright=$(Copyright)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);PackageTags=$(PackageTags)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);RepositoryType=$(RepositoryType)</NuspecProperties>
+    <NuspecProperties>$(NuspecProperties);RepositoryUrl=$(RepositoryUrl)</NuspecProperties>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="build\ViewPacker.props">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="ViewPacker.nuspec">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="build\node-sass-vendors\" />
-    <Folder Include="tools\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>npm install --no-bin-links --prefix "$(ProjectDir)tools" "$(ProjectDir)tools"</PreBuildEvent>
-  </PropertyGroup>
-  <Target Name="CopySassVendors" AfterTargets="AfterBuild">
-     <CreateItem Include="$(ProjectDir)build\node-sass-vendors\**\*.*">
-        <Output TaskParameter="Include" ItemName="FilesToCopy" />
-     </CreateItem>
-     <Copy SourceFiles="@(FilesToCopy)"
-           DestinationFiles="@(FilesToCopy->'$(ProjectDir)tools\node_modules\node-sass\vendor\%(RecursiveDir)%(Filename)%(Extension)')" />
+  <Target Name="InstallDependencies" BeforeTargets="PrepareForBuild" Inputs="$(NpmInstallStampFile)" Outputs="$(NpmInstallStampFile)">
+    <Exec Command="npm install --no-bin-links --prefix &quot;$(ProjectDir)tools&quot; &quot;$(ProjectDir)tools&quot;" />
+    <Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
   </Target>
+  <Target Name="CopySassVendors" AfterTargets="AfterBuild">
+    <CreateItem Include="$(ProjectDir)build\node-sass-vendors\**\*.*">
+      <Output TaskParameter="Include" ItemName="FilesToCopy" />
+    </CreateItem>
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFiles="@(FilesToCopy->'$(ProjectDir)tools\node_modules\node-sass\vendor\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+  <ItemGroup>
+    <None Include="build\ViewPacker.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="tools\node_modules\node-gyp\lib\Find-VS2017.cs" />
+  </ItemGroup>
 </Project>
