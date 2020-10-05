@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.props" Condition="Exists('..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.props')" />
+  <Import Project="..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.props" Condition="Exists('..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.props')" />
+  <Import Project="..\packages\cef.redist.x64.75.1.14\build\cef.redist.x64.props" Condition="Exists('..\packages\cef.redist.x64.75.1.14\build\cef.redist.x64.props')" />
   <Import Project="..\packages\ViewGenerator.1.0.305\build\ViewGenerator.props" Condition="Exists('..\packages\ViewGenerator.1.0.305\build\ViewGenerator.props')" />
   <Import Project="..\packages\ViewGeneratorCore.1.0.218\build\ViewGeneratorCore.props" Condition="Exists('..\packages\ViewGeneratorCore.1.0.218\build\ViewGeneratorCore.props')" />
   <Import Project="..\packages\ViewPacker.1.0.13\build\ViewPacker.props" Condition="Exists('..\packages\ViewPacker.1.0.13\build\ViewPacker.props')" />
@@ -22,7 +25,7 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -48,6 +51,11 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Threading.Tasks.Dataflow, Version=4.6.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Dataflow.4.11.1\lib\net461\System.Threading.Tasks.Dataflow.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -57,9 +65,27 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="WebViewControl, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebViewControl-WPF.2.75.59\lib\net472\WebViewControl.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Xilium.CefGlue, Version=75.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Common.75.1.87\lib\net472\x64\Xilium.CefGlue.dll</HintPath>
+    </Reference>
+    <Reference Include="Xilium.CefGlue.BrowserProcess, Version=75.1.87.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Common.75.1.87\lib\net472\x64\Xilium.CefGlue.BrowserProcess.exe</HintPath>
+    </Reference>
+    <Reference Include="Xilium.CefGlue.Common, Version=75.1.87.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Common.75.1.87\lib\net472\x64\Xilium.CefGlue.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Xilium.CefGlue.Common.Shared, Version=75.1.87.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Common.75.1.87\lib\net472\x64\Xilium.CefGlue.Common.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Xilium.CefGlue.WPF, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Wpf.75.1.87\lib\net472\x64\Xilium.CefGlue.WPF.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -70,13 +96,7 @@
     <Compile Include="ExampleView\ExampleViewAdapter.cs" />
     <Compile Include="ExtendedReactView.cs" />
     <Compile Include="ExtendedReactViewFactory.cs" />
-    <Compile Include="ReactViewExample.xaml.cs">
-      <DependentUpon>ReactViewExample.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Settings.cs" />
-    <Compile Include="WebViewExample.xaml.cs">
-      <DependentUpon>WebViewExample.xaml</DependentUpon>
-    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -89,14 +109,6 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="ReactViewExample.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="WebViewExample.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -147,10 +159,6 @@
       <Project>{4fe01227-bbe0-4b87-9b11-2418f6f77512}</Project>
       <Name>ReactViewControl</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WebViewControl\WebViewControl.csproj">
-      <Project>{a1c2a0c7-df81-4a8f-aeb5-b5375d5d1b47}</Project>
-      <Name>WebViewControl</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -163,8 +171,15 @@
     <Error Condition="!Exists('..\packages\ViewGeneratorCore.1.0.218\build\ViewGeneratorCore.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGeneratorCore.1.0.218\build\ViewGeneratorCore.targets'))" />
     <Error Condition="!Exists('..\packages\ViewGenerator.1.0.305\build\ViewGenerator.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGenerator.1.0.305\build\ViewGenerator.props'))" />
     <Error Condition="!Exists('..\packages\ViewGenerator.1.0.305\build\ViewGenerator.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGenerator.1.0.305\build\ViewGenerator.targets'))" />
+    <Error Condition="!Exists('..\packages\cef.redist.x64.75.1.14\build\cef.redist.x64.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\cef.redist.x64.75.1.14\build\cef.redist.x64.props'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.props'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.targets'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.props'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.targets'))" />
   </Target>
   <Import Project="..\packages\OutSystems.ESLint.MSBuild.1.0.18\build\OutSystems.ESLint.MSBuild.targets" Condition="Exists('..\packages\OutSystems.ESLint.MSBuild.1.0.18\build\OutSystems.ESLint.MSBuild.targets')" />
   <Import Project="..\packages\ViewGeneratorCore.1.0.218\build\ViewGeneratorCore.targets" Condition="Exists('..\packages\ViewGeneratorCore.1.0.218\build\ViewGeneratorCore.targets')" />
   <Import Project="..\packages\ViewGenerator.1.0.305\build\ViewGenerator.targets" Condition="Exists('..\packages\ViewGenerator.1.0.305\build\ViewGenerator.targets')" />
+  <Import Project="..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.targets" Condition="Exists('..\packages\CefGlue.Common.75.1.87\build\CefGlue.Common.targets')" />
+  <Import Project="..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.targets" Condition="Exists('..\packages\CefGlue.Wpf.75.1.87\build\CefGlue.Wpf.targets')" />
 </Project>

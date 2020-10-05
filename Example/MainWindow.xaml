@@ -5,15 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Example"
         mc:Ignorable="d"
-        Title="Example" Height="300" Width="300">
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Vertical">
-        <StackPanel.Resources>
-            <Style TargetType="Button">
-                <Setter Property="Padding" Value="10"/>
-                <Setter Property="Margin" Value="5"/>
-            </Style>
-        </StackPanel.Resources>
-        <Button Click="OnShowWebViewClick">Show Web View</Button>
-        <Button Click="OnShowReactViewClick">Show React View</Button>
-    </StackPanel>
+        Title="ReactViewExample" Height="450" Width="800">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Actions">
+                <MenuItem Header="Call Main View" Click="OnCallMainViewMenuItemClick"></MenuItem>
+                <MenuItem Header="Call Inner View" Click="OnCallInnerViewMenuItemClick"></MenuItem>
+                <MenuItem Header="Call Inner View Plugin" Click="OnCallInnerViewPluginMenuItemClick"></MenuItem>
+                <MenuItem Header="Show dev tools" Click="OnShowDevTools"></MenuItem>
+                <MenuItem Header="Toggle DefaultStyleSheet" Click="OnToggleDefaultStyleSheetMenuItemClick"></MenuItem>
+            </MenuItem>
+        </Menu>
+
+        <TextBlock x:Name="status" DockPanel.Dock="Bottom" Height="50"></TextBlock>
+
+        <local:ExampleView x:Name="exampleView" Click="OnExampleViewClick" GetTime="OnExampleViewGetTime" ConstantMessage="This is an example" Image="Beach" ViewMounted="OnViewMounted" />
+    </DockPanel>
 </Window>
