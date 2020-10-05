@@ -37,6 +37,7 @@
     <Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
   </Target>
   <Target Name="TouchCacheFile" BeforeTargets="PrepareForBuild">
+    <MakeDir Directories="$(ProjectDir)contentFiles" />
     <Touch Files="$(ProjectDir)contentFiles\VGC.cache" AlwaysCreate="true" />
   </Target>
   <ItemGroup>
@@ -50,6 +51,5 @@
     <Content Include="tools\tsconfig.json" />
     <None Include="run-generator.bat" />
     <None Include="debug-generator.bat" />
-    <None Include="contentFiles\VGC.cache" />
   </ItemGroup>
 </Project>
