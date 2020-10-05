@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Example.Avalonia</RootNamespace>
     <AssemblyName>Example.Avalonia</AssemblyName>
+    <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
