@@ -14,11 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Tests.WebView\App.xaml.cs" Link="App.xaml.cs" />
-    <Compile Include="..\Tests.WebView\TestBase.cs" Link="TestBase.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="0.10.0-preview5" />
     <PackageReference Include="nunit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
@@ -30,9 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\Tests.WebView\App.xaml">
+    <EmbeddedResource Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
-      <Link>App.xaml</Link>
     </EmbeddedResource>
     <EmbeddedResource Include="TestAppView\imgs\image.png" />
     <DefaultStyleSheet Include="TestAppView\Default.scss" />
