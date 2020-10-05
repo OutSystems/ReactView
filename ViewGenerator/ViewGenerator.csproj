@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\nuget</PackageOutputPath>
@@ -53,11 +52,7 @@
     <None Include="contentFiles\tsconfig.json" />
     <None Include="contentFiles\VG.cache" />
     <Content Include="tools\webpack\tsconfig.json" />
-    <None Include="build\ViewGenerator.targets">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="build\ViewGenerator.targets"/>
     <None Include="readme.txt" />
   </ItemGroup>
 </Project>
