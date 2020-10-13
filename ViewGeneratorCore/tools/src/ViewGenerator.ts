@@ -141,8 +141,9 @@ class Generator {
     }
 
     private generateNativeApiObject(objInterface: Units.TsInterface) {
+        const objKind = objInterface.annotations.find(a => a.name === "class") ? "class" : "struct";
         return (
-            `public partial struct ${this.getTypeNameAlias(objInterface.name)} {\n` +
+            `public partial ${objKind} ${this.getTypeNameAlias(objInterface.name)} {\n` +
             `    ${f(objInterface.properties.map(p => `public ${this.getTypeName(p.type)} ${p.name} { get; set; }`).join("\n"))}\n` +
             `}`
         );
