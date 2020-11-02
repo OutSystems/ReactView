@@ -18,5 +18,9 @@ namespace Example.Avalonia {
         private void OnStylePreferenceChanged() {
             RefreshDefaultStyleSheet();
         }
+
+        public void Load() {
+            TryLoadComponent();
+        }
     }
 }

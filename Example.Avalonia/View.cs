@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using WebViewControl;
@@ -48,7 +50,33 @@ namespace Example.Avalonia {
         }
 
         private void OnExampleViewClick(SomeType arg) {
-            Thread.Sleep(3000);
+            Dispatcher.UIThread.Post(() =>
+            {
+                var popup = new Popup();
+                ((ISetLogicalParent)popup).SetParent(view);
+                var innerView = new PopupView();
+                innerView.MinHeight = 400;
+                innerView.MinWidth = 400;
+                popup.Child = innerView;
+                popup.PlacementTarget = view;
+                popup.PlacementMode = PlacementMode.AnchorAndGravity;
+                popup.PlacementAnchor = PopupAnchor.TopLeft;
+                popup.PlacementGravity = PopupGravity.BottomRight;
+                popup.IsLightDismissEnabled = true;
+
+                popup.Opened += delegate
+                {
+                    Dispatcher.UIThread.Post(() => popup.Child.Focus());
+                };
+
+                innerView.Loaded += () =>
+                {
+                    Dispatcher.UIThread.Post(() => popup.IsOpen = true);
+                };
+
+                innerView.Load();
+            });
+            
             AppendLog("Clicked on a button inside the React view");
         }
 
