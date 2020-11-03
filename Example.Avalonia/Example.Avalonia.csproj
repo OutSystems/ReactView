@@ -43,6 +43,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Generated\*.js" />
+    <EmbeddedResource Include="Generated\*.js.entry" />
+    <EmbeddedResource Include="Generated\*.css" />
+    <EmbeddedResource Include="Generated\*.css.entry" />
     <EmbeddedResource Include="ExampleView\beach.jpg" />
     <EmbeddedResource Include="ExampleView\ExampleView\Ok.png" />
     <EmbeddedResource Include="ExampleView\SubExampleView\Completed.png" />
