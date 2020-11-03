@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -14,6 +15,8 @@ namespace Example.Avalonia {
         public MainWindow() {
             WebView.OsrEnabled = false;
             InitializeComponent();
+
+            this.AttachDevTools();
 
             CreateTab();
         }
