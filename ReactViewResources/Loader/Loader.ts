@@ -1,9 +1,9 @@
 ﻿/// <reference path="./../../ViewGenerator/contentFiles/global.d.ts"/>
 
-import { getStylesheets, webViewRootId, mainFrameName } from "./LoaderCommon";
-import { ObservableListCollection } from "./ObservableCollection";
-import { Task } from "./Task";
-import { ViewMetadata } from "./ViewMetadata";
+import { getStylesheets, webViewRootId, mainFrameName } from "./Internal/LoaderCommon";
+import { ObservableListCollection } from "./Internal/ObservableCollection";
+import { Task } from "./Internal/Task";
+import { ViewMetadata } from "./Internal/ViewMetadata";
 
 declare function define(name: string, dependencies: string[], definition: Function);
 
@@ -317,7 +317,7 @@ export function loadComponent(
                 throw new Error(`Component ${componentName} is not defined or does not have a default class`);
             }
 
-            const { createView } = await import("./Loader.View");
+            const { createView } = await import("./Internal/Loader.View");
 
             const viewElement = createView(
                 componentClass,
@@ -409,10 +409,10 @@ async function bootstrap() {
 
     await loadFramework();
 
-    const { renderMainView } = await import("./Loader.View");
+    const { renderMainView } = await import("./Internal/Loader.View");
     mainView.renderHandler = component => renderMainView(component, rootElement);
 
-    const resourceLoader = await import("./ResourceLoader");
+    const resourceLoader = await import("./Public/ResourceLoader");
     resourceLoader.setCustomResourceBaseUrl(customResourceBaseUrl);
 
     // bind event listener object ahead-of-time

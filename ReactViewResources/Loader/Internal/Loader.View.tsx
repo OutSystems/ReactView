@@ -1,10 +1,10 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { PluginsContext, PluginsContextHolder } from "./PluginsContext";
-import { ViewContext } from "./ViewContext";
+import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
+import { ViewContext } from "../Internal/ViewContext";
 import { ViewMetadata } from "./ViewMetadata";
 import { ViewPortalsCollection, ViewLifecycleEventHandler, ViewErrorHandler } from "./ViewPortalsCollection";
-import { ResourceLoader, formatUrl } from "./ResourceLoader";
+import { ResourceLoader, formatUrl } from "../Public/ResourceLoader";
 
 export function createView(
     componentClass: any,
