@@ -83,7 +83,9 @@ namespace ReactViewControl {
             WebView.JavacriptDialogShown += OnWebViewJavacriptDialogShown;
             WebView.FilesDragging += OnWebViewFilesDragging;
             WebView.TextDragging += OnWebViewTextDragging;
-            WebView.KeyPressed += OnWebViewKeyPressed;
+
+            // TO FIX: Line commented to avoid issue where undesired keypress events are thrown (RMAC-4358)
+            //WebView.KeyPressed += OnWebViewKeyPressed;
 
             ExtraInitialize();
 
