@@ -634,11 +634,11 @@ namespace ReactViewControl {
                             var options = resourceKeyAndOptions.Skip(1).ToArray();
 
                             // get response from first handler that returns a stream
-                            var response = customResourceRequestedHandlers.Select(h => h(resourceKey, options)).FirstOrDefault(r => r != null);
+                            var response = customResourceRequestedHandlers.Select(h => h(resourceKey, options)).FirstOrDefault(r => r?.Content != null);
 
                             if (response != null) {
-                                var extension = Path.GetExtension(resourceKey).TrimStart('.');
-                                resourceHandler.RespondWith(response, extension);
+                                var extension = (response.Extension ?? Path.GetExtension(resourceKey)).TrimStart('.');
+                                resourceHandler.RespondWith(response.Content, extension);
                             } else {
                                 resourceHandler.RespondWith(MemoryStream.Null);
                             }
