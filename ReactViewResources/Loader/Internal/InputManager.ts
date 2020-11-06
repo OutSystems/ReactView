@@ -1,12 +1,10 @@
-﻿import * as Environment from "./Environment";
-
-let layer: HTMLDivElement;
-let disableCounter = 0;
+﻿let layer: HTMLDivElement;
+let disableInputCounter = 0;
 
 export function disableInputInteractions(disable: boolean) {
     if (disable) {
-        disableCounter++;
-        if (disableCounter > 1) {
+        disableInputCounter++;
+        if (disableInputCounter > 1) {
             return;
         }
 
@@ -22,14 +20,12 @@ export function disableInputInteractions(disable: boolean) {
             layer.style.zIndex = "2147483647";
         }
 
-        //alert(Environment.disableKeyboardCallback + "1");
         document.body.appendChild(layer);
     } else {
-        if (disableCounter === 1) {
+        if (disableInputCounter === 1) {
             // going 0
-            //alert(Environment.disableKeyboardCallback + "0");
             document.body.removeChild(layer);
         }
-        disableCounter = Math.max(0, disableCounter - 1);
+        disableInputCounter = Math.max(0, disableInputCounter - 1);
     }
 }

@@ -10,3 +10,6 @@
 })();
 
 export const defaultLoadResourcesTimeout = (isDebugModeEnabled ? 60 : 10) * 1000; // ms
+
+export const mainFrameName = "";
+export const webViewRootId = "webview_root";

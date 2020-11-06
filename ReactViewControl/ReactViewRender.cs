@@ -264,7 +264,7 @@ namespace ReactViewControl {
             get { return defaultStyleSheet; }
             set {
                 if (IsMainComponentLoaded) {
-                    Loader.SetDefaultStyleSheet(value);
+                    Loader.LoadDefaultStyleSheet(value);
                 }
                 defaultStyleSheet = value;
             }

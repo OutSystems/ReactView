@@ -1,11 +1,11 @@
-﻿import { waitForDOMReady } from "./LoaderCommon";
+﻿import { waitForDOMReady } from "./Common";
 
-export async function showErrorMessage(msg: string, targetElement?: HTMLElement): Promise<void> {
-    return showMessage(msg, true, targetElement);
+export function showErrorMessage(msg: string, targetElement?: HTMLElement): void {
+    showMessage(msg, true, targetElement);
 }
 
-export function showWarningMessage(msg: string, targetElement?: HTMLElement): Promise<void> {
-    return showMessage(msg, false, targetElement);
+export function showWarningMessage(msg: string, targetElement?: HTMLElement): void {
+    showMessage(msg, false, targetElement);
 }
 
 async function showMessage(msg: string, isError: boolean, targetElement?: HTMLElement): Promise<void> {

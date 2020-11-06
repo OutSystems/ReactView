@@ -1,134 +1,52 @@
 ﻿/// <reference path="./../../ViewGenerator/contentFiles/global.d.ts"/>
 
-import * as Environment from "./Internal/Environment";
-import * as InputManager from "./Internal/InputManager";
-import { getStylesheets, mainFrameName, waitForDOMReady, waitForNextPaint, webViewRootId } from "./Internal/LoaderCommon";
-import * as MessagesProvider from "./Internal/MessagesProvider";
+import { getPluginModule, getStylesheets, getViewModule, waitForDOMReady, waitForNextPaint } from "./Internal/Common";
+import { customResourceBaseUrl, libsPath, mainFrameName, webViewRootId } from "./Internal/Environment";
+import { handleError } from "./Internal/ErrorHandler";
+import { bindNativeObject, notifyViewInitialized, notifyViewLoaded } from "./Internal/NativeAPI";
+import { createPropertiesProxy } from "./Internal/NativeObjectProxy";
 import { ObservableListCollection } from "./Internal/ObservableCollection";
+import { loadScript, loadStyleSheet } from "./Internal/ResourcesLoader";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
-import { bindNativeObject, notifyViewLoaded, notifyViewInitialized, notifyViewDestroyed } from "./Internal/NativeAPI";
+import { addView, getView } from "./Internal/ViewsCollection";
+
+export { disableInputInteractions } from "./Internal/InputManager";
+export { showErrorMessage } from "./Internal/MessagesProvider";
+export { syncFunction } from "./Internal/NativeObjectProxy";
 
 declare function define(name: string, dependencies: string[], definition: Function);
 
-interface PromiseWithFinally<T> extends Promise<T> {
-    finally(onFinally: () => void);
-}
-
-export const syncFunction = new Object();
-export const disableInputInteractions = InputManager.disableInputInteractions;
-export const showErrorMessage = MessagesProvider.showErrorMessage;
-
-const viewsBundleName: string = "Views";
-const pluginsBundleName: string = "Plugins";
-
-let defaultStyleSheetLink: HTMLLinkElement;
-
 const bootstrapTask = new Task();
 const defaultStylesheetLoadTask = new Task();
-const views = new Map<string, ViewMetadata>();
 
-function getView(viewName: string): ViewMetadata {
-    const view = views.get(viewName);
-    if (!view) {
-        throw new Error(`View "${viewName}" not loaded`);
-    }
-    return view;
-}
+export const loadDefaultStyleSheet = (() => {
+    let defaultStyleSheetLink: HTMLLinkElement;
 
-function getModule(viewName: string, id: string, moduleName: string) {
-    const view = views.get(viewName);
-    if (view && view.id.toString() === id) {
-        // when generation requested != current generation, ignore (we don't want to interact with old views)
-        const module = view.modules.get(moduleName);
-        if (module) {
-            return module;
-        }
-    }
-
-    return new Proxy({}, {
-        get: function () {
-            // return a dummy function, call will be ingored, but no exception thrown
-            return new Function();
-        }
-    });
-}
-
-window[Environment.modulesFunctionName] = getModule;
-
-function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-        const frameScripts = view.scriptsLoadTasks;
-
-        // check if script was already added, fallback to main frame
-        let scriptLoadTask = frameScripts.get(scriptSrc) || getView(mainFrameName).scriptsLoadTasks.get(scriptSrc);
-        if (scriptLoadTask) {
-            // wait for script to be loaded
-            await scriptLoadTask.promise;
-            resolve();
+    return (stylesheet: string): void => {
+        if (defaultStyleSheetLink) {
+            defaultStyleSheetLink.setAttribute("href", stylesheet);
             return;
         }
 
-        const loadTask = new Task<void>();
-        frameScripts.set(scriptSrc, loadTask);
+        async function innerLoad() {
+            try {
+                await bootstrapTask.promise;
+                const styleSheet = await loadStyleSheet(stylesheet, document.head, true);
 
-        const script = document.createElement("script");
-        script.src = scriptSrc;
+                if (!defaultStyleSheetLink) {
+                    defaultStyleSheetLink = styleSheet;
+                }
 
-        waitForLoad(script, scriptSrc, Environment.defaultLoadResourcesTimeout)
-            .then(() => {
-                loadTask.setResult();
-                resolve();
-            });
-
-        if (!view.head) {
-            throw new Error(`View ${view.name} head is not set`);
-        }
-        view.head.appendChild(script);
-    });
-}
-
-function loadStyleSheet(stylesheet: string, containerElement: Element, markAsSticky: boolean): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const link = document.createElement("link");
-        link.type = "text/css";
-        link.rel = "stylesheet";
-        link.href = stylesheet;
-        if (markAsSticky) {
-            link.dataset.sticky = "true";
+                defaultStylesheetLoadTask.setResult();
+            } catch (error) {
+                handleError(error);
+            }
         }
 
-        waitForLoad(link, stylesheet, Environment.defaultLoadResourcesTimeout)
-            .then(resolve);
-
-        containerElement.appendChild(link);
-
-        if (!defaultStyleSheetLink) {
-            defaultStyleSheetLink = link;
-        }
-    });
-}
-
-export function setDefaultStyleSheet(stylesheet: string): void {
-    if (defaultStyleSheetLink) {
-        defaultStyleSheetLink.setAttribute("href", stylesheet);
-    }
-}
-
-export function loadDefaultStyleSheet(stylesheet: string): void {
-    async function innerLoad() {
-        try {
-            await bootstrapTask.promise;
-            await loadStyleSheet(stylesheet, document.head, true);
-
-            defaultStylesheetLoadTask.setResult();
-        } catch (error) {
-            handleError(error);
-        }
-    }
-
-    innerLoad();
-}
+        innerLoad();
+    };
+})();
 
 export function loadPlugins(plugins: any[][], frameName: string): void {
     async function innerLoad() {
@@ -161,8 +79,7 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                         await loadScript(mainJsSource, view);
                     }
 
-                    const pluginsBundle = window[pluginsBundleName];
-                    const module = (pluginsBundle ? pluginsBundle[moduleName] : null) || window[viewsBundleName][moduleName];
+                    const module = getPluginModule(moduleName) || getViewModule(moduleName);
                     if (!module || !module.default) {
                         throw new Error(`Failed to load '${moduleName}' (might not be a module with a default export)`);
                     }
@@ -235,9 +152,8 @@ export function loadComponent(
             await Promise.all(promisesToWaitFor);
 
             // load component dependencies js sources and css sources
-            const dependencyLoadPromises =
-                dependencySources.map(s => loadScript(s, view)).concat(
-                    cssSources.map(s => loadStyleSheet(s, head, false)));
+            const dependencyLoadPromises = dependencySources.map(s => loadScript(s, view) as Promise<any>)
+                .concat(cssSources.map(s => loadStyleSheet(s, head, false)));
             await Promise.all(dependencyLoadPromises);
 
             // main component script should be the last to be loaded, otherwise errors might occur
@@ -249,22 +165,14 @@ export function loadComponent(
             const properties = createPropertiesProxy(componentNativeObject, componentNativeObjectName, renderTask);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
-            const componentClass = (window[viewsBundleName][componentName] || {}).default;
+            const componentClass = (getViewModule(componentName) || {}).default;
             if (!componentClass) {
                 throw new Error(`Component ${componentName} is not defined or does not have a default class`);
             }
 
             const { createView } = await import("./Internal/Loader.View");
 
-            const viewElement = createView(
-                componentClass,
-                properties,
-                view,
-                componentName,
-                onChildViewAdded,
-                onChildViewRemoved,
-                onChildViewErrorRaised);
-
+            const viewElement = createView(componentClass, properties, view, componentName);
             const render = view.renderHandler;
             if (!render) {
                 throw new Error(`View ${view.name} render handler is not set`);
@@ -298,7 +206,7 @@ export function loadComponent(
                 localStorage.setItem(componentSource, JSON.stringify(cachedEntries));
             }
 
-            window.dispatchEvent(new Event('viewready'));
+            window.dispatchEvent(new Event("viewready"));
 
             notifyViewLoaded(view.name, view.id.toString());
         } catch (error) {
@@ -342,7 +250,7 @@ async function bootstrap() {
         childViews: new ObservableListCollection<ViewMetadata>(),
         parentView: null!
     };
-    views.set(mainFrameName, mainView);
+    addView(mainFrameName, mainView);
 
     await loadFramework();
 
@@ -350,7 +258,7 @@ async function bootstrap() {
     mainView.renderHandler = component => renderMainView(component, rootElement);
 
     const resourceLoader = await import("./Public/ResourceLoader");
-    resourceLoader.setCustomResourceBaseUrl(Environment.customResourceBaseUrl);
+    resourceLoader.setCustomResourceBaseUrl(customResourceBaseUrl);
 
     bootstrapTask.setResult();
 
@@ -360,7 +268,7 @@ async function bootstrap() {
 async function loadFramework(): Promise<void> {
     const reactLib: string = "React";
     const reactDOMLib: string = "ReactDOM";
-    const externalLibsPath = Environment.libsPath + "node_modules/";
+    const externalLibsPath = libsPath + "node_modules/";
 
     const view = getView(mainFrameName);
     await loadScript(externalLibsPath + "prop-types/prop-types.min.js", view); /* Prop-Types */
@@ -369,91 +277,6 @@ async function loadFramework(): Promise<void> {
 
     define("react", [], () => window[reactLib]);
     define("react-dom", [], () => window[reactDOMLib]);
-}
-
-function createPropertiesProxy(objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void>): {} {
-    const proxy = Object.assign({}, objProperties);
-    Object.keys(proxy).forEach(key => {
-        const value = objProperties[key];
-        const isSyncFunction = value === syncFunction;
-        if (value !== undefined && !isSyncFunction) {
-            proxy[key] = value;
-        } else {
-            proxy[key] = async function () {
-                let nativeObject = window[nativeObjName];
-                if (!nativeObject) {
-                    nativeObject = await new Promise(async (resolve) => {
-                        const nativeObject = await bindNativeObject(nativeObjName);
-                        resolve(nativeObject);
-                    });
-                }
-
-                let result: PromiseWithFinally<any> | undefined = undefined;
-                try {
-                    if (isSyncFunction) {
-                        disableInputInteractions(true);
-                    }
-
-                    result = nativeObject[key].apply(window, arguments);
-                } finally {
-                    if (isSyncFunction) {
-                        if (result) {
-                            result.finally(() => disableInputInteractions(false));
-                        } else {
-                            disableInputInteractions(false);
-                        }
-                    }
-                }
-
-                if (componentRenderedWaitTask) {
-                    // wait until component is rendered, first render should only render static data
-                    await componentRenderedWaitTask.promise;
-                }
-
-                return result;
-            };
-        }
-    });
-    return proxy;
-}
-
-function handleError(error: Error | string, view?: ViewMetadata) {
-    if (Environment.isDebugModeEnabled) {
-        const msg = error instanceof Error ? error.message : error;
-        showErrorMessage(msg, view ? view.root as HTMLElement : undefined);
-    }
-    throw error;
-}
-
-function waitForLoad(element: HTMLElement, url: string, timeout: number) {
-    return new Promise((resolve) => {
-        const timeoutHandle = setTimeout(
-            () => {
-                if (Environment.isDebugModeEnabled) {
-                    MessagesProvider.showWarningMessage(`Timeout loading resouce: '${url}'. If you paused the application to debug, you may disregard this message.`);
-                }
-            },
-            timeout);
-
-        element.addEventListener("load", () => {
-            clearTimeout(timeoutHandle);
-            resolve();
-        });
-    });
-}
-
-function onChildViewAdded(childView: ViewMetadata) {
-    views.set(childView.name, childView);
-    notifyViewInitialized(childView.name);
-}
-
-function onChildViewRemoved(childView: ViewMetadata) {
-    views.delete(childView.name);
-    notifyViewDestroyed(childView.name);
-}
-
-function onChildViewErrorRaised(childView: ViewMetadata, error: Error) {
-    handleError(error, childView);
 }
 
 bootstrap();
