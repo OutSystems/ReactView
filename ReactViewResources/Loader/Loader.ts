@@ -1,53 +1,32 @@
 ﻿/// <reference path="./../../ViewGenerator/contentFiles/global.d.ts"/>
 
-import { getStylesheets, webViewRootId, mainFrameName } from "./Internal/LoaderCommon";
+import * as Environment from "./Internal/Environment";
+import * as InputManager from "./Internal/InputManager";
+import { getStylesheets, mainFrameName, waitForDOMReady, waitForNextPaint, webViewRootId } from "./Internal/LoaderCommon";
+import * as MessagesProvider from "./Internal/MessagesProvider";
 import { ObservableListCollection } from "./Internal/ObservableCollection";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
+import { bindNativeObject, notifyViewLoaded, notifyViewInitialized, notifyViewDestroyed } from "./Internal/NativeAPI";
 
 declare function define(name: string, dependencies: string[], definition: Function);
-
-declare const cefglue: {
-    checkObjectBound(objName: string): Promise<boolean>
-};
 
 interface PromiseWithFinally<T> extends Promise<T> {
     finally(onFinally: () => void);
 }
 
 export const syncFunction = new Object();
+export const disableInputInteractions = InputManager.disableInputInteractions;
+export const showErrorMessage = MessagesProvider.showErrorMessage;
 
-const reactLib: string = "React";
-const reactDOMLib: string = "ReactDOM";
 const viewsBundleName: string = "Views";
 const pluginsBundleName: string = "Plugins";
 
 let defaultStyleSheetLink: HTMLLinkElement;
 
-const [
-    libsPath,
-    isDebugModeEnabled,
-    modulesFunctionName,
-    eventListenerObjectName,
-    viewInitializedEventName,
-    viewDestroyedEventName,
-    viewLoadedEventName,
-    disableKeyboardCallback,
-    customResourceBaseUrl
-] = (() => {
-    const params = Array.from(new URLSearchParams(location.search).keys());
-    return params.map(v => v === "false" ? "" : v);
-})();
-
-const defaultLoadResourcesTimeout = (isDebugModeEnabled ? 60 : 10) * 1000; // ms
-
-const externalLibsPath = libsPath + "node_modules/";
-
 const bootstrapTask = new Task();
 const defaultStylesheetLoadTask = new Task();
 const views = new Map<string, ViewMetadata>();
-
-class TimeoutException extends Error { }
 
 function getView(viewName: string): ViewMetadata {
     const view = views.get(viewName);
@@ -75,49 +54,7 @@ function getModule(viewName: string, id: string, moduleName: string) {
     });
 }
 
-window[modulesFunctionName] = getModule;
-
-export async function showErrorMessage(msg: string, targetElement?: HTMLElement): Promise<void> {
-    return showMessage(msg, true, targetElement);
-}
-
-function showWarningMessage(msg: string, targetElement?: HTMLElement): Promise<void> {
-    return showMessage(msg, false, targetElement);
-}
-
-async function showMessage(msg: string, isError: boolean, targetElement?: HTMLElement): Promise<void> {
-    const containerId = "webview_error";
-    let msgContainer = document.getElementById(containerId) as HTMLDivElement;
-    if (!msgContainer) {
-        msgContainer = document.createElement("div");
-        msgContainer.id = containerId;
-        const style = msgContainer.style;
-        style.backgroundColor = isError ? "#f45642" : "#f4b942";
-        style.color = "white";
-        style.fontFamily = "Arial";
-        style.fontWeight = "bold";
-        style.fontSize = "10px"
-        style.padding = "3px";
-        style.position = "relative";
-        style.top = "0";
-        style.left = "0";
-        style.right = "0";
-        style.zIndex = "10000";
-        style.height = "auto";
-        style.wordWrap = "break-word";
-        style.visibility = "visible";
-
-        await waitForDOMReady();
-        (targetElement || document.body).appendChild(msgContainer);
-    }
-    msgContainer.innerText = msg;
-
-    if (!isError) {
-        setTimeout(() => {
-            msgContainer.style.visibility = "collapsed";
-        }, 30000);
-    }
-}
+window[Environment.modulesFunctionName] = getModule;
 
 function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void> {
     return new Promise(async (resolve, reject) => {
@@ -138,7 +75,7 @@ function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void> {
         const script = document.createElement("script");
         script.src = scriptSrc;
 
-        waitForLoad(script, scriptSrc, defaultLoadResourcesTimeout)
+        waitForLoad(script, scriptSrc, Environment.defaultLoadResourcesTimeout)
             .then(() => {
                 loadTask.setResult();
                 resolve();
@@ -161,7 +98,7 @@ function loadStyleSheet(stylesheet: string, containerElement: Element, markAsSti
             link.dataset.sticky = "true";
         }
 
-        waitForLoad(link, stylesheet, defaultLoadResourcesTimeout)
+        waitForLoad(link, stylesheet, Environment.defaultLoadResourcesTimeout)
             .then(resolve);
 
         containerElement.appendChild(link);
@@ -363,7 +300,7 @@ export function loadComponent(
 
             window.dispatchEvent(new Event('viewready'));
 
-            fireNativeNotification(viewLoadedEventName, view.name, view.id.toString());
+            notifyViewLoaded(view.name, view.id.toString());
         } catch (error) {
             handleError(error, view!);
         }
@@ -413,17 +350,18 @@ async function bootstrap() {
     mainView.renderHandler = component => renderMainView(component, rootElement);
 
     const resourceLoader = await import("./Public/ResourceLoader");
-    resourceLoader.setCustomResourceBaseUrl(customResourceBaseUrl);
-
-    // bind event listener object ahead-of-time
-    await cefglue.checkObjectBound(eventListenerObjectName);
+    resourceLoader.setCustomResourceBaseUrl(Environment.customResourceBaseUrl);
 
     bootstrapTask.setResult();
 
-    fireNativeNotification(viewInitializedEventName, mainFrameName);
+    notifyViewInitialized(mainFrameName);
 }
 
 async function loadFramework(): Promise<void> {
+    const reactLib: string = "React";
+    const reactDOMLib: string = "ReactDOM";
+    const externalLibsPath = Environment.libsPath + "node_modules/";
+
     const view = getView(mainFrameName);
     await loadScript(externalLibsPath + "prop-types/prop-types.min.js", view); /* Prop-Types */
     await loadScript(externalLibsPath + "react/umd/react.production.min.js", view); /* React */
@@ -479,41 +417,20 @@ function createPropertiesProxy(objProperties: {}, nativeObjName: string, compone
     return proxy;
 }
 
-async function bindNativeObject(nativeObjectName: string) {
-    await cefglue.checkObjectBound(nativeObjectName);
-    return window[nativeObjectName];
-}
-
 function handleError(error: Error | string, view?: ViewMetadata) {
-    if (isDebugModeEnabled) {
+    if (Environment.isDebugModeEnabled) {
         const msg = error instanceof Error ? error.message : error;
         showErrorMessage(msg, view ? view.root as HTMLElement : undefined);
     }
     throw error;
 }
 
-function waitForNextPaint() {
-    return new Promise((resolve) => {
-        requestAnimationFrame(() => {
-            setTimeout(resolve);
-        });
-    });
-}
-
-function waitForDOMReady() {
-    if (document.readyState === "loading") {
-        return new Promise((resolve) => document.addEventListener("DOMContentLoaded", resolve, { once: true }));
-    }
-    return Promise.resolve();
-}
-
-
 function waitForLoad(element: HTMLElement, url: string, timeout: number) {
     return new Promise((resolve) => {
         const timeoutHandle = setTimeout(
             () => {
-                if (isDebugModeEnabled) {
-                    showWarningMessage(`Timeout loading resouce: '${url}'. If you paused the application to debug, you may disregard this message.`);
+                if (Environment.isDebugModeEnabled) {
+                    MessagesProvider.showWarningMessage(`Timeout loading resouce: '${url}'. If you paused the application to debug, you may disregard this message.`);
                 }
             },
             timeout);
@@ -525,58 +442,18 @@ function waitForLoad(element: HTMLElement, url: string, timeout: number) {
     });
 }
 
-
-function fireNativeNotification(eventName: string, ...args: string[]) {
-    window[eventListenerObjectName].notify(eventName, ...args);
-}
-
 function onChildViewAdded(childView: ViewMetadata) {
     views.set(childView.name, childView);
-    fireNativeNotification(viewInitializedEventName, childView.name);
+    notifyViewInitialized(childView.name);
 }
 
 function onChildViewRemoved(childView: ViewMetadata) {
     views.delete(childView.name);
-    fireNativeNotification(viewDestroyedEventName, childView.name, childView.id.toString());
+    notifyViewDestroyed(childView.name);
 }
 
 function onChildViewErrorRaised(childView: ViewMetadata, error: Error) {
     handleError(error, childView);
 }
-
-export const disableInputInteractions = (() => {
-    let layer: HTMLDivElement;
-    let disableCounter = 0;
-    return (disable: boolean) => {
-        if (disable) {
-            disableCounter++;
-            if (disableCounter > 1) {
-                return;
-            }
-
-            if (!layer) {
-                layer = layer || document.createElement("div");
-                layer.id = "webview_root_layer"; // used to enable styling by consumers
-                layer.style.userSelect = "none";
-                layer.style.height = "100vh";
-                layer.style.width = "100vw";
-                layer.style.position = "fixed";
-                layer.style.top = "0";
-                layer.style.left = "0";
-                layer.style.zIndex = "2147483647";
-            }
-
-            alert(disableKeyboardCallback + "1");
-            document.body.appendChild(layer);
-        } else {
-            if (disableCounter === 1) {
-                // going 0
-                alert(disableKeyboardCallback + "0");
-                document.body.removeChild(layer);
-            }
-            disableCounter = Math.max(0, disableCounter - 1);
-        }
-    };
-})();
 
 bootstrap();

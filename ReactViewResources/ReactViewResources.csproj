@@ -60,6 +60,10 @@
     <None Remove="AMDLoader\tsconfig.json" />
     <None Remove="index.html" />
     <None Remove="Loader.js" />
+    <None Remove="Loader\Internal\Environment.ts" />
+    <None Remove="Loader\Internal\InputManager.ts" />
+    <None Remove="Loader\Internal\MessagesProvider.ts" />
+    <None Remove="Loader\Internal\NativeAPI.ts" />
     <None Remove="Loader\tsconfig.json" />
     <None Remove="Loader\_Loader.js" />
     <None Remove="node_modules\prop-types\CHANGELOG.md" />

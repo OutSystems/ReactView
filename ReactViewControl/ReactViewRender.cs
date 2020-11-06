@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using WebViewControl;
-using Xilium.CefGlue;
 
 namespace ReactViewControl {
 
@@ -21,20 +17,11 @@ namespace ReactViewControl {
 
         private object SyncRoot { get; } = new object();
 
-        internal const string MainViewFrameName = "";
-        internal const string ModulesObjectName = "__Modules__";
-
-        private const string ViewInitializedEventName = "ViewInitialized";
-        private const string ViewDestroyedEventName = "ViewDestroyed";
-        private const string ViewLoadedEventName = "ViewLoaded";
-        private const string DisableKeyboardCallback = "$DisableKeyboard:";
         private const string CustomResourceBaseUrl = "resource";
 
         private static Assembly ResourcesAssembly { get; } = typeof(ReactViewResources.Resources).Assembly;
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
-
-        private ConcurrentQueue<CefKeyEvent> KeyEventsBuffer { get; } = new ConcurrentQueue<CefKeyEvent>();
 
         private WebView WebView { get; }
         private Assembly UserCallingAssembly { get; }
@@ -44,11 +31,10 @@ namespace ReactViewControl {
 
         private bool enableDebugMode;
         private ResourceUrl defaultStyleSheet;
-        private bool isKeyboardEffectivelyDisabled; // effective value, controlled by the browser to disable keyboard
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
         public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, int maxNativeMethodsParallelCalls, bool enableDebugMode, Uri devServerUri = null) {
-            UserCallingAssembly = WebView.GetUserCallingMethod().ReflectedType.Assembly;
+            UserCallingAssembly = ResourceUrl.GetUserCallingMethod().ReflectedType.Assembly;
             
             // must useSharedDomain for the local storage to be shared
             WebView = new WebView(useSharedDomain: true) {
@@ -59,6 +45,7 @@ namespace ReactViewControl {
                 MaxNativeMethodsParallelCalls = maxNativeMethodsParallelCalls
             };
 
+            NativeAPI.Initialize(this);
             Loader = new LoaderModule(this);
 
             ForceNativeSyncCalls = maxNativeMethodsParallelCalls == 1;
@@ -67,37 +54,22 @@ namespace ReactViewControl {
             EnableDebugMode = enableDebugMode;
             DevServerUri = devServerUri;
 
-            GetOrCreateFrame(MainViewFrameName); // creates the main frame
+            GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 
-            var loadedListener = WebView.AttachListener(ViewLoadedEventName);
-            loadedListener.Handler += OnViewLoaded;
-            loadedListener.UIHandler += OnViewLoadedUIHandler;
-
-            WebView.AttachListener(ViewInitializedEventName).Handler += OnViewInitialized;
-            WebView.AttachListener(ViewDestroyedEventName).Handler += OnViewDestroyed;
-
-            WebView.Disposed += OnWebViewDisposed;
+            WebView.Disposed += Dispose;
             WebView.BeforeNavigate += OnWebViewBeforeNavigate;
             WebView.BeforeResourceLoad += OnWebViewBeforeResourceLoad;
             WebView.LoadFailed += OnWebViewLoadFailed;
-            WebView.JavacriptDialogShown += OnWebViewJavacriptDialogShown;
-            WebView.FilesDragging += OnWebViewFilesDragging;
-            WebView.TextDragging += OnWebViewTextDragging;
-
-            // TO FIX: Line commented to avoid issue where undesired keypress events are thrown (RMAC-4358)
-            //WebView.KeyPressed += OnWebViewKeyPressed;
+            WebView.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
+            WebView.TextDragging += textContent => TextDragging?.Invoke(textContent);
 
             ExtraInitialize();
 
             var urlParams = new string[] {
                 new ResourceUrl(ResourcesAssembly).ToString(),
                 enableDebugMode ? "true" : "false",
-                ModulesObjectName,
-                Listener.EventListenerObjName,
-                ViewInitializedEventName,
-                ViewDestroyedEventName,
-                ViewLoadedEventName,
-                DisableKeyboardCallback,
+                ExecutionEngine.ModulesObjectName,
+                NativeAPI.NativeObjectName,
                 ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl
             };
 
@@ -117,21 +89,19 @@ namespace ReactViewControl {
         /// <summary>
         /// True when hot reload is enabled.
         /// </summary>
-        public bool IsHotReloadEnabled {
-            get { return DevServerUri != null; }
-        }
+        public bool IsHotReloadEnabled => DevServerUri != null;
 
         public bool IsDisposing => WebView.IsDisposing;
 
         /// <summary>
         /// True when the main component has been rendered.
         /// </summary>
-        public bool IsReady => Frames.TryGetValue(MainViewFrameName, out var frame) && frame.LoadStatus == LoadStatus.Ready;
+        public bool IsReady => Frames.TryGetValue(FrameInfo.MainViewFrameName, out var frame) && frame.LoadStatus == LoadStatus.Ready;
 
         /// <summary>
         /// True when view component is loading or loaded
         /// </summary>
-        public bool IsMainComponentLoaded => Frames.TryGetValue(MainViewFrameName, out var frame) && frame.LoadStatus >= LoadStatus.ComponentLoading;
+        public bool IsMainComponentLoaded => Frames.TryGetValue(FrameInfo.MainViewFrameName, out var frame) && frame.LoadStatus >= LoadStatus.ComponentLoading;
 
         /// <summary>
         /// Enables or disables debug mode. 
@@ -212,75 +182,6 @@ namespace ReactViewControl {
         internal event TextDraggingEventHandler TextDragging;
 
         /// <summary>
-        /// An view was initialized, load its component.
-        /// </summary>
-        /// <param name="args"></param>
-        private void OnViewInitialized(params object[] args) {
-            var frameName = (string)args.ElementAt(0);
-
-            lock (SyncRoot) {
-                var frame = GetOrCreateFrame(frameName);
-                frame.LoadStatus = LoadStatus.ViewInitialized;
-
-                if (frameName == MainViewFrameName) {
-                    // from now on we have to watch for js context released
-                    WebView.JavascriptContextReleased -= OnWebViewJavascriptContextReleased;
-                    WebView.JavascriptContextReleased += OnWebViewJavascriptContextReleased;
-
-                    // only need to load the stylesheet for the main frame
-                    LoadStyleSheet();
-
-                    ClearKeyEventBuffer();
-                    isKeyboardEffectivelyDisabled = false;
-                }
-
-                LoadPlugins(frame);
-                
-                TryLoadComponent(frame);
-            }
-        }
-
-        /// <summary>
-        /// Handle component loaded event: component is loaded and ready for interaction.
-        /// </summary>
-        /// <param name="args"></param>
-        private void OnViewLoaded(params object[] args) {
-            var frameName = (string)args.ElementAt(0);
-            var id = (string)args.ElementAt(1);
-
-            lock (SyncRoot) {
-                var frame = GetOrCreateFrame(frameName);
-                frame.LoadStatus = LoadStatus.Ready;
-
-#if DEBUG
-                System.Diagnostics.Debug.WriteLine($"View '{frameName}' loaded (id: '{id}')");
-#endif
-                // start component execution engine
-                frame.ExecutionEngine.Start(WebView, frameName, id);
-            }
-        }
-
-        /// <summary>
-        /// An inner view was destroyed, cleanup its resources.
-        /// </summary>
-        /// <param name="args"></param>
-        private void OnViewDestroyed(params object[] args) {
-            var frameName = (string)args.FirstOrDefault();
-            lock (SyncRoot) {
-                if (Frames.TryGetValue(frameName, out var frame)) {
-                    IEnumerable<IViewModule> modules = frame.Plugins;
-                    if (frame.Component != null) {
-                        modules = modules.Concat(new[] { frame.Component });
-                    }
-                    foreach (var module in modules) {
-                        UnregisterNativeObject(module, frame);
-                    }
-                    Frames.Remove(frameName);
-                }
-            }
-        }
-
-        /// <summary>
         /// Javascript context was destroyed, cleanup everthing.
         /// </summary>
         /// <param name="frameName"></param>
@@ -291,50 +192,13 @@ namespace ReactViewControl {
             }
 
             lock (SyncRoot) {
-                var mainFrame = Frames[MainViewFrameName];
+                var mainFrame = Frames[FrameInfo.MainViewFrameName];
                 Frames.Clear();
-                Frames.Add(MainViewFrameName, mainFrame);
+                Frames.Add(mainFrame.Name, mainFrame);
                 var previousComponentReady = mainFrame.IsComponentReadyToLoad;
                 mainFrame.Reset();
                 mainFrame.IsComponentReadyToLoad = previousComponentReady;
             }
-        }
-
-        private void OnWebViewKeyPressed(CefKeyEvent keyEvent, out bool handled) {
-            handled = isKeyboardEffectivelyDisabled;
-            if (isKeyboardEffectivelyDisabled) {
-                KeyEventsBuffer.Enqueue(new CefKeyEvent() {
-                    Character = keyEvent.Character,
-                    EventType = keyEvent.EventType,
-                    FocusOnEditableField = keyEvent.FocusOnEditableField,
-                    IsSystemKey = keyEvent.IsSystemKey,
-                    Modifiers = keyEvent.Modifiers,
-                    NativeKeyCode = keyEvent.NativeKeyCode,
-                    UnmodifiedCharacter = keyEvent.UnmodifiedCharacter,
-                    WindowsKeyCode = keyEvent.WindowsKeyCode
-                });
-                if (keyEvent.UnmodifiedCharacter != '\0') {
-                    // add a char key event if user pressed a char key
-                    KeyEventsBuffer.Enqueue(new CefKeyEvent() {
-                        Character = keyEvent.Character,
-                        EventType = CefKeyEventType.Char,
-                        FocusOnEditableField = keyEvent.FocusOnEditableField,
-                        IsSystemKey = keyEvent.IsSystemKey,
-                        Modifiers = keyEvent.Modifiers,
-                        // not applicable, seems to work ok without NativeKeyCode = keyEvent.NativeKeyCode,
-                        UnmodifiedCharacter = keyEvent.UnmodifiedCharacter,
-                        WindowsKeyCode = keyEvent.UnmodifiedCharacter
-                    });
-                }
-            }
-        }
-
-        private void OnViewLoadedUIHandler(object[] args) {
-            Ready?.Invoke();
-        }
-
-        private void OnWebViewDisposed() {
-            Dispose();
         }
 
         public void Dispose() {
@@ -347,7 +211,7 @@ namespace ReactViewControl {
         /// <param name="component"></param>
         public void BindComponent(IViewModule component) {
             lock (SyncRoot) {
-                var frame = GetOrCreateFrame(MainViewFrameName);
+                var frame = GetOrCreateFrame(FrameInfo.MainViewFrameName);
                 BindComponentToFrame(component, frame);
             }
         }
@@ -358,7 +222,7 @@ namespace ReactViewControl {
         /// <param name="component"></param>
         public void LoadComponent(IViewModule component) {
             lock (SyncRoot) {
-                var frame = GetOrCreateFrame(MainViewFrameName);
+                var frame = GetOrCreateFrame(FrameInfo.MainViewFrameName);
                 frame.IsComponentReadyToLoad = true;
                 TryLoadComponent(frame);
             }
@@ -387,32 +251,9 @@ namespace ReactViewControl {
                 RegisterNativeObject(frame.Component, frame);
 
                 Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ForceNativeSyncCalls);
-                if (isInputDisabled && frame.Name == MainViewFrameName) {
+                if (isInputDisabled && frame.IsMain) {
                     Loader.DisableInputInteractions(true);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Load stylesheet
-        /// </summary>
-        private void LoadStyleSheet() {
-            if (DefaultStyleSheet != null) {
-                Loader.LoadDefaultStyleSheet(DefaultStyleSheet);
-            }
-        }
-        
-        /// <summary>
-        /// Load plugins of the specified frame.
-        /// </summary>
-        /// <param name="frame"></param>
-        private void LoadPlugins(FrameInfo frame) {
-            if (frame.Plugins.Length > 0) {
-                foreach (var module in frame.Plugins) {
-                    RegisterNativeObject(module, frame);
-                }
-
-                Loader.LoadPlugins(frame.Plugins, frame.Name);
             }
         }
 
@@ -454,7 +295,7 @@ namespace ReactViewControl {
         /// <param name="frameName"></param>
         /// <exception cref="InvalidOperationException">If the plugin hasn't been registered on the specified frame.</exception>
         /// <returns></returns>
-        public T WithPlugin<T>(string frameName = MainViewFrameName) {
+        public T WithPlugin<T>(string frameName = FrameInfo.MainViewFrameName) {
             if (!Frames.TryGetValue(frameName, out var frame)) {
                 throw new InvalidOperationException($"Frame {frameName} is not loaded");
             }
@@ -474,26 +315,6 @@ namespace ReactViewControl {
         /// </summary>
         public void CloseDeveloperTools() {
             WebView.CloseDeveloperTools();
-        }
-
-        /// <summary>
-        /// Disables or enables keyboard and mouse interactions with the browser
-        /// </summary>
-        /// <param name="disable"></param>
-        private void DisableInputInteractions(bool disable) {
-            if (isInputDisabled == disable) {
-                return;
-            }
-            lock (SyncRoot) {
-                if (isInputDisabled == disable) {
-                    return;
-                }
-                isInputDisabled = disable;
-                var frame = GetOrCreateFrame(MainViewFrameName);
-                if (frame.LoadStatus >= LoadStatus.ComponentLoading) {
-                    Loader.DisableInputInteractions(disable);
-                }
-            }
         }
 
         /// <summary>
@@ -602,14 +423,6 @@ namespace ReactViewControl {
             throw new Exception($"Failed to load view (error: {errorCode})");
         }
 
-        private void OnWebViewFilesDragging(string[] fileNames) {
-            FilesDragging?.Invoke(fileNames);
-        }
-        
-        private void OnWebViewTextDragging(string textContent) {
-            TextDragging?.Invoke(textContent);
-        }
-
         private CustomResourceRequestedEventHandler[] GetCustomResourceHandlers(FrameInfo frame) {
             var globalHandlers = CustomResourceRequested?.GetInvocationList().Cast<CustomResourceRequestedEventHandler>() ?? Enumerable.Empty<CustomResourceRequestedEventHandler>();
             var frameHandlers = frame.CustomResourceRequestedHandler?.GetInvocationList().Cast<CustomResourceRequestedEventHandler>() ?? Enumerable.Empty<CustomResourceRequestedEventHandler>();
@@ -680,29 +493,6 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Handles special alert invocations.
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="closeDialog"></param>
-        private void OnWebViewJavacriptDialogShown(string text, Action closeDialog) {
-            if (text.StartsWith(DisableKeyboardCallback)) {
-                var value = text.Substring(DisableKeyboardCallback.Length);
-                isKeyboardEffectivelyDisabled = value == "1";
-                
-                closeDialog();
-             
-                if (!isKeyboardEffectivelyDisabled) {
-                    // flush key events
-                    while (KeyEventsBuffer.TryDequeue(out var keyEvent)) {
-                        WebView.SendKeyEvent(keyEvent);
-                    }
-                }
-            } else {
-                closeDialog();
-            }
-        }
-
-        /// <summary>
         /// Converts an url to a full path url
         /// </summary>
         /// <param name="url"></param>
@@ -730,6 +520,26 @@ namespace ReactViewControl {
             return url.Replace("\\", ResourceUrl.PathSeparator);
         }
 
+        /// <summary>
+        /// Disables or enables keyboard and mouse interactions with the browser
+        /// </summary>
+        /// <param name="disable"></param>
+        private void DisableInputInteractions(bool disable) {
+            if (isInputDisabled == disable) {
+                return;
+            }
+            lock (SyncRoot) {
+                if (isInputDisabled == disable) {
+                    return;
+                }
+                isInputDisabled = disable;
+                var frame = GetOrCreateFrame(FrameInfo.MainViewFrameName);
+                if (frame.LoadStatus >= LoadStatus.ComponentLoading) {
+                    Loader.DisableInputInteractions(disable);
+                }
+            }
+        }
+
         private FrameInfo GetOrCreateFrame(string frameName) {
             if (!Frames.TryGetValue(frameName, out var frame)) {
                 frame = new FrameInfo(frameName);
@@ -737,10 +547,6 @@ namespace ReactViewControl {
                 AddPlugins(PluginsFactory(), frame);
             }
             return frame;
-        }
-
-        private void ClearKeyEventBuffer() {
-            while (KeyEventsBuffer.TryDequeue(out var _)) ;
         }
     }
 }

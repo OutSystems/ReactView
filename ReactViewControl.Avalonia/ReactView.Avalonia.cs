@@ -22,7 +22,7 @@ namespace ReactViewControl {
             TryLoadComponent();
         }
 
-        private static void AsyncExecuteInUI(Action action, bool lowPriority) {
+        internal static void AsyncExecuteInUI(Action action, bool lowPriority) {
             Dispatcher.UIThread.Post(action, lowPriority ? DispatcherPriority.Background : DispatcherPriority.Normal);
         }
 
