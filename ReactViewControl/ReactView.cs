@@ -8,7 +8,7 @@ namespace ReactViewControl {
 
     public delegate void ResourceRequestedEventHandler(ResourceHandler resourceHandler);
 
-    public delegate Stream CustomResourceRequestedEventHandler(string resourceKey, params string[] options);
+    public delegate Resource CustomResourceRequestedEventHandler(string resourceKey, params string[] options);
 
     public abstract partial class ReactView : IDisposable {
 

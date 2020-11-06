@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReactViewControl;
+using System;
 using System.IO;
 using System.Windows;
 using WebViewControl;
@@ -67,12 +68,12 @@ namespace Example
             Application.Current.Dispatcher.Invoke(() => status.Text = log + Environment.NewLine + status.Text);
         }
 
-        private Stream OnViewResourceRequested(string resourceKey, params string[] options) {
-            return ResourcesManager.TryGetResource(GetType().Assembly, new[] { "ExampleView", "ExampleView", resourceKey });
+        private Resource OnViewResourceRequested(string resourceKey, params string[] options) {
+            return new Resource(ResourcesManager.TryGetResource(GetType().Assembly, new[] { "ExampleView", "ExampleView", resourceKey }));
         }
 
-        private Stream OnInnerViewResourceRequested(string resourceKey, params string[] options) {
-            return ResourcesManager.GetResource(GetType().Assembly, new[] { "ExampleView", "SubExampleView", resourceKey });
+        private Resource OnInnerViewResourceRequested(string resourceKey, params string[] options) {
+            return new Resource(ResourcesManager.GetResource(GetType().Assembly, new[] { "ExampleView", "SubExampleView", resourceKey }));
         }
     }
 }
