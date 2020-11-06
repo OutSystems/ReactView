@@ -13,6 +13,7 @@
 
     <ViewGeneratorCorePath>$([System.IO.Path]::GetFullPath(&quot;$(MSBuildThisFileDirectory)..\&quot;))</ViewGeneratorCorePath>
     <ViewGeneratorCoreContentFilesPath>$(ViewGeneratorCorePath)contentFiles\</ViewGeneratorCoreContentFilesPath>
+    <NodeVersion>12.18.4</NodeVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,13 +22,13 @@
 
   <Target Name="VGC_SetVariables">
       <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
-          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\*\tools\win-x64\node.exe"/>
-          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist*\tools\win-x64\node.exe"/>
+          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\$(NodeVersion)\tools\win-x64\node.exe"/>
+          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist.$(NodeVersion)\tools\win-x64\node.exe"/>
 
       </ItemGroup>
       <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
-          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\*\tools\osx-x64\node"/>
-          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist*\tools\osx-x64\node"/>
+          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\$(NodeVersion)\tools\osx-x64\node"/>
+          <_ViewGeneratorCoreNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist.$(NodeVersion)\tools\osx-x64\node"/>
 
       </ItemGroup>
       
