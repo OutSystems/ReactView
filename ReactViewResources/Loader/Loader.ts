@@ -1,6 +1,7 @@
 ﻿/// <reference path="./../../ViewGenerator/contentFiles/global.d.ts"/>
 
-import { getPluginModule, getStylesheets, getViewModule, waitForDOMReady, waitForNextPaint } from "./Internal/Common";
+import { getPluginModule, getViewModule, waitForDOMReady, waitForNextPaint } from "./Internal/Common";
+import { renderCachedView, storeViewRenderInCache } from "./Internal/ComponentsRenderCache";
 import { customResourceBaseUrl, libsPath, mainFrameName, webViewRootId } from "./Internal/Environment";
 import { handleError } from "./Internal/ErrorHandler";
 import { bindNativeObject, notifyViewInitialized, notifyViewLoaded } from "./Internal/NativeAPI";
@@ -115,10 +116,6 @@ export function loadComponent(
     frameName: string,
     componentHash: string): void {
 
-    function getComponentCacheKey(propertiesHash: string) {
-        return componentSource + "|" + propertiesHash;
-    }
-
     async function innerLoad() {
         let view: ViewMetadata;
         try {
@@ -135,15 +132,7 @@ export function loadComponent(
                 throw new Error(`View ${view.name} head or root is not set`);
             }
 
-            const componentCacheKey = getComponentCacheKey(componentHash);
-            const enableHtmlCache = view.isMain; // disable cache retrieval for inner views, since react does not currently support portals hydration
-            const cachedComponentHtml = enableHtmlCache ? localStorage.getItem(componentCacheKey) : null;
-            const shouldStoreComponentHtml = enableHtmlCache && !cachedComponentHtml && maxPreRenderedCacheEntries > 0;
-            if (cachedComponentHtml) {
-                // render cached component html to reduce time to first render
-                rootElement.innerHTML = cachedComponentHtml;
-                await waitForNextPaint();
-            }
+            const cacheEntry = await renderCachedView(view, componentSource, componentHash, maxPreRenderedCacheEntries);
 
             const promisesToWaitFor = [bootstrapTask.promise];
             if (hasPlugins) {
@@ -159,10 +148,8 @@ export function loadComponent(
             // main component script should be the last to be loaded, otherwise errors might occur
             await loadScript(componentSource, view);
 
-            const renderTask = shouldStoreComponentHtml ? new Task<void>() : undefined;
-
             // create proxy for properties obj to delay its methods execution until native object is ready
-            const properties = createPropertiesProxy(componentNativeObject, componentNativeObjectName, renderTask);
+            const properties = createPropertiesProxy(componentNativeObject, componentNativeObjectName, cacheEntry ? cacheEntry.renderTask : undefined);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
             const componentClass = (getViewModule(componentName) || {}).default;
@@ -182,29 +169,7 @@ export function loadComponent(
 
             await waitForNextPaint();
 
-            if (shouldStoreComponentHtml) {
-                // cache view html for further use
-                const elementHtml = rootElement.innerHTML;
-                // get all stylesheets except the stick ones (which will be loaded by the time the html gets rendered) otherwise we could be loading them twice
-                const stylesheets = getStylesheets(head).filter(l => l.dataset.sticky !== "true").map(l => l.outerHTML).join("");
-
-                // pending native calls can now be resolved, first html snapshot was grabbed
-                renderTask!.setResult();
-
-                localStorage.setItem(componentCacheKey, stylesheets + elementHtml); // insert html into the cache
-
-                const componentCachedInfo = localStorage.getItem(componentSource);
-                const cachedEntries: string[] = componentCachedInfo ? JSON.parse(componentCachedInfo) : [];
-
-                // remove cached entries that are older tomantina cache size within limits
-                while (cachedEntries.length >= maxPreRenderedCacheEntries) {
-                    const olderCacheEntryKey = cachedEntries.shift() as string;
-                    localStorage.removeItem(getComponentCacheKey(olderCacheEntryKey));
-                }
-
-                cachedEntries.push(componentHash);
-                localStorage.setItem(componentSource, JSON.stringify(cachedEntries));
-            }
+            storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries);
 
             window.dispatchEvent(new Event("viewready"));
 

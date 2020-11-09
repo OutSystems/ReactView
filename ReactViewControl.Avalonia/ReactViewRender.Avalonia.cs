@@ -10,7 +10,7 @@ namespace ReactViewControl {
 
         private static Window hiddenWindow;
 
-        private Window GetHiddenWindow() {
+        private static Window GetHiddenWindow() {
             if (hiddenWindow == null) {
                 hiddenWindow = new Window() {
                     IsVisible = false,

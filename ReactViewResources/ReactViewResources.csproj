@@ -59,6 +59,7 @@
     <None Remove="AMDLoader\tsconfig.json" />
     <None Remove="index.html" />
     <None Remove="Loader.js" />
+    <None Remove="Loader\Internal\ComponentsRenderCache.ts" />
     <None Remove="Loader\Internal\Environment.ts" />
     <None Remove="Loader\Internal\ErrorHandler.ts" />
     <None Remove="Loader\Internal\InputManager.ts" />
@@ -88,7 +89,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="AMDLoader\AMDLoaderExports.js" />
     <Content Include="AMDLoader\tsconfig.json" />
     <Content Include="Loader\tsconfig.json" />
   </ItemGroup>
