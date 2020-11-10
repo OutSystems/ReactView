@@ -1,4 +1,5 @@
-﻿import { InputEventsManager } from "./InputManager";
+﻿import * as Scheduler from "scheduler";
+import { InputEventsManager } from "./InputManager";
 import { bindNativeObject } from "./NativeAPI";
 import { Semaphore } from "./Semaphore";
 import { Task } from "./Task";
@@ -26,7 +27,10 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
                     if (isSyncFunction) {
                         const currentEventTargetElement = inputEventsManager.getCurrentEventTargetElement();
                         await nativeCallsSemaphore.acquire();
-                        if (currentEventTargetElement && !rootElement.contains(currentEventTargetElement)) {
+                        if (currentEventTargetElement) {
+                            console.dir((currentEventTargetElement as HTMLInputElement).disabled);
+                        }
+                        if (currentEventTargetElement && (!rootElement.contains(currentEventTargetElement) || (currentEventTargetElement as HTMLInputElement).disabled)) {
                             return null;
                         }
                     }
@@ -37,7 +41,12 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
                 } finally {
                     if (isSyncFunction) {
                         if (result) {
-                            result.finally(() => nativeCallsSemaphore.release());
+                            result.finally(async () => {
+                                await Task.delay(0); // TODO
+                                //Scheduler.unstable_runWithPriority(Scheduler.unstable_NormalPriority, () => {
+                                    nativeCallsSemaphore.release();
+                                //});
+                            });
                         } else {
                             nativeCallsSemaphore.release();
                         }
