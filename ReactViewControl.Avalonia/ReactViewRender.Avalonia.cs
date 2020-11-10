@@ -45,5 +45,9 @@ namespace ReactViewControl {
                  DisableInputInteractions(!IsEffectivelyEnabled);
             }
         }
+
+        private static bool IsFrameworkAssemblyName(string name) {
+            return name.StartsWith("Avalonia") || name == "mscorlib";
+        }
     }
 }

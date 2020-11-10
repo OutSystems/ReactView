@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -34,7 +35,7 @@ namespace ReactViewControl {
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
         public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, int maxNativeMethodsParallelCalls, bool enableDebugMode, Uri devServerUri = null) {
-            UserCallingAssembly = ResourceUrl.GetUserCallingMethod().ReflectedType.Assembly;
+            UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
             
             // must useSharedDomain for the local storage to be shared
             WebView = new WebView(useSharedDomain: true) {
@@ -547,6 +548,16 @@ namespace ReactViewControl {
                 AddPlugins(PluginsFactory(), frame);
             }
             return frame;
+        }
+
+        private static MethodBase GetUserCallingMethod(bool captureFilenames = false) {
+            var currentAssembly = typeof(ReactView).Assembly;
+            var callstack = new StackTrace(captureFilenames).GetFrames().Select(f => f.GetMethod()).Where(m => m.ReflectedType.Assembly != currentAssembly);
+            var userMethod = callstack.First(m => !IsFrameworkAssemblyName(m.ReflectedType.Assembly.GetName().Name));
+            if (userMethod == null) {
+                throw new InvalidOperationException("Unable to find calling method");
+            }
+            return userMethod;
         }
     }
 }
