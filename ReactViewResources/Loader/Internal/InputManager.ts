@@ -29,3 +29,29 @@ export function disableInputInteractions(disable: boolean) {
         disableInputCounter = Math.max(0, disableInputCounter - 1);
     }
 }
+
+export class InputEventsManager {
+
+    private currentEvent: UIEvent | null;
+
+    constructor(root: Element) {
+        const handleEvent = (e: UIEvent) => {
+            this.currentEvent = e;
+            setTimeout(() => this.currentEvent = null, 0); // after event discard current event
+        };
+        root.addEventListener("keydown", handleEvent, true);
+        root.addEventListener("keypress", handleEvent, true);
+        root.addEventListener("keyup", handleEvent, true);
+        root.addEventListener("mousedown", handleEvent, true);
+        root.addEventListener("mouseup", handleEvent, true);
+        root.addEventListener("click", handleEvent, true);
+        root.addEventListener("dblclick", handleEvent, true);
+    }
+
+    /**
+     * The DOM element that fired current Event, if any. 
+     * */
+    public getCurrentEventTargetElement(): Node | null {
+        return this.currentEvent ? this.currentEvent.composedPath()[0] as Node : null;
+    }
+}

@@ -1,5 +1,6 @@
-﻿import { disableInputInteractions } from "./InputManager";
+﻿import { InputEventsManager } from "./InputManager";
 import { bindNativeObject } from "./NativeAPI";
+import { Semaphore } from "./Semaphore";
 import { Task } from "./Task";
 
 interface PromiseWithFinally<T> extends Promise<T> {
@@ -8,7 +9,9 @@ interface PromiseWithFinally<T> extends Promise<T> {
 
 export const syncFunction = new Object();
 
-export function createPropertiesProxy(objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void>): {} {
+export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void>): {} {
+    const inputEventsManager = new InputEventsManager(rootElement);
+    const nativeCallsSemaphore = new Semaphore(1);
     const proxy = Object.assign({}, objProperties);
     Object.keys(proxy).forEach(key => {
         const value = objProperties[key];
@@ -17,27 +20,26 @@ export function createPropertiesProxy(objProperties: {}, nativeObjName: string, 
             proxy[key] = value;
         } else {
             proxy[key] = async function () {
-                let nativeObject = window[nativeObjName];
-                if (!nativeObject) {
-                    nativeObject = await new Promise(async (resolve) => {
-                        const nativeObject = await bindNativeObject(nativeObjName);
-                        resolve(nativeObject);
-                    });
-                }
-
                 let result: PromiseWithFinally<any> | undefined = undefined;
+
                 try {
                     if (isSyncFunction) {
-                        disableInputInteractions(true);
+                        const currentEventTargetElement = inputEventsManager.getCurrentEventTargetElement();
+                        await nativeCallsSemaphore.acquire();
+                        if (currentEventTargetElement && !rootElement.contains(currentEventTargetElement)) {
+                            return null;
+                        }
                     }
+
+                    const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
 
                     result = nativeObject[key].apply(window, arguments);
                 } finally {
                     if (isSyncFunction) {
                         if (result) {
-                            result.finally(() => disableInputInteractions(false));
+                            result.finally(() => nativeCallsSemaphore.release());
                         } else {
-                            disableInputInteractions(false);
+                            nativeCallsSemaphore.release();
                         }
                     }
                 }
