@@ -10,7 +10,7 @@ import { loadScript, loadStyleSheet } from "./Internal/ResourcesLoader";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
-import { addView, getView } from "./Internal/ViewsCollection";
+import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
@@ -52,7 +52,10 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
         try {
             await bootstrapTask.promise;
 
-            view = getView(frameName);
+            view = tryGetView(frameName)!;
+            if (!view) {
+                return; // was probably unloaded
+            }
 
             if (!view.isMain) {
                 // wait for main frame plugins to be loaded, otherwise modules won't be loaded yet
@@ -121,7 +124,11 @@ export function loadComponent(
                 await defaultStylesheetLoadTask.promise;
             }
 
-            view = getView(frameName);
+            view = tryGetView(frameName)!;
+            if (!view) {
+                return; // view was probably unloaded
+            }
+
             const head = view.head;
             const rootElement = view.root;
 

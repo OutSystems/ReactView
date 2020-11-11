@@ -11,8 +11,12 @@ export function deleteView(name: string): void {
     views.delete(name);
 }
 
+export function tryGetView(viewName: string): ViewMetadata | null {
+    return views.get(viewName) || null;
+}
+
 export function getView(viewName: string): ViewMetadata {
-    const view = views.get(viewName);
+    const view = tryGetView(viewName);
     if (!view) {
         throw new Error(`View "${viewName}" not loaded`);
     }
