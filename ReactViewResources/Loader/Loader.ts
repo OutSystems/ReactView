@@ -12,9 +12,8 @@ import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { getView } from "./Internal/ViewsCollection";
 
-export { disableInputInteractions } from "./Internal/InputManager";
+export { enableMouseInteractions, disableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
-export { syncFunction } from "./Internal/ViewPropertiesProxy";
 
 const bootstrapTask = new Task();
 const defaultStylesheetLoadTask = new Task();

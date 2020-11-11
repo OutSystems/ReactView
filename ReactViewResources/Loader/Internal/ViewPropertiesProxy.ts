@@ -1,57 +1,17 @@
-﻿import * as Scheduler from "scheduler";
-import { InputEventsManager } from "./InputManager";
-import { bindNativeObject } from "./NativeAPI";
-import { Semaphore } from "./Semaphore";
+﻿import { bindNativeObject } from "./NativeAPI";
 import { Task } from "./Task";
 
-interface PromiseWithFinally<T> extends Promise<T> {
-    finally(onFinally: () => void);
-}
-
-export const syncFunction = new Object();
-
 export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void>): {} {
-    const inputEventsManager = new InputEventsManager(rootElement);
-    const nativeCallsSemaphore = new Semaphore(1);
     const proxy = Object.assign({}, objProperties);
     Object.keys(proxy).forEach(key => {
         const value = objProperties[key];
-        const isSyncFunction = value === syncFunction;
-        if (value !== undefined && !isSyncFunction) {
+        if (value !== undefined) {
             proxy[key] = value;
         } else {
             proxy[key] = async function () {
-                let result: PromiseWithFinally<any> | undefined = undefined;
+                const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
 
-                try {
-                    if (isSyncFunction) {
-                        const currentEventTargetElement = inputEventsManager.getCurrentEventTargetElement();
-                        await nativeCallsSemaphore.acquire();
-                        if (currentEventTargetElement) {
-                            console.dir((currentEventTargetElement as HTMLInputElement).disabled);
-                        }
-                        if (currentEventTargetElement && (!rootElement.contains(currentEventTargetElement) || (currentEventTargetElement as HTMLInputElement).disabled)) {
-                            return null;
-                        }
-                    }
-
-                    const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
-
-                    result = nativeObject[key].apply(window, arguments);
-                } finally {
-                    if (isSyncFunction) {
-                        if (result) {
-                            result.finally(async () => {
-                                await Task.delay(0); // TODO
-                                //Scheduler.unstable_runWithPriority(Scheduler.unstable_NormalPriority, () => {
-                                    nativeCallsSemaphore.release();
-                                //});
-                            });
-                        } else {
-                            nativeCallsSemaphore.release();
-                        }
-                    }
-                }
+                let result = nativeObject[key].apply(window, arguments);
 
                 if (componentRenderedWaitTask) {
                     // wait until component is rendered, first render should only render static data

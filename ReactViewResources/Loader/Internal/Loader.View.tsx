@@ -29,7 +29,7 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
     );
 }
 
-export function renderMainView(children: React.ReactElement, container: Element): Promise<void> {
+export function renderMainView(children: React.ReactElement, container: Element) {
     return new Promise<void>(resolve => ReactDOM.hydrate(children, container, resolve));
 }
 
