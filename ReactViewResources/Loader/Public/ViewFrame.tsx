@@ -1,9 +1,9 @@
 ﻿import * as React from "react";
+import { IViewFrameProps } from "ViewFrame";
 import { ObservableListCollection } from "../Internal/ObservableCollection";
 import { Task } from "../Internal/Task";
 import { ViewContext } from "../Internal/ViewContext";
-import { ViewMetadata } from "../Internal/ViewMetadata";
-import { IViewFrameProps } from "ViewFrame";
+import { newView, ViewMetadata } from "../Internal/ViewMetadata";
 
 /**
  * Placeholder were a child view is mounted.
@@ -67,19 +67,10 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
             return;
         }
 
-        const childView: ViewMetadata = {
-            id: this.generation, // for this purpose we can use generation (we just need a unique number)
-            name: this.fullName,
-            generation: this.generation,
-            isMain: false,
-            placeholder: this.placeholder,
-            modules: new Map<string, any>(),
-            nativeObjectNames: [],
-            pluginsLoadTask: new Task(),
-            scriptsLoadTasks: new Map<string, Task<void>>(),
-            childViews: new ObservableListCollection<ViewMetadata>(),
-            parentView: this.parentView
-        };
+        const id = this.generation; // for this purpose we can use generation (we just need a unique number)
+        const childView = newView(id, this.fullName, false, this.placeholder);
+        childView.generation = this.generation;
+        childView.parentView = this.parentView;
 
         this.parentView.childViews.add(childView);
     }

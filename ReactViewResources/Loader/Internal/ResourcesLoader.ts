@@ -9,7 +9,7 @@ export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void>
         const frameScripts = view.scriptsLoadTasks;
 
         // check if script was already added, fallback to main frame
-        let scriptLoadTask = frameScripts.get(scriptSrc) || getView(mainFrameName).scriptsLoadTasks.get(scriptSrc);
+        const scriptLoadTask = frameScripts.get(scriptSrc) || !view.isMain ? getView(mainFrameName).scriptsLoadTasks.get(scriptSrc) : null;
         if (scriptLoadTask) {
             // wait for script to be loaded
             await scriptLoadTask.promise;

@@ -17,3 +17,21 @@ export type ViewMetadata = {
     parentView: ViewMetadata;
     renderHandler?: (component: React.ReactElement) => Promise<void>;
 }
+
+export function newView(id: number, name: string, isMain: boolean, placeholder: Element): ViewMetadata {
+    return {
+        id: id,
+        name: name,
+        generation: 0,
+        isMain: isMain,
+        placeholder: placeholder,
+        head: undefined,
+        root: undefined,
+        modules: new Map<string, any>(),
+        nativeObjectNames: [],
+        pluginsLoadTask: new Task(),
+        scriptsLoadTasks: new Map<string, Task<void>>(),
+        childViews: new ObservableListCollection<ViewMetadata>(),
+        parentView: null!
+    };
+}

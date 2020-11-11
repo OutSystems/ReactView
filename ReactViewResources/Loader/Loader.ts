@@ -10,9 +10,9 @@ import { loadScript, loadStyleSheet } from "./Internal/ResourcesLoader";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
-import { getView } from "./Internal/ViewsCollection";
+import { addView, getView } from "./Internal/ViewsCollection";
 
-export { enableMouseInteractions, disableMouseInteractions } from "./Internal/InputManager";
+export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
 
 const bootstrapTask = new Task();
@@ -179,7 +179,7 @@ export function loadComponent(
     innerLoad();
 }
 
-export function initialize() {
+export function initialize(mainView: ViewMetadata) {
     function preventDroppingFiles(event: DragEvent): void {
         const containsDraggedFiles = event.dataTransfer && event.dataTransfer.types.includes("Files");
         if (containsDraggedFiles) {
@@ -190,7 +190,7 @@ export function initialize() {
     window.addEventListener("dragover", preventDroppingFiles);
     window.addEventListener("drop", preventDroppingFiles);
 
-    const mainView = getView(mainFrameName);
+    addView(mainFrameName, mainView);
     mainView.renderHandler = component => renderMainView(component, mainView.root!);
 
     bootstrapTask.setResult();
