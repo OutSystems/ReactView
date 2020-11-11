@@ -8,7 +8,7 @@ export function showWarningMessage(msg: string, targetElement?: HTMLElement): vo
     showMessage(msg, false, targetElement);
 }
 
-async function showMessage(msg: string, isError: boolean, targetElement?: HTMLElement): Promise<void> {
+async function showMessage(msg: string, isError: boolean, targetElement?: HTMLElement) {
     const containerId = "webview_error";
     let msgContainer = document.getElementById(containerId) as HTMLDivElement;
     if (!msgContainer) {

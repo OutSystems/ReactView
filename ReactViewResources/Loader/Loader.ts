@@ -1,22 +1,19 @@
 ﻿/// <reference path="./../../ViewGenerator/contentFiles/global.d.ts"/>
 
-import { getPluginModule, getViewModule, waitForDOMReady, waitForNextPaint } from "./Internal/Common";
+import { getPluginModule, getViewModule, waitForNextPaint } from "./Internal/Common";
 import { renderCachedView, storeViewRenderInCache } from "./Internal/ComponentsRenderCache";
-import { customResourceBaseUrl, libsPath, mainFrameName, webViewRootId } from "./Internal/Environment";
+import { mainFrameName } from "./Internal/Environment";
 import { handleError } from "./Internal/ErrorHandler";
+import { renderMainView } from "./Internal/Loader.View";
 import { bindNativeObject, notifyViewInitialized, notifyViewLoaded } from "./Internal/NativeAPI";
-import { createPropertiesProxy } from "./Internal/NativeObjectProxy";
-import { ObservableListCollection } from "./Internal/ObservableCollection";
 import { loadScript, loadStyleSheet } from "./Internal/ResourcesLoader";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
-import { addView, getView } from "./Internal/ViewsCollection";
+import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
+import { getView } from "./Internal/ViewsCollection";
 
-export { disableInputInteractions } from "./Internal/InputManager";
+export { enableMouseInteractions, disableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
-export { syncFunction } from "./Internal/NativeObjectProxy";
-
-declare function define(name: string, dependencies: string[], definition: Function);
 
 const bootstrapTask = new Task();
 const defaultStylesheetLoadTask = new Task();
@@ -149,7 +146,7 @@ export function loadComponent(
             await loadScript(componentSource, view);
 
             // create proxy for properties obj to delay its methods execution until native object is ready
-            const properties = createPropertiesProxy(componentNativeObject, componentNativeObjectName, cacheEntry ? cacheEntry.renderTask : undefined);
+            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, cacheEntry ? cacheEntry.renderTask : undefined);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
             const componentClass = (getViewModule(componentName) || {}).default;
@@ -182,7 +179,7 @@ export function loadComponent(
     innerLoad();
 }
 
-async function bootstrap() {
+export function initialize() {
     function preventDroppingFiles(event: DragEvent): void {
         const containsDraggedFiles = event.dataTransfer && event.dataTransfer.types.includes("Files");
         if (containsDraggedFiles) {
@@ -193,55 +190,10 @@ async function bootstrap() {
     window.addEventListener("dragover", preventDroppingFiles);
     window.addEventListener("drop", preventDroppingFiles);
 
-    await waitForDOMReady();
-
-    const rootElement = document.getElementById(webViewRootId);
-    if (!rootElement) {
-        throw new Error("Root element not found");
-    }
-
-    const mainView: ViewMetadata = {
-        id: 0,
-        name: mainFrameName,
-        generation: 0,
-        isMain: true,
-        placeholder: rootElement,
-        head: document.head,
-        root: rootElement,
-        modules: new Map<string, any>(),
-        nativeObjectNames: [],
-        pluginsLoadTask: new Task(),
-        scriptsLoadTasks: new Map<string, Task<void>>(),
-        childViews: new ObservableListCollection<ViewMetadata>(),
-        parentView: null!
-    };
-    addView(mainFrameName, mainView);
-
-    await loadFramework();
-
-    const { renderMainView } = await import("./Internal/Loader.View");
-    mainView.renderHandler = component => renderMainView(component, rootElement);
-
-    const resourceLoader = await import("./Public/ResourceLoader");
-    resourceLoader.setCustomResourceBaseUrl(customResourceBaseUrl);
+    const mainView = getView(mainFrameName);
+    mainView.renderHandler = component => renderMainView(component, mainView.root!);
 
     bootstrapTask.setResult();
 
     notifyViewInitialized(mainFrameName);
 }
-
-async function loadFramework(): Promise<void> {
-    const reactLib: string = "React";
-    const reactDOMLib: string = "ReactDOM";
-    const externalLibsPath = libsPath + "node_modules/";
-
-    const view = getView(mainFrameName);
-    await loadScript(externalLibsPath + "prop-types/prop-types.min.js", view); /* Prop-Types */
-    await loadScript(externalLibsPath + "react/umd/react.production.min.js", view); /* React */
-    await loadScript(externalLibsPath + "react-dom/umd/react-dom.production.min.js", view); /* ReactDOM */
-
-    define("react", [], () => window[reactLib]);
-    define("react-dom", [], () => window[reactDOMLib]);
-}
-
-bootstrap();

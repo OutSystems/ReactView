@@ -28,7 +28,6 @@ namespace ReactViewControl {
         private Assembly UserCallingAssembly { get; }
         private LoaderModule Loader { get; }
         private Func<IViewModule[]> PluginsFactory { get; }
-        private bool ForceNativeSyncCalls { get; }
 
         private bool enableDebugMode;
         private ResourceUrl defaultStyleSheet;
@@ -49,7 +48,6 @@ namespace ReactViewControl {
             NativeAPI.Initialize(this);
             Loader = new LoaderModule(this);
 
-            ForceNativeSyncCalls = maxNativeMethodsParallelCalls == 1;
             DefaultStyleSheet = defaultStyleSheet;
             PluginsFactory = initializePlugins;
             EnableDebugMode = enableDebugMode;
@@ -63,6 +61,7 @@ namespace ReactViewControl {
             WebView.LoadFailed += OnWebViewLoadFailed;
             WebView.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
             WebView.TextDragging += textContent => TextDragging?.Invoke(textContent);
+            WebView.KeyPressed += OnWebViewKeyPressed;
 
             ExtraInitialize();
 
@@ -251,9 +250,9 @@ namespace ReactViewControl {
 
                 RegisterNativeObject(frame.Component, frame);
 
-                Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ForceNativeSyncCalls);
+                Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0);
                 if (isInputDisabled && frame.IsMain) {
-                    Loader.DisableInputInteractions(true);
+                    Loader.DisableMouseInteractions();
                 }
             }
         }
@@ -424,6 +423,15 @@ namespace ReactViewControl {
             throw new Exception($"Failed to load view (error: {errorCode})");
         }
 
+        /// <summary>
+        /// Handles webview keypresses.
+        /// </summary>
+        /// <param name="keyEvent"></param>
+        /// <param name="handled"></param>
+        private void OnWebViewKeyPressed(Xilium.CefGlue.CefKeyEvent keyEvent, out bool handled) {
+            handled = isInputDisabled;
+        }
+
         private CustomResourceRequestedEventHandler[] GetCustomResourceHandlers(FrameInfo frame) {
             var globalHandlers = CustomResourceRequested?.GetInvocationList().Cast<CustomResourceRequestedEventHandler>() ?? Enumerable.Empty<CustomResourceRequestedEventHandler>();
             var frameHandlers = frame.CustomResourceRequestedHandler?.GetInvocationList().Cast<CustomResourceRequestedEventHandler>() ?? Enumerable.Empty<CustomResourceRequestedEventHandler>();
@@ -536,7 +544,11 @@ namespace ReactViewControl {
                 isInputDisabled = disable;
                 var frame = GetOrCreateFrame(FrameInfo.MainViewFrameName);
                 if (frame.LoadStatus >= LoadStatus.ComponentLoading) {
-                    Loader.DisableInputInteractions(disable);
+                    if (disable) {
+                        Loader.DisableMouseInteractions();
+                    } else {
+                        Loader.EnableMouseInteractions();
+                    }
                 }
             }
         }

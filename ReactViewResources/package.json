@@ -3,8 +3,10 @@
   "main": "index.js",
   "dependencies": {
     "@types/react-dom": "^16.9.0",
+    "@types/scheduler": "^0.16.1",
     "react": "^16.9.0",
-    "react-dom": "^16.9.0"
+    "react-dom": "^16.9.0",
+    "scheduler": "^0.20.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
