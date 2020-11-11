@@ -33,6 +33,7 @@
     <Compile Include="..\ReactViewControl\ReactViewRender.cs" Link="ReactViewRender.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.LoaderModule.cs" Link="ReactViewRender.LoaderModule.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.NativeAPI.cs" Link="ReactViewRender.NativeAPI.cs" />
+    <Compile Include="..\ReactViewControl\Resource.cs" Link="Resource.cs" />
     <Compile Include="..\ReactViewControl\ViewModuleContainer.cs" Link="ViewModuleContainer.cs" />
     <Compile Include="..\ReactViewControl\ViewModuleExtensions.cs" Link="ViewModuleExtensions.cs" />
   </ItemGroup>
