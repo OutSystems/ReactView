@@ -129,7 +129,7 @@ export function loadComponent(
                 throw new Error(`View ${view.name} head or root is not set`);
             }
 
-            const cacheEntry = await renderCachedView(view, componentSource, componentHash, maxPreRenderedCacheEntries);
+            const cacheEntry = maxPreRenderedCacheEntries > 0 ? await renderCachedView(view, componentSource, componentHash) : null;
 
             const promisesToWaitFor = [bootstrapTask.promise];
             if (hasPlugins) {
@@ -145,8 +145,9 @@ export function loadComponent(
             // main component script should be the last to be loaded, otherwise errors might occur
             await loadScript(componentSource, view);
 
+            const renderFinishedTask = cacheEntry ? new Task<void>() : null;
             // create proxy for properties obj to delay its methods execution until native object is ready
-            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, cacheEntry ? cacheEntry.renderTask : undefined);
+            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, renderFinishedTask);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
             const componentClass = (getViewModule(componentName) || {}).default;
@@ -166,7 +167,13 @@ export function loadComponent(
 
             await waitForNextPaint();
 
-            storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries);
+            if (cacheEntry) {
+                storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries); // dont need to await
+            }
+            if (renderFinishedTask) {
+                // pending native calls can now be resolved, first html snapshot was grabbed
+                renderFinishedTask.setResult();
+            }
 
             window.dispatchEvent(new Event("viewready"));
 

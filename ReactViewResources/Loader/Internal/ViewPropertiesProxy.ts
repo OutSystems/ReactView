@@ -1,7 +1,7 @@
 ﻿import { bindNativeObject } from "./NativeAPI";
 import { Task } from "./Task";
 
-export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void>): {} {
+export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void> | null): {} {
     const proxy = Object.assign({}, objProperties);
     Object.keys(proxy).forEach(key => {
         const value = objProperties[key];
@@ -11,7 +11,7 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
             proxy[key] = async function () {
                 const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
 
-                let result = nativeObject[key].apply(window, arguments);
+                const result = nativeObject[key].apply(window, arguments);
 
                 if (componentRenderedWaitTask) {
                     // wait until component is rendered, first render should only render static data

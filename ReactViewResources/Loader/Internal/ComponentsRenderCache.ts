@@ -1,14 +1,12 @@
 ﻿import { getStylesheets, waitForNextPaint } from "./Common";
-import { Task } from "./Task";
 import { ViewMetadata } from "./ViewMetadata";
 
 export interface IRenderCacheEntry {
     cacheKey: string;
     componentSource: string;
-    renderTask: Task<void>;
 }
 
-export async function renderCachedView(view: ViewMetadata, componentSource: string, componentPropertiesHash: string, maxPreRenderedCacheEntries: number): Promise<IRenderCacheEntry | null> {
+export async function renderCachedView(view: ViewMetadata, componentSource: string, componentPropertiesHash: string): Promise<IRenderCacheEntry | null> {
     if (!view.isMain) {
         // disable render from cache for inner views, since react does not currently support portals hydration
         return null;
@@ -26,43 +24,33 @@ export async function renderCachedView(view: ViewMetadata, componentSource: stri
         return null;
     }
 
-    if (maxPreRenderedCacheEntries === 0) {
-        // cache is disabled, skip storing on cache
-        return null;    
-    }
-
     return {
         cacheKey: componentCacheKey,
-        componentSource: componentSource,
-        renderTask: new Task<void>()
+        componentSource: componentSource
     };
 }
 
-export function storeViewRenderInCache(view: ViewMetadata, cacheEntry: IRenderCacheEntry | null, maxPreRenderedCacheEntries: number): void {
-    if (!cacheEntry) {
-        return; // ship cache storing
-    }
-
+export function storeViewRenderInCache(view: ViewMetadata, cacheEntry: IRenderCacheEntry, maxPreRenderedCacheEntries: number): Promise<void> {
     // cache view html for further use
     const elementHtml = view.root!.innerHTML;
     // get all stylesheets except the sticky ones (which will be loaded by the time the html gets rendered) otherwise we could be loading them twice
     const stylesheets = getStylesheets(view.head!).filter(l => l.dataset.sticky !== "true").map(l => l.outerHTML).join("");
 
-    // pending native calls can now be resolved, first html snapshot was grabbed
-    cacheEntry.renderTask.setResult();
+    // the remaining code can be executed afterwards
+    return new Promise<void>(() => {
+        // insert rendered html into the cache
+        localStorage.setItem(cacheEntry.cacheKey, stylesheets + elementHtml);
 
-    // insert rendered html into the cache
-    localStorage.setItem(cacheEntry.cacheKey, stylesheets + elementHtml);
+        const componentCachedInfo = localStorage.getItem(cacheEntry.componentSource);
+        const cachedEntries: string[] = componentCachedInfo ? JSON.parse(componentCachedInfo) : [];
 
-    const componentCachedInfo = localStorage.getItem(cacheEntry.componentSource);
-    const cachedEntries: string[] = componentCachedInfo ? JSON.parse(componentCachedInfo) : [];
+        // remove cached entries that are older -> maintain cache size within limits
+        while (cachedEntries.length >= maxPreRenderedCacheEntries) {
+            const olderCacheEntryKey = cachedEntries.shift() as string;
+            localStorage.removeItem(olderCacheEntryKey);
+        }
 
-    // remove cached entries that are older -> maintain cache size within limits
-    while (cachedEntries.length >= maxPreRenderedCacheEntries) {
-        const olderCacheEntryKey = cachedEntries.shift() as string;
-        localStorage.removeItem(olderCacheEntryKey);
-    }
-
-    cachedEntries.push(cacheEntry.cacheKey);
-    localStorage.setItem(cacheEntry.componentSource, JSON.stringify(cachedEntries));
+        cachedEntries.push(cacheEntry.cacheKey);
+        localStorage.setItem(cacheEntry.componentSource, JSON.stringify(cachedEntries));
+    });
 }
