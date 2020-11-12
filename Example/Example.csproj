@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.props" Condition="Exists('..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.props')" />
-  <Import Project="..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.props" Condition="Exists('..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.props')" />
+  <Import Project="..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.props" Condition="Exists('..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.props')" />
+  <Import Project="..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.props" Condition="Exists('..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.props')" />
   <Import Project="..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.props" Condition="Exists('..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.props')" />
   <Import Project="..\packages\ViewGenerator.1.0.307\build\ViewGenerator.props" Condition="Exists('..\packages\ViewGenerator.1.0.307\build\ViewGenerator.props')" />
   <Import Project="..\packages\ViewPacker.1.0.14\build\ViewPacker.props" Condition="Exists('..\packages\ViewPacker.1.0.14\build\ViewPacker.props')" />
@@ -86,25 +86,25 @@
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="WebViewControl, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebViewControl-WPF.2.75.66\lib\net472\WebViewControl.dll</HintPath>
+      <HintPath>..\packages\WebViewControl-WPF.2.75.67\lib\net472\WebViewControl.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="Xilium.CefGlue, Version=75.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefGlue.Common.75.1.88\lib\net472\x64\Xilium.CefGlue.dll</HintPath>
+      <HintPath>..\packages\CefGlue.Common.75.1.89\lib\net472\x64\Xilium.CefGlue.dll</HintPath>
     </Reference>
-    <Reference Include="Xilium.CefGlue.BrowserProcess, Version=75.1.88.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefGlue.Common.75.1.88\lib\net472\x64\Xilium.CefGlue.BrowserProcess.exe</HintPath>
+    <Reference Include="Xilium.CefGlue.BrowserProcess, Version=75.1.89.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Common.75.1.89\lib\net472\x64\Xilium.CefGlue.BrowserProcess.exe</HintPath>
     </Reference>
-    <Reference Include="Xilium.CefGlue.Common, Version=75.1.88.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefGlue.Common.75.1.88\lib\net472\x64\Xilium.CefGlue.Common.dll</HintPath>
+    <Reference Include="Xilium.CefGlue.Common, Version=75.1.89.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Common.75.1.89\lib\net472\x64\Xilium.CefGlue.Common.dll</HintPath>
     </Reference>
-    <Reference Include="Xilium.CefGlue.Common.Shared, Version=75.1.88.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefGlue.Common.75.1.88\lib\net472\x64\Xilium.CefGlue.Common.Shared.dll</HintPath>
+    <Reference Include="Xilium.CefGlue.Common.Shared, Version=75.1.89.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CefGlue.Common.75.1.89\lib\net472\x64\Xilium.CefGlue.Common.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Xilium.CefGlue.WPF, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CefGlue.Wpf.75.1.88\lib\net472\x64\Xilium.CefGlue.WPF.dll</HintPath>
+      <HintPath>..\packages\CefGlue.Wpf.75.1.89\lib\net472\x64\Xilium.CefGlue.WPF.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -192,14 +192,14 @@
     <Error Condition="!Exists('..\packages\ViewGenerator.1.0.307\build\ViewGenerator.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGenerator.1.0.307\build\ViewGenerator.targets'))" />
     <Error Condition="!Exists('..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.props'))" />
     <Error Condition="!Exists('..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.targets'))" />
-    <Error Condition="!Exists('..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.props'))" />
-    <Error Condition="!Exists('..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.targets'))" />
-    <Error Condition="!Exists('..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.props'))" />
-    <Error Condition="!Exists('..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.targets'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.props'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.targets'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.props'))" />
+    <Error Condition="!Exists('..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.targets'))" />
   </Target>
   <Import Project="..\packages\OutSystems.ESLint.MSBuild.1.0.20\build\OutSystems.ESLint.MSBuild.targets" Condition="Exists('..\packages\OutSystems.ESLint.MSBuild.1.0.20\build\OutSystems.ESLint.MSBuild.targets')" />
   <Import Project="..\packages\ViewGenerator.1.0.307\build\ViewGenerator.targets" Condition="Exists('..\packages\ViewGenerator.1.0.307\build\ViewGenerator.targets')" />
   <Import Project="..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.targets" Condition="Exists('..\packages\ViewGeneratorCore.1.0.222\build\ViewGeneratorCore.targets')" />
-  <Import Project="..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.targets" Condition="Exists('..\packages\CefGlue.Common.75.1.88\build\CefGlue.Common.targets')" />
-  <Import Project="..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.targets" Condition="Exists('..\packages\CefGlue.Wpf.75.1.88\build\CefGlue.Wpf.targets')" />
+  <Import Project="..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.targets" Condition="Exists('..\packages\CefGlue.Common.75.1.89\build\CefGlue.Common.targets')" />
+  <Import Project="..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.targets" Condition="Exists('..\packages\CefGlue.Wpf.75.1.89\build\CefGlue.Wpf.targets')" />
 </Project>
