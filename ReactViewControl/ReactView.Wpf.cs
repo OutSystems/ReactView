@@ -52,7 +52,7 @@ namespace ReactViewControl {
             }
         }
 
-        private static void AsyncExecuteInUI(Action action, bool lowPriority) {
+        internal static void AsyncExecuteInUI(Action action, bool lowPriority) {
             var dispatcher = Application.Current.Dispatcher;
             dispatcher.BeginInvoke((Action) (() => {
                 if (!dispatcher.HasShutdownStarted) {

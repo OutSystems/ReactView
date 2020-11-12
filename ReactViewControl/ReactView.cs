@@ -66,7 +66,7 @@ namespace ReactViewControl {
 
         public void Dispose() {
             InnerDispose();
-            View.Dispose();
+            View?.Dispose();
             GC.SuppressFinalize(this);
         }
 

@@ -1,5 +1,6 @@
 ﻿import * as React from "react";
-import { webViewRootId, getStylesheets } from "./LoaderCommon"
+import { webViewRootId } from "../Internal/Environment";
+import { getStylesheets } from "./Common";
 import { ViewMetadata } from "./ViewMetadata";
 
 export type ViewLifecycleEventHandler = (view: ViewMetadata) => void;

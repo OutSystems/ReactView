@@ -17,5 +17,9 @@ namespace ReactViewControl {
             var height = (int)SystemParameters.FullPrimaryScreenHeight;
             WebView.InitializeBrowser(width, height);
         }
+
+        private static bool IsFrameworkAssemblyName(string name) {
+            return name == "PresentationFramework" || name == "PresentationCore" || name == "mscorlib" || name == "System.Xaml" || name == "WindowsBase";
+        }
     }
 }

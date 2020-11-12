@@ -5,6 +5,8 @@ namespace ReactViewControl {
 
     internal class FrameInfo : IFrame {
 
+        internal const string MainViewFrameName = "";
+
         public FrameInfo(string name) {
             Name = name;
             Plugins = new IViewModule[0];
@@ -24,6 +26,8 @@ namespace ReactViewControl {
         public LoadStatus LoadStatus { get; set; }
 
         public bool IsComponentReadyToLoad { get; set; }
+
+        public bool IsMain => Name == MainViewFrameName;
 
         public CustomResourceRequestedEventHandler CustomResourceRequestedHandler { get; set; }
 
