@@ -10,7 +10,7 @@ namespace Example.Avalonia {
     public delegate void ExampleViewViewMountedEventHandler();
     public delegate void ExampleViewInputChangedEventHandler();
 
-    public struct SomeType {
+    public partial struct SomeType {
         public string name { get; set; }
     }
     

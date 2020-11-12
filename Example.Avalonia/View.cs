@@ -67,7 +67,7 @@ namespace Example.Avalonia {
 
                 popup.Opened += delegate
                 {
-                    Dispatcher.UIThread.Post(() => popup.Child.Focus());
+                    //Dispatcher.UIThread.Post(() => popup.Child.Focus());
                 };
 
                 innerView.Loaded += () =>

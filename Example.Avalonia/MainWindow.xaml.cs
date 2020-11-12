@@ -16,7 +16,7 @@ namespace Example.Avalonia {
             WebView.OsrEnabled = false;
             InitializeComponent();
 
-            this.AttachDevTools();
+            //this.AttachDevTools();
 
             CreateTab();
         }
