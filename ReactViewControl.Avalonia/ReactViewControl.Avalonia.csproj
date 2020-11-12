@@ -12,7 +12,7 @@
     <Product>ReactViewControl</Product>
     <Copyright>Copyright ©  2019</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.75.71</Version>
+    <Version>2.75.103</Version>
     <PackageId>ReactViewControl-Avalonia</PackageId>
     <Authors>OutSystems</Authors>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\nuget</PackageOutputPath>
@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <Compile Include="..\ReactViewControl\ExecutionEngine.cs" Link="ExecutionEngine.cs" />
+    <Compile Include="..\ReactViewControl\ExtendedWebView.cs" Link="ExtendedWebView.cs" />
     <Compile Include="..\ReactViewControl\FrameInfo.cs" Link="FrameInfo.cs" />
     <Compile Include="..\ReactViewControl\IChildViewHost.cs" Link="IChildViewHost.cs" />
     <Compile Include="..\ReactViewControl\IExecutionEngine.cs" Link="IExecutionEngine.cs" />
@@ -32,12 +33,14 @@
     <Compile Include="..\ReactViewControl\ReactViewFactory.cs" Link="ReactViewFactory.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.cs" Link="ReactViewRender.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.LoaderModule.cs" Link="ReactViewRender.LoaderModule.cs" />
+    <Compile Include="..\ReactViewControl\ReactViewRender.NativeAPI.cs" Link="ReactViewRender.NativeAPI.cs" />
+    <Compile Include="..\ReactViewControl\Resource.cs" Link="Resource.cs" />
     <Compile Include="..\ReactViewControl\ViewModuleContainer.cs" Link="ViewModuleContainer.cs" />
     <Compile Include="..\ReactViewControl\ViewModuleExtensions.cs" Link="ViewModuleExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" Version="2.75.59" />
+    <PackageReference Include="WebViewControl-Avalonia" Version="2.75.69" />
   </ItemGroup>
 
   <ItemGroup>

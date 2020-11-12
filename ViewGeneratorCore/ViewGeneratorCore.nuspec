@@ -11,7 +11,7 @@
     <copyright>$copyright$</copyright>
     <developmentDependency>true</developmentDependency>
     <dependencies>
-      <dependency id="Node.js.redist" version="10.16.3" />
+      <dependency id="Node.js.redist" version="12.18.4" />
     </dependencies>
   </metadata>
   <files>

@@ -2,7 +2,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using WebViewControl;
 
 namespace ReactViewControl {
@@ -11,7 +10,7 @@ namespace ReactViewControl {
 
         private static Window hiddenWindow;
 
-        private Window GetHiddenWindow() {
+        private static Window GetHiddenWindow() {
             if (hiddenWindow == null) {
                 hiddenWindow = new Window() {
                     IsVisible = false,
@@ -45,6 +44,10 @@ namespace ReactViewControl {
             if (!WebView.OsrEnabled && change.Property == IsEffectivelyEnabledProperty) {
                  DisableInputInteractions(!IsEffectivelyEnabled);
             }
+        }
+
+        private static bool IsFrameworkAssemblyName(string name) {
+            return name.StartsWith("Avalonia") || name == "mscorlib";
         }
     }
 }

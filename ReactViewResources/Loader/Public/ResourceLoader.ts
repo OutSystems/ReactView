@@ -1,11 +1,6 @@
 ﻿import * as React from "react";
 import { ResourceLoaderUrlFormatter } from "ResourceLoader";
-
-let customResourceBaseUrl = "";
-
-export function setCustomResourceBaseUrl(url: string): void {
-    customResourceBaseUrl = url;
-}
+import { customResourceBaseUrl } from "../Internal/Environment";
 
 export function formatUrl(viewName: string, resourceKey: string, ...params: string[]): string {
     const urlTail = [resourceKey].concat(params).map(p => encodeURIComponent(p)).join("&");

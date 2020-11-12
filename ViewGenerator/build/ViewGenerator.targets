@@ -9,7 +9,7 @@
       VG_Clean;
       $(CleanDependsOn);
     </CleanDependsOn>
-      
+    <NodeVersion>12.18.4</NodeVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,13 +18,13 @@
   
   <Target Name="VG_SetVariables">
       <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\*\tools\win-x64\node.exe"/>
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist*\tools\win-x64\node.exe"/>
+          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\$(NodeVersion)\tools\win-x64\node.exe"/>
+          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist.$(NodeVersion)\tools\win-x64\node.exe"/>
 
       </ItemGroup>
       <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\*\tools\osx-x64\node"/>
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist*\tools\osx-x64\node"/>
+          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\$(NodeVersion)\tools\osx-x64\node"/>
+          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist.$(NodeVersion)\tools\osx-x64\node"/>
 
       </ItemGroup>
       

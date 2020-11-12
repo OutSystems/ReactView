@@ -6,6 +6,8 @@ namespace ReactViewControl {
 
     internal class ExecutionEngine : IExecutionEngine {
 
+        internal const string ModulesObjectName = "__Modules__";
+
         private string id;
         private string frameName;
         private WebView webView;
@@ -13,7 +15,7 @@ namespace ReactViewControl {
         private ConcurrentQueue<Tuple<IViewModule, string, object[]>> PendingExecutions { get; } = new ConcurrentQueue<Tuple<IViewModule, string, object[]>>();
 
         private string FormatMethodInvocation(IViewModule module, string methodCall) {
-            return ReactViewRender.ModulesObjectName + "(\"" + frameName + "\",\"" + id + "\",\"" + module.Name + "\")." + methodCall;
+            return ModulesObjectName + "(\"" + frameName + "\",\"" + id + "\",\"" + module.Name + "\")." + methodCall;
         }
 
         public void ExecuteMethod(IViewModule module, string methodCall, params object[] args) {

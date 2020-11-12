@@ -13,11 +13,6 @@ namespace ReactViewControl {
 
             private const string LoaderModuleName = "Loader";
 
-            private class SyncFunction {
-                public static readonly SyncFunction Instance = new SyncFunction();
-                private SyncFunction() { }
-            }
-
             public LoaderModule(ReactViewRender viewRender) {
                 ViewRender = viewRender;
             }
@@ -27,12 +22,12 @@ namespace ReactViewControl {
             /// <summary>
             /// Loads the specified react component into the specified frame
             /// </summary>
-            public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins, bool forceNativeSyncCalls) {
+            public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins) {
                 var mainSource = ViewRender.ToFullUrl(NormalizeUrl(component.MainJsSource));
                 var dependencySources = component.DependencyJsSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
                 var cssSources = component.CssSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
 
-                var componentSerialization = SerializeComponent(component, forceNativeSyncCalls);
+                var componentSerialization = SerializeComponent(component);
                 var componentHash = ComputeHash(componentSerialization);
 
                 // loadComponent arguments:
@@ -75,14 +70,6 @@ namespace ReactViewControl {
             }
 
             /// <summary>
-            /// Set the specified stylesheet.
-            /// </summary>
-            /// <param name="stylesheet"></param>
-            public void SetDefaultStyleSheet(ResourceUrl stylesheet) {
-                ExecuteLoaderFunction("setDefaultStyleSheet", SerializeResourceUrl(stylesheet));
-            }
-
-            /// <summary>
             /// Loads the specified plugins modules in the specified frame.
             /// </summary>
             /// <param name="plugins"></param>
@@ -122,8 +109,16 @@ namespace ReactViewControl {
             /// Prevents mouse interaction with the browser
             /// </summary>
             /// <param name="disable"></param>
-            public void DisableInputInteractions(bool disable) {
-                ExecuteLoaderFunction("disableInputInteractions", JavascriptSerializer.Serialize(disable));
+            public void DisableMouseInteractions() {
+                ExecuteLoaderFunction("disableMouseInteractions");
+            }
+
+            /// <summary>
+            /// Enables mouse interaction with the browser
+            /// </summary>
+            /// <param name="disable"></param>
+            public void EnableMouseInteractions() {
+                ExecuteLoaderFunction("enableMouseInteractions");
             }
 
             /// <summary>
@@ -137,13 +132,13 @@ namespace ReactViewControl {
                 ViewRender.WebView.ExecuteScript($"import('{loaderUrl}').then(m => m.default.{LoaderModuleName}).then({LoaderModuleName} => {LoaderModuleName}.{functionName}({string.Join(",", args)}))");
             }
 
-            private static string SerializeComponent(IViewModule component, bool forceNativeSyncCalls) {
+            private static string SerializeComponent(IViewModule component) {
                 var nativeObjectMethodsMap = component.Events
-                    .Select(g => new KeyValuePair<string, object>(g, forceNativeSyncCalls ? SyncFunction.Instance : JavascriptSerializer.Undefined))
+                    .Select(g => new KeyValuePair<string, object>(g, JavascriptSerializer.Undefined))
                     .Concat(component.PropertiesValues)
                     .OrderBy(p => p.Key)
                     .Select(p => new KeyValuePair<string, object>(JavascriptSerializer.GetJavascriptName(p.Key), p.Value));
-                return JavascriptSerializer.Serialize(nativeObjectMethodsMap, o => o == SyncFunction.Instance ? $"{LoaderModuleName}.syncFunction" : JavascriptSerializer.Serialize(o));
+                return JavascriptSerializer.Serialize(nativeObjectMethodsMap, o => JavascriptSerializer.Serialize(o));
             }
 
             private static string ComputeHash(string inputString) {

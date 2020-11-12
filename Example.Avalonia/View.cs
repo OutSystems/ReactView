@@ -7,6 +7,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using ReactViewControl;
 using WebViewControl;
 
 namespace Example.Avalonia {
@@ -119,12 +120,12 @@ namespace Example.Avalonia {
             });
         }
 
-        private Stream OnViewResourceRequested(string resourceKey, params string[] options) {
-            return ResourcesManager.TryGetResource(GetType().Assembly, new[] { "ExampleView", "ExampleView", resourceKey });
+        private Resource OnViewResourceRequested(string resourceKey, params string[] options) {
+            return new Resource(ResourcesManager.TryGetResource(GetType().Assembly, new[] { "ExampleView", "ExampleView", resourceKey }));
         }
 
-        private Stream OnInnerViewResourceRequested(string resourceKey, params string[] options) {
-            return ResourcesManager.GetResource(GetType().Assembly, new[] { "ExampleView", "SubExampleView", resourceKey });
+        private Resource OnInnerViewResourceRequested(string resourceKey, params string[] options) {
+            return new Resource(ResourcesManager.GetResource(GetType().Assembly, new[] { "ExampleView", "SubExampleView", resourceKey }));
         }
     }
 }
