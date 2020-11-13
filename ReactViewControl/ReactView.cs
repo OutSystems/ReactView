@@ -118,6 +118,22 @@ namespace ReactViewControl {
         public double ZoomPercentage { get => View.ZoomPercentage; set => View.ZoomPercentage = value; }
 
         /// <summary>
+        /// Event fired when the underlying view receives focus.
+        /// </summary>
+        public event Action GotViewFocus {
+            add { View.GotViewFocus += value; }
+            remove { View.GotViewFocus -= value; }
+        }
+
+        /// <summary>
+        /// Event fired when the underlying view looses focus.
+        /// </summary>
+        public event Action LostViewFocus {
+            add { View.LostViewFocus += value; }
+            remove { View.LostViewFocus -= value; }
+        }
+
+        /// <summary>
         /// Event fired when the component is rendered and ready for interaction.
         /// </summary>
         public event Action Ready {
