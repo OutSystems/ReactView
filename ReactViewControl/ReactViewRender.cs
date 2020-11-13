@@ -24,7 +24,7 @@ namespace ReactViewControl {
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
 
-        private ExtendedWebView WebView { get; }
+        private WebView WebView { get; }
         private Assembly UserCallingAssembly { get; }
         private LoaderModule Loader { get; }
         private Func<IViewModule[]> PluginsFactory { get; }
@@ -360,16 +360,6 @@ namespace ReactViewControl {
             }
 
             return component;
-        }
-
-        public event Action GotViewFocus {
-            add { WebView.GotWebViewFocus += value; }
-            remove { WebView.GotWebViewFocus -= value; }
-        }
-
-        public event Action LostViewFocus {
-            add { WebView.LostWebViewFocus += value; }
-            remove { WebView.LostWebViewFocus -= value; }
         }
 
         /// <summary>
