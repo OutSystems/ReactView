@@ -8,7 +8,7 @@ namespace ReactViewControl {
 
         protected override bool OnSetFocus(bool isSystemEvent) {
             // prevent stealing focus on navigation, only allow when system explicitly sends a focus signal
-            return isSystemEvent ? false : true;
+            return !isSystemEvent;
         }
     }
 }
