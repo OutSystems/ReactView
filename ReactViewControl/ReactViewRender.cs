@@ -37,7 +37,7 @@ namespace ReactViewControl {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
             
             // must useSharedDomain for the local storage to be shared
-            WebView = new WebView(useSharedDomain: true) {
+            WebView = new ExtendedWebView(useSharedDomain: true) {
                 DisableBuiltinContextMenus = true,
                 IsSecurityDisabled = true,
                 IgnoreMissingResources = false,
