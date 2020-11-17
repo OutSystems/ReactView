@@ -12,7 +12,7 @@
     <Product>ReactViewControl</Product>
     <Copyright>Copyright ©  2019</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.75.102</Version>
+    <Version>2.84.1</Version>
     <PackageId>ReactViewControl-WPF</PackageId>
     <Authors>OutSystems</Authors>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\nuget</PackageOutputPath>
@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-WPF" Version="2.75.67" />
+    <PackageReference Include="WebViewControl-WPF" Version="2.84.2" />
   </ItemGroup>
 
   <ItemGroup>
