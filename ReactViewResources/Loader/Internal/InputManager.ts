@@ -16,6 +16,7 @@ export function disableMouseInteractions() {
         layer.style.top = "0";
         layer.style.left = "0";
         layer.style.zIndex = "2147483647";
+        layer.tabIndex = -1;
     }
 
     document.body.appendChild(layer);
