@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using NUnit.Framework;
 using ReactViewControl;
 
@@ -46,10 +47,7 @@ namespace Tests.ReactView {
         [Test(Description = "Loading a view with preload enabled uses a webview from cache")]
         public async Task PreloadUsesWebViewFromCache() {
             await Run(async () => {
-                var start = DateTime.Now;
-                while ((DateTime.Now - start).TotalSeconds < 1) {
-                    Thread.Sleep(1); // let the cached webview have time to be created
-                }
+                await Task.Delay(1000);
 
                 var taskCompletionSource = new TaskCompletionSource<bool>();
 
@@ -63,8 +61,10 @@ namespace Tests.ReactView {
                 var isNewViewReady = await taskCompletionSource.Task;
                 Assert.IsTrue(isNewViewReady, "Second view was not properly loaded!");
 
-                var startTime = newView.EvaluateMethod<double>("getStartTime");
-                Assert.LessOrEqual(startTime, currentTime, "The second webview should have been loaded before!");
+                await Dispatcher.UIThread.InvokeAsync(() => {
+                    var startTime = newView.EvaluateMethod<double>("getStartTime");
+                    Assert.LessOrEqual(startTime, currentTime, "The second webview should have been loaded before!");
+                }, DispatcherPriority.Background);
             });
         }
     }
