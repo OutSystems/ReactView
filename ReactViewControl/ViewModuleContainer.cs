@@ -13,10 +13,11 @@ namespace ReactViewControl {
 
         private IFrame frame;
         private IChildViewHost childViewHost;
+        private IDependenciesProvider dependenciesProvider;
 
         public ViewModuleContainer() {
-            DependencyJsSourcesCache = new Lazy<string[]>(() => GetDependenciesFromEntriesFile(JsEntryFileExtension));
-            CssSourcesCache = new Lazy<string[]>(() => GetDependenciesFromEntriesFile(CssEntryFileExtension));
+            DependencyJsSourcesCache = new Lazy<string[]>(() => GetJsDependencies());
+            CssSourcesCache = new Lazy<string[]>(() => GetCssDependencies());
 
             frame = new FrameInfo("dummy");
         }
@@ -58,6 +59,12 @@ namespace ReactViewControl {
         KeyValuePair<string, object>[] IViewModule.PropertiesValues => PropertiesValues;
 
         void IViewModule.Bind(IFrame frame, IChildViewHost childViewHost) {
+            var devServerUri = childViewHost?.DevServerUri ?? DevServerUri;
+
+            if (devServerUri != null && dependenciesProvider == null) {
+                dependenciesProvider = new WebPackDependenciesProvider(devServerUri);
+            }
+
             frame.CustomResourceRequestedHandler += this.frame.CustomResourceRequestedHandler;
             frame.ExecutionEngine.MergeWorkload(this.frame.ExecutionEngine);
             this.frame = frame;
@@ -73,6 +80,40 @@ namespace ReactViewControl {
                 }
                 return engine;
             }
+        }
+
+        private string[] GetJsDependencies() {
+            var isHotReloadEnabled = dependenciesProvider != null;
+
+            if (isHotReloadEnabled) {
+                var dependencies = GetJsDependenciesFromWebPack();
+                if (dependencies.Length > 0) {
+                    return dependencies;
+                }
+            }
+
+            return GetDependenciesFromEntriesFile(JsEntryFileExtension);
+        }
+
+        private string[] GetCssDependencies() {
+            var isHotReloadEnabled = dependenciesProvider != null;
+
+            if (isHotReloadEnabled) {
+                var dependencies = GetCssDependenciesFromWebPack();
+                if (dependencies.Length > 0) {
+                    return dependencies;
+                }
+            }
+
+            return GetDependenciesFromEntriesFile(CssEntryFileExtension);
+        }
+
+        private string[] GetCssDependenciesFromWebPack() {
+            return dependenciesProvider.GetCssDependencies(ModuleName);
+        }
+
+        private string[] GetJsDependenciesFromWebPack() {
+            return dependenciesProvider.GetJsDependencies(ModuleName);
         }
 
         private string[] GetDependenciesFromEntriesFile(string extension) {
@@ -93,7 +134,7 @@ namespace ReactViewControl {
         }
 
         private Stream GetResourceStream(string[] resource) {
-            var isHotReloadEnabled = childViewHost == null ? false : childViewHost.IsHotReloadEnabled;
+            var isHotReloadEnabled = childViewHost?.IsHotReloadEnabled ?? DevServerUri != null;
             if (isHotReloadEnabled) {
                 return File.OpenRead(Path.Combine(Path.GetDirectoryName(Source), resource.Last()));
             }
@@ -122,5 +163,7 @@ namespace ReactViewControl {
         }
 
         public ReactView Host => childViewHost?.Host;
+
+        public virtual Uri DevServerUri { get; set; }
     }
 }
