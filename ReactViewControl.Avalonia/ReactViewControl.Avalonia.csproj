@@ -40,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" Version="2.85.1" />
+    <PackageReference Include="WebViewControl-Avalonia" Version="2.85.4" />
   </ItemGroup>
 
   <ItemGroup>

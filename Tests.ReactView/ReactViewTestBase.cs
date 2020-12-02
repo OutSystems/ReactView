@@ -15,18 +15,7 @@ namespace Tests.ReactView {
         protected override async Task AfterInitializeView() {
             await base.AfterInitializeView();
             if (AwaitReady) {
-                var taskCompletionSource = new TaskCompletionSource<bool>();
-                void OnReady() {
-                    taskCompletionSource.SetResult(true);
-                }
-                TargetView.Ready += OnReady;
-
-                try {
-                    await taskCompletionSource.Task;
-
-                } finally {
-                    TargetView.Ready -= OnReady;
-                }
+                await TargetView.AwaitReady();
             }
         }
 
@@ -49,8 +38,9 @@ namespace Tests.ReactView {
             }
         }
 
-        protected override void ShowDebugConsole() {
+        protected override bool ShowDebugConsole() { 
             TargetView.ShowDeveloperTools();
+            return true;
         }
     }
 

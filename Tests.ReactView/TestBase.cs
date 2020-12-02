@@ -46,6 +46,7 @@ namespace Tests {
                     Dispatcher.UIThread.MainLoop(CancellationToken.None);
                 });
                 uiThread.IsBackground = true;
+                uiThread.Name = "UI Thread";
                 uiThread.Start();
                 return taskCompletionSource.Task;
             }
@@ -98,8 +99,9 @@ namespace Tests {
         [TearDown]
         protected async Task TearDown() {
             if (Debugger.IsAttached && TestContext.CurrentContext.Result.FailCount > 0) {
-                ShowDebugConsole();
-                await new TaskCompletionSource<bool>().Task;
+                if (ShowDebugConsole()) {
+                    await new TaskCompletionSource<bool>().Task;
+                }
             } else {
                 await Run(() => {
                     if (view != null) {
@@ -112,7 +114,7 @@ namespace Tests {
             }
         }
 
-        protected abstract void ShowDebugConsole();
+        protected abstract bool ShowDebugConsole();
 
         protected T TargetView {
             get { return view; }

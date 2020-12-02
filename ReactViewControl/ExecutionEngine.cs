@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using WebViewControl;
 
 namespace ReactViewControl {
@@ -10,7 +11,7 @@ namespace ReactViewControl {
 
         private string id;
         private string frameName;
-        private WebView webView;
+        private ExtendedWebView webView;
 
         private ConcurrentQueue<Tuple<IViewModule, string, object[]>> PendingExecutions { get; } = new ConcurrentQueue<Tuple<IViewModule, string, object[]>>();
 
@@ -29,16 +30,16 @@ namespace ReactViewControl {
             }
         }
 
-        public T EvaluateMethod<T>(IViewModule module, string methodCall, params object[] args) {
+        public Task<T> EvaluateMethod<T>(IViewModule module, string methodCall, params object[] args) {
             if (webView == null) {
-                return default(T);
+                return Task.FromResult<T>(default);
             }
             module.Host?.HandledBeforeExecuteMethod();
             var method = FormatMethodInvocation(module, methodCall);
             return webView.EvaluateScriptFunctionWithSerializedParams<T>(method, args);
         }
 
-        public void Start(WebView webView, string frameName, string id) {
+        public void Start(ExtendedWebView webView, string frameName, string id) {
             this.id = id;
             this.frameName = frameName;
             this.webView = webView;

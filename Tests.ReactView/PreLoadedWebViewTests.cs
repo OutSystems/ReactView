@@ -1,9 +1,7 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Avalonia.Threading;
+﻿using System.Threading.Tasks;
 using NUnit.Framework;
 using ReactViewControl;
+using WebViewControl;
 
 namespace Tests.ReactView {
 
@@ -31,41 +29,40 @@ namespace Tests.ReactView {
         [Test(Description = "Loading a view with a inner view and preload enabled loads the component successfully the second time")]
         public async Task PreloadLoadsComponent() {
             await Run(async () => {
-                var taskCompletionSource = new TaskCompletionSource<bool>();
-
                 using var newView = new TestReactViewWithPreload();
-                newView.Ready += delegate {
-                    taskCompletionSource.SetResult(newView.IsReady);
-                };
-                Window.Content = newView;
+                newView.Load();
 
-                var isNewViewReady = await taskCompletionSource.Task;
-                Assert.IsTrue(isNewViewReady, "Second view was not properly loaded!");
+                var ready = await newView.AwaitReady();
+                Assert.IsTrue(ready, "Second view was not properly loaded!");
             });
         }
 
         [Test(Description = "Loading a view with preload enabled uses a webview from cache")]
         public async Task PreloadUsesWebViewFromCache() {
-            await Run(async () => {
-                await Task.Delay(1000);
+            var webviewInstantiatedTaskCompletionSource = new TaskCompletionSource<bool>();
+            void OnWebViewInitialized(WebView webview) {
+                webviewInstantiatedTaskCompletionSource.TrySetResult(true);
+            }
 
-                var taskCompletionSource = new TaskCompletionSource<bool>();
+            try {
+                WebView.GlobalWebViewInitialized += OnWebViewInitialized;
+                await Run(async () => {
+                    using var newView = new TestReactViewWithPreload();
+                    newView.Load();
+                    var currentTime = await TargetView.EvaluateMethod<double>("getCurrentTime");
 
-                var currentTime = TargetView.EvaluateMethod<double>("getCurrentTime");
-                using var newView = new TestReactViewWithPreload();
-                newView.Ready += delegate {
-                    taskCompletionSource.SetResult(newView.IsReady);
-                };
-                Window.Content = newView;
+                    // wait for the cached webview to be instantiated
+                    await webviewInstantiatedTaskCompletionSource.Task;
 
-                var isNewViewReady = await taskCompletionSource.Task;
-                Assert.IsTrue(isNewViewReady, "Second view was not properly loaded!");
+                    using var newView2 = new TestReactViewWithPreload();
+                    newView2.Load();
 
-                await Dispatcher.UIThread.InvokeAsync(() => {
-                    var startTime = newView.EvaluateMethod<double>("getStartTime");
+                    var startTime = await newView2.EvaluateMethod<double>("getStartTime");
                     Assert.LessOrEqual(startTime, currentTime, "The second webview should have been loaded before!");
-                }, DispatcherPriority.Background);
-            });
+                });
+            } finally {
+                WebView.GlobalWebViewInitialized -= OnWebViewInitialized;
+            }
         }
     }
 }

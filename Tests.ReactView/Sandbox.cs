@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 
 namespace Tests.ReactView {
 
@@ -19,7 +20,7 @@ namespace Tests.ReactView {
         }
 
         public static async Task<Sandbox> InitializeAsync(Window window, string propertyValue) {
-            var sandbox = new Sandbox(window, propertyValue);
+            var sandbox = await Dispatcher.UIThread.InvokeAsync(() => new Sandbox(window, propertyValue));
             await sandbox.Initialize();
 
             return sandbox;
@@ -29,15 +30,15 @@ namespace Tests.ReactView {
             window.Content = View;
         }
 
-        public string GetFirstRenderHtml() {
+        public Task<string> GetFirstRenderHtml() {
             return View.EvaluateMethod<string>("getFirstRenderHtml");
         }
 
-        public string GetHtml() {
+        public Task<string> GetHtml() {
             return View.EvaluateMethod<string>("getHtml");
         }
 
-        public string GetPropertyValue() {
+        public Task<string> GetPropertyValue() {
             return View.EvaluateMethod<string>("getPropertyValue");
         }
 
@@ -47,18 +48,7 @@ namespace Tests.ReactView {
         }
 
         public async Task Initialize() {
-            var taskCompletionSource = new TaskCompletionSource<bool>();
-            void OnReady() {
-                taskCompletionSource.SetResult(true);
-            }
-            View.Ready += OnReady;
-
-            try {
-                await taskCompletionSource.Task;
-
-            } finally {
-                View.Ready -= OnReady;
-            }
+            await View.AwaitReady();
         }
 
         public void Dispose() {

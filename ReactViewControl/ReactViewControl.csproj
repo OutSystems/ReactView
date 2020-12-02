@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-WPF" Version="2.85.1" />
+    <PackageReference Include="WebViewControl-WPF" Version="2.85.2" />
   </ItemGroup>
 
   <ItemGroup>
