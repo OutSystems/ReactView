@@ -463,7 +463,7 @@ namespace ReactViewControl {
 
                             if (response != null) {
                                 var extension = (response.Extension ?? Path.GetExtension(resourceKey)).TrimStart('.');
-                                resourceHandler.RespondWith(response.Content, extension);
+                                resourceHandler.RespondWith(response.Content, extension, preventStreamConcurrentAccess: true);
                             } else {
                                 resourceHandler.RespondWith(MemoryStream.Null);
                             }
