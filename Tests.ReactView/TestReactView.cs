@@ -23,7 +23,7 @@ namespace Tests.ReactView {
         public event Action<string> Event;
 
         public Task<T> EvaluateMethod<T>(string functionName, params object[] args) {
-            return ExecutionEngine.EvaluateMethod<T>(this, functionName, args);
+            return ExecutionEngine.EvaluateMethodAsync<T>(this, functionName, args);
         }
 
         public void ExecuteMethod(string functionName, params object[] args) {

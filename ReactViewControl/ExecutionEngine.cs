@@ -30,7 +30,9 @@ namespace ReactViewControl {
             }
         }
 
-        public Task<T> EvaluateMethod<T>(IViewModule module, string methodCall, params object[] args) {
+        public T EvaluateMethod<T>(IViewModule module, string methodCall, params object[] args) => EvaluateMethodAsync<T>(module, methodCall, args).Result;
+
+        public Task<T> EvaluateMethodAsync<T>(IViewModule module, string methodCall, params object[] args) {
             if (webView == null) {
                 return Task.FromResult<T>(default);
             }
