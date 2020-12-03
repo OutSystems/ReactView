@@ -235,7 +235,7 @@ class Generator {
             let body = "";
             if (func.returnType != Types.TsVoidType) {
                 let returnType = this.getFunctionReturnType(func);
-                body = `ExecutionEngine.EvaluateMethod<${returnType}>(this, ${params}).Result`;
+                body = `ExecutionEngine.EvaluateMethod<${returnType}>(this, ${params})`;
             } else {
                 body = `ExecutionEngine.ExecuteMethod(this, ${params})`;
             }
