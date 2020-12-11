@@ -39,6 +39,7 @@ class App extends React.Component<IAppProperties> {
                     <h2>Welcome to React</h2>
                     <img src={Image} />
                     <div>Cache timestamp: {uniqueTimestamp}</div>
+                    <div>Property value: {this.props.propertyValue}</div>
                     {this.renderInnerViewContainer()}
                 </div>
             </div>

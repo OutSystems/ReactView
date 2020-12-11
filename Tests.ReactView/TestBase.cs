@@ -18,7 +18,7 @@ namespace Tests {
         private Window window;
         private T view;
 
-        protected static string CurrentTestName => TestContext.CurrentContext.Test.Name; 
+        protected static string CurrentTestName { get; private set; }
 
         protected Task Run(Func<Task> func) => Dispatcher.UIThread.InvokeAsync(func, DispatcherPriority.Background);
 
@@ -46,6 +46,7 @@ namespace Tests {
                     Dispatcher.UIThread.MainLoop(CancellationToken.None);
                 });
                 uiThread.IsBackground = true;
+                uiThread.Name = "UI Thread";
                 uiThread.Start();
                 return taskCompletionSource.Task;
             }
@@ -63,11 +64,11 @@ namespace Tests {
 
         [SetUp]
         protected async Task SetUp() {
-            var currentTestName = CurrentTestName; // we cannot access TestContext properly in asynchronous mode
+            CurrentTestName = TestContext.CurrentContext.Test.Name; // we cannot access TestContext properly in asynchronous mode
 
             await Run(async () => {
                 window = new Window {
-                    Title = "Running: " + currentTestName
+                    Title = "Running: " + CurrentTestName
                 };
 
                 if (view == null) {
@@ -98,8 +99,9 @@ namespace Tests {
         [TearDown]
         protected async Task TearDown() {
             if (Debugger.IsAttached && TestContext.CurrentContext.Result.FailCount > 0) {
-                ShowDebugConsole();
-                await new TaskCompletionSource<bool>().Task;
+                if (ShowDebugConsole()) {
+                    await new TaskCompletionSource<bool>().Task;
+                }
             } else {
                 await Run(() => {
                     if (view != null) {
@@ -112,7 +114,7 @@ namespace Tests {
             }
         }
 
-        protected abstract void ShowDebugConsole();
+        protected abstract bool ShowDebugConsole();
 
         protected T TargetView {
             get { return view; }
