@@ -1,7 +1,5 @@
 ﻿import * as React from "react";
 import { IViewFrameProps } from "ViewFrame";
-import { ObservableListCollection } from "../Internal/ObservableCollection";
-import { Task } from "../Internal/Task";
 import { ViewContext } from "../Internal/ViewContext";
 import { newView, ViewMetadata } from "../Internal/ViewMetadata";
 
