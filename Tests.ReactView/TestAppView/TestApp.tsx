@@ -6,6 +6,7 @@ import * as Image from "./imgs/image.png";
 import InnerView from "./InnerView";
 import Plugin from './PluginModule';
 import "./Styles.scss";
+import { Task } from "./Task";
 
 interface IAppProperties {
     event: (args: string) => void;
@@ -21,6 +22,7 @@ class App extends React.Component<IAppProperties> {
 
     firstRenderHtml: string;
     pluginsContext: IPluginsContext;
+    innerViewLoadedTask = new Task<boolean>();
 
     constructor(props: IAppProperties, context: IPluginsContext) {
         super(props);
@@ -29,7 +31,7 @@ class App extends React.Component<IAppProperties> {
     }
 
     renderInnerViewContainer() {
-        return this.props.autoShowInnerView ? <ViewFrame<IChildViews> key="test_frame" name="test" className="" /> : null;
+        return this.props.autoShowInnerView ? <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} /> : null;
     }
 
     render() {
@@ -86,6 +88,10 @@ class App extends React.Component<IAppProperties> {
     checkPluginInContext() {
         const plugin = this.pluginsContext.getPluginInstance<Plugin>(Plugin);
         return [!!plugin.nativeObject, !!plugin.root.tagName, plugin.viewLoaded];
+    }
+
+    checkInnerViewLoaded() {
+        this.innerViewLoadedTask.promise.then(() => this.props.event("InnerViewLoaded"));
     }
 
     loadCustomResource(url: string) {

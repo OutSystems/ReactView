@@ -61,7 +61,12 @@ declare module "ViewFrame" {
     export interface IViewFrameProps<T> {
         name: keyof T;
         className?: string;
+        loaded?: () => void;
     }
 
     export class ViewFrame<T> extends React.Component<IViewFrameProps<T>> { }
+}
+
+declare interface IPlugin<NativeObjectType> {
+    new(nativeObject: NativeObjectType, root: HTMLElement, viewLoadPromise: Promise<void>): IPlugin<NativeObjectType>;
 }

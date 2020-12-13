@@ -178,10 +178,12 @@ export function loadComponent(
                 storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries); // dont need to await
             }
 
+            // queue view loaded notification to run after all other pending promise notifications (ensure order)
+            view.viewLoadTask.promise.then(() => notifyViewLoaded(view.name, view.id.toString()));
+
             // pending native calls can now be resolved, first html snapshot was grabbed
             view.viewLoadTask.setResult();
 
-            notifyViewLoaded(view.name, view.id.toString());
         } catch (error) {
             handleError(error, view!);
         }
@@ -204,7 +206,7 @@ export function initialize(mainView: ViewMetadata) {
     addView(mainFrameName, mainView);
     mainView.renderHandler = component => renderMainView(component, mainView.root!);
 
-    bootstrapTask.setResult();
-
     notifyViewInitialized(mainFrameName);
+
+    bootstrapTask.setResult();
 }
