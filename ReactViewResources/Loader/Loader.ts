@@ -88,7 +88,7 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                     const pluginNativeObject = await bindNativeObject(nativeObjectFullName);
 
                     view.nativeObjectNames.push(nativeObjectFullName); // add to the native objects collection
-                    view.modules.set(moduleName, new module.default(pluginNativeObject, view.root));
+                    view.modules.set(moduleName, new module.default(pluginNativeObject, view.root, view.viewLoadTask.promise));
                 });
 
                 await Promise.all(pluginsPromises);
@@ -152,7 +152,7 @@ export function loadComponent(
             // main component script should be the last to be loaded, otherwise errors might occur
             await loadScript(componentSource, view);
 
-            const renderFinishedTask = cacheEntry ? new Task<void>() : null;
+            const renderFinishedTask = cacheEntry ? view.viewLoadTask : null;
             // create proxy for properties obj to delay its methods execution until native object is ready
             const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, renderFinishedTask);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
@@ -177,14 +177,13 @@ export function loadComponent(
             if (cacheEntry) {
                 storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries); // dont need to await
             }
-            if (renderFinishedTask) {
-                // pending native calls can now be resolved, first html snapshot was grabbed
-                renderFinishedTask.setResult();
-            }
 
-            window.dispatchEvent(new Event("viewready"));
+            // queue view loaded notification to run after all other pending promise notifications (ensure order)
+            view.viewLoadTask.promise.then(() => notifyViewLoaded(view.name, view.id.toString()));
 
-            notifyViewLoaded(view.name, view.id.toString());
+            // pending native calls can now be resolved, first html snapshot was grabbed
+            view.viewLoadTask.setResult();
+
         } catch (error) {
             handleError(error, view!);
         }
@@ -207,7 +206,7 @@ export function initialize(mainView: ViewMetadata) {
     addView(mainFrameName, mainView);
     mainView.renderHandler = component => renderMainView(component, mainView.root!);
 
-    bootstrapTask.setResult();
-
     notifyViewInitialized(mainFrameName);
+
+    bootstrapTask.setResult();
 }

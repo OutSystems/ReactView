@@ -43,29 +43,29 @@ namespace Tests.ReactView {
             });
         }
 
-        [Test(Description = "Loading a view with preload enabled uses a webview from cache")]
-        public async Task PreloadUsesWebViewFromCache() {
-            await Run(async () => {
-                var start = DateTime.Now;
-                while ((DateTime.Now - start).TotalSeconds < 1) {
-                    Thread.Sleep(1); // let the cached webview have time to be created
-                }
+        //[Test(Description = "Loading a view with preload enabled uses a webview from cache")]
+        //public async Task PreloadUsesWebViewFromCache() {
+        //    await Run(async () => {
+        //        var start = DateTime.Now;
+        //        while ((DateTime.Now - start).TotalSeconds < 1) {
+        //            Thread.Sleep(1); // let the cached webview have time to be created
+        //        }
 
-                var taskCompletionSource = new TaskCompletionSource<bool>();
+        //        var taskCompletionSource = new TaskCompletionSource<bool>();
 
-                var currentTime = TargetView.EvaluateMethod<double>("getCurrentTime");
-                using var newView = new TestReactViewWithPreload();
-                newView.Ready += delegate {
-                    taskCompletionSource.SetResult(newView.IsReady);
-                };
-                Window.Content = newView;
+        //        var currentTime = TargetView.EvaluateMethod<double>("getCurrentTime");
+        //        using var newView = new TestReactViewWithPreload();
+        //        newView.Ready += delegate {
+        //            taskCompletionSource.SetResult(newView.IsReady);
+        //        };
+        //        Window.Content = newView;
 
-                var isNewViewReady = await taskCompletionSource.Task;
-                Assert.IsTrue(isNewViewReady, "Second view was not properly loaded!");
+        //        var isNewViewReady = await taskCompletionSource.Task;
+        //        Assert.IsTrue(isNewViewReady, "Second view was not properly loaded!");
 
-                var startTime = newView.EvaluateMethod<double>("getStartTime");
-                Assert.LessOrEqual(startTime, currentTime, "The second webview should have been loaded before!");
-            });
-        }
+        //        var startTime = newView.EvaluateMethod<double>("getStartTime");
+        //        Assert.LessOrEqual(startTime, currentTime, "The second webview should have been loaded before!");
+        //    });
+        //}
     }
 }

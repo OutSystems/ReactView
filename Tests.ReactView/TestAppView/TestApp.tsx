@@ -1,9 +1,12 @@
-﻿import * as React from 'react';
-import dummy from "ModuleWithAlias";
+﻿import dummy from "ModuleWithAlias";
+import { IPluginsContext } from 'PluginsProvider';
+import * as React from 'react';
 import { ViewFrame } from "ViewFrame";
-import InnerView from "./InnerView";
-import "./Styles.scss";
 import * as Image from "./imgs/image.png";
+import InnerView from "./InnerView";
+import Plugin from './PluginModule';
+import "./Styles.scss";
+import { Task } from "./Task";
 
 interface IAppProperties {
     event: (args: string) => void;
@@ -18,17 +21,17 @@ interface IChildViews {
 class App extends React.Component<IAppProperties> {
 
     firstRenderHtml: string;
-    viewIsReady: boolean;
+    pluginsContext: IPluginsContext;
+    innerViewLoadedTask = new Task<boolean>();
 
-    constructor(props: IAppProperties) {
+    constructor(props: IAppProperties, context: IPluginsContext) {
         super(props);
-        this.viewIsReady = false;
-        window.addEventListener("viewready", () => this.viewIsReady = true);
+        this.pluginsContext = context;
         this.firstRenderHtml = this.getHtml();
     }
 
     renderInnerViewContainer() {
-        return this.props.autoShowInnerView ? <ViewFrame<IChildViews> key="test_frame" name="test" className="" /> : null;
+        return this.props.autoShowInnerView ? <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} /> : null;
     }
 
     render() {
@@ -71,13 +74,9 @@ class App extends React.Component<IAppProperties> {
     }
 
     checkPluginModuleLoaded() {
-        var intervalHandle = 0;
-        intervalHandle = setInterval(() => {
-            if ((window as any).PluginModuleLoaded) {
-                this.props.event("PluginModuleLoaded");
-            }
-            clearInterval(intervalHandle);
-        }, 50);
+        if ((window as any).PluginModuleLoaded) {
+            this.props.event("PluginModuleLoaded");
+        }
     }
 
     checkAliasedModuleLoaded() {
@@ -86,14 +85,13 @@ class App extends React.Component<IAppProperties> {
         }
     }
 
-    checkViewReady() {
-        var intervalHandle = 0;
-        intervalHandle = setInterval(() => {
-            if (this.viewIsReady) {
-                this.props.event("ViewReadyTrigger");
-            }
-            clearInterval(intervalHandle);
-        }, 50);
+    checkPluginInContext() {
+        const plugin = this.pluginsContext.getPluginInstance<Plugin>(Plugin);
+        return [!!plugin.nativeObject, !!plugin.root.tagName, plugin.viewLoaded];
+    }
+
+    checkInnerViewLoaded() {
+        this.innerViewLoadedTask.promise.then(() => this.props.event("InnerViewLoaded"));
     }
 
     loadCustomResource(url: string) {
@@ -108,7 +106,7 @@ class App extends React.Component<IAppProperties> {
     }
 
     getHtml() {
-        return (document.body.firstElementChild as HTMLElement).innerHTML || "";
+        return this.getRoot().innerHTML || "";
     }
 
     getPropertyValue() {
@@ -121,6 +119,10 @@ class App extends React.Component<IAppProperties> {
 
     getStartTime() {
         return window.performance.timing.navigationStart;
+    }
+
+    private getRoot() {
+        return document.body.firstElementChild as HTMLElement;
     }
 }
 
