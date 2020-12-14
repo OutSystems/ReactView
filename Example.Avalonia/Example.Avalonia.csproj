@@ -27,7 +27,7 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="0.10.0-preview6" />
     <PackageReference Include="NLog" Version="4.6.2" />
-    <PackageReference Include="ViewGenerator" Version="1.0.309">
+    <PackageReference Include="ViewGenerator" Version="1.0.310">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

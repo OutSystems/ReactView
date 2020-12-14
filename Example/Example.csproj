@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\ViewGenerator.1.0.309\build\ViewGenerator.props" Condition="Exists('..\packages\ViewGenerator.1.0.309\build\ViewGenerator.props')" />
+  <Import Project="..\packages\ViewGenerator.1.0.310\build\ViewGenerator.props" Condition="Exists('..\packages\ViewGenerator.1.0.310\build\ViewGenerator.props')" />
   <Import Project="..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.props" Condition="Exists('..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.props')" />
   <Import Project="..\packages\CefGlue.Wpf.85.4183.6\build\CefGlue.Wpf.props" Condition="Exists('..\packages\CefGlue.Wpf.85.4183.6\build\CefGlue.Wpf.props')" />
   <Import Project="..\packages\CefGlue.Common.85.4183.6\build\CefGlue.Common.props" Condition="Exists('..\packages\CefGlue.Common.85.4183.6\build\CefGlue.Common.props')" />
@@ -86,7 +86,7 @@
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="WebViewControl, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebViewControl-WPF.2.85.5\lib\net472\WebViewControl.dll</HintPath>
+      <HintPath>..\packages\WebViewControl-WPF.2.85.8\lib\net472\WebViewControl.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
@@ -194,12 +194,12 @@
     <Error Condition="!Exists('..\packages\CefGlue.Wpf.85.4183.6\build\CefGlue.Wpf.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CefGlue.Wpf.85.4183.6\build\CefGlue.Wpf.targets'))" />
     <Error Condition="!Exists('..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.props'))" />
     <Error Condition="!Exists('..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.targets'))" />
-    <Error Condition="!Exists('..\packages\ViewGenerator.1.0.309\build\ViewGenerator.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGenerator.1.0.309\build\ViewGenerator.props'))" />
-    <Error Condition="!Exists('..\packages\ViewGenerator.1.0.309\build\ViewGenerator.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGenerator.1.0.309\build\ViewGenerator.targets'))" />
+    <Error Condition="!Exists('..\packages\ViewGenerator.1.0.310\build\ViewGenerator.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGenerator.1.0.310\build\ViewGenerator.props'))" />
+    <Error Condition="!Exists('..\packages\ViewGenerator.1.0.310\build\ViewGenerator.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ViewGenerator.1.0.310\build\ViewGenerator.targets'))" />
   </Target>
   <Import Project="..\packages\OutSystems.ESLint.MSBuild.1.0.21\build\OutSystems.ESLint.MSBuild.targets" Condition="Exists('..\packages\OutSystems.ESLint.MSBuild.1.0.21\build\OutSystems.ESLint.MSBuild.targets')" />
   <Import Project="..\packages\CefGlue.Common.85.4183.6\build\CefGlue.Common.targets" Condition="Exists('..\packages\CefGlue.Common.85.4183.6\build\CefGlue.Common.targets')" />
   <Import Project="..\packages\CefGlue.Wpf.85.4183.6\build\CefGlue.Wpf.targets" Condition="Exists('..\packages\CefGlue.Wpf.85.4183.6\build\CefGlue.Wpf.targets')" />
   <Import Project="..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.targets" Condition="Exists('..\packages\ViewGeneratorCore.1.0.224\build\ViewGeneratorCore.targets')" />
-  <Import Project="..\packages\ViewGenerator.1.0.309\build\ViewGenerator.targets" Condition="Exists('..\packages\ViewGenerator.1.0.309\build\ViewGenerator.targets')" />
+  <Import Project="..\packages\ViewGenerator.1.0.310\build\ViewGenerator.targets" Condition="Exists('..\packages\ViewGenerator.1.0.310\build\ViewGenerator.targets')" />
 </Project>
