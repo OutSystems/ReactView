@@ -11,7 +11,7 @@
     <copyright>$copyright$</copyright>
     <developmentDependency>true</developmentDependency>
     <dependencies>
-      <dependency id="ViewGeneratorCore" version="1.0.223" />
+      <dependency id="ViewGeneratorCore" version="1.0.224" />
       <dependency id="ViewPacker" version="1.0.14" />
       <dependency id="OutSystems.ESLint.MSBuild" version="1.0.21" />
     </dependencies>
