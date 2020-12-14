@@ -70,6 +70,11 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
         childView.generation = this.generation;
         childView.parentView = this.parentView;
 
+        const loadedHandler = this.props.loaded;
+        if (loadedHandler) {
+            childView.viewLoadTask.promise.then(() => loadedHandler());
+        }
+
         this.parentView.childViews.add(childView);
     }
 

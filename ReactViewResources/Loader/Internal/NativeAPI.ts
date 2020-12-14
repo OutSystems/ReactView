@@ -10,23 +10,28 @@ declare const cefglue: {
     checkObjectBound(objName: string): Promise<boolean>
 };
 
-function withAPI(): Promise<INativeObject> {
-    return bindNativeObject(nativeAPIObjectName);
+function withAPI(action: (api: INativeObject) => void): void {
+    const api = window[nativeAPIObjectName];
+    if (api) {
+        action(api);
+    } else {
+        bindNativeObject(nativeAPIObjectName).then(action);
+    }
 }
 
-export async function bindNativeObject(nativeObjectName: string): Promise<any> {
+export async function bindNativeObject<T>(nativeObjectName: string): Promise<T> {
     await cefglue.checkObjectBound(nativeObjectName);
-    return window[nativeObjectName];
+    return window[nativeObjectName] as T;
 }
 
-export function notifyViewInitialized(viewName: string) {
-    withAPI().then(api => api.notifyViewInitialized(viewName));
+export function notifyViewInitialized(viewName: string): void {
+    withAPI(api => api.notifyViewInitialized(viewName));
 }
 
-export function notifyViewLoaded(viewName: string, id: string) {
-    withAPI().then(api => api.notifyViewLoaded(viewName, id));
+export function notifyViewLoaded(viewName: string, id: string): void {
+    withAPI(api => api.notifyViewLoaded(viewName, id));
 }
 
-export function notifyViewDestroyed(viewName: string) {
-    withAPI().then(api => api.notifyViewDestroyed(viewName));
+export function notifyViewDestroyed(viewName: string): void {
+    withAPI(api => api.notifyViewDestroyed(viewName));
 }
