@@ -62,7 +62,7 @@ namespace ReactViewControl {
             WebView.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
             WebView.TextDragging += textContent => TextDragging?.Invoke(textContent);
             WebView.KeyPressed += OnWebViewKeyPressed;
-
+            
             ExtraInitialize();
 
             var urlParams = new string[] {

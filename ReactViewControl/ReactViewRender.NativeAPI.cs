@@ -61,10 +61,7 @@ namespace ReactViewControl {
                     frame.ExecutionEngine.Start(ViewRender.WebView, frameName, id);
 
                     if (frame.IsMain) {
-                        var readyHandler = ViewRender.Ready;
-                        if (readyHandler != null) {
-                            ReactView.AsyncExecuteInUI(() => readyHandler(), false);
-                        }
+                        ReactView.AsyncExecuteInUI(() => ViewRender.Ready?.Invoke(), false);
                     }
                 }
             }
