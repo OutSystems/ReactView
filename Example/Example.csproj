@@ -86,7 +86,7 @@
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="WebViewControl, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WebViewControl-WPF.2.85.4\lib\net472\WebViewControl.dll</HintPath>
+      <HintPath>..\packages\WebViewControl-WPF.2.85.5\lib\net472\WebViewControl.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />

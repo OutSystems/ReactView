@@ -11,7 +11,7 @@ declare const cefglue: {
 };
 
 function withAPI(action: (api: INativeObject) => void): void {
-    let api = window[nativeAPIObjectName];
+    const api = window[nativeAPIObjectName];
     if (api) {
         action(api);
     } else {
