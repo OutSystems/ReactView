@@ -79,8 +79,8 @@ namespace Tests.ReactView {
 
         [Test(Description = "Tests plugin module is loaded with expected arguments")]
         public async Task PluginModuleReceivesExpectedArguments() {
-            await Run(() => {
-                var result = TargetView.EvaluateMethod<bool[]>("checkPluginInContext");
+            await Run(async () => {
+                var result = await TargetView.EvaluateMethod<bool[]>("checkPluginInContext");
 
                 CollectionAssert.AreEquivalent(new[] { true, true, true }, result);
             });

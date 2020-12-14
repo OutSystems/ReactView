@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using WebViewControl;
+using Xilium.CefGlue;
 
 namespace ReactViewControl {
 
@@ -24,7 +25,7 @@ namespace ReactViewControl {
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
 
-        private WebView WebView { get; }
+        private ExtendedWebView WebView { get; }
         private Assembly UserCallingAssembly { get; }
         private LoaderModule Loader { get; }
         private Func<IViewModule[]> PluginsFactory { get; }
@@ -35,7 +36,7 @@ namespace ReactViewControl {
 
         public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, int maxNativeMethodsParallelCalls, bool enableDebugMode, Uri devServerUri = null) {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
-            
+
             // must useSharedDomain for the local storage to be shared
             WebView = new ExtendedWebView(useSharedDomain: true) {
                 DisableBuiltinContextMenus = true,
@@ -428,7 +429,7 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="keyEvent"></param>
         /// <param name="handled"></param>
-        private void OnWebViewKeyPressed(Xilium.CefGlue.CefKeyEvent keyEvent, out bool handled) {
+        private void OnWebViewKeyPressed(CefKeyEvent keyEvent, out bool handled) {
             handled = isInputDisabled;
         }
 
