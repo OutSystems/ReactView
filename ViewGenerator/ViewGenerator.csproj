@@ -8,7 +8,7 @@
     <Product>ViewGenerator</Product>
     <Description>Generates .NET View bindings from typescript</Description>
     <Copyright>Copyright ©  2018</Copyright>
-    <Version>1.0.307</Version>
+    <Version>1.0.309</Version>
     <PackageId>ViewGenerator</PackageId>
     <Authors>OutSystems</Authors>
     <PackageTags>Library</PackageTags>
