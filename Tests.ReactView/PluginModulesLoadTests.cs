@@ -77,6 +77,15 @@ namespace Tests.ReactView {
             });
         }
 
+        [Test(Description = "Tests plugin module is loaded with expected arguments")]
+        public async Task PluginModuleReceivesExpectedArguments() {
+            await Run(async () => {
+                var result = await TargetView.EvaluateMethod<bool[]>("checkPluginInContext");
+
+                CollectionAssert.AreEquivalent(new[] { true, true, true }, result);
+            });
+        }
+
         [Test(Description = "Tests module with alias is loaded")]
         public async Task AliasedModuleIsLoaded() {
             await Run(async () => {

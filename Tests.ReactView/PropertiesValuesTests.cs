@@ -10,7 +10,7 @@ namespace Tests.ReactView {
             return null;
         }
 
-        protected override void ShowDebugConsole() { }
+        protected override bool ShowDebugConsole() => false;
 
         [Test(Description = "Test setting properties after component added to window but window is not visible yet.")]
         public async Task PropertyValuesArePassedToView() {
@@ -27,7 +27,7 @@ namespace Tests.ReactView {
                     window.Show();
                     await sandbox.Initialize();
 
-                    var actualPropertyValue = sandbox.GetPropertyValue();
+                    var actualPropertyValue = await sandbox.GetPropertyValue();
                     Assert.AreEqual(PropertyValue, actualPropertyValue);
                 } finally {
                     window.Close();

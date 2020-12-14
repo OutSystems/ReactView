@@ -92,18 +92,5 @@ namespace Tests.ReactView {
                 Assert.AreNotEqual(mainThread, customResourceRequestThread, "Custom resource request thread should be different from main thread");
             });
         }
-
-        [Test(Description = "Tests view ready event is dispatched.")]
-        public async Task ViewReadyEventIsDispatched() {
-            await Run(async () => {
-                var taskCompletionSource = new TaskCompletionSource<string>();
-                TargetView.Event += (args) => taskCompletionSource.SetResult(args);
-
-                TargetView.ExecuteMethod("checkViewReady");
-                var viewIsReady = await taskCompletionSource.Task;
-
-                Assert.AreEqual("ViewReadyTrigger", viewIsReady, "View is not ready!");
-            });
-        }
     }
 }

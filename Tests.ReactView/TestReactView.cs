@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ReactViewControl;
 
 namespace Tests.ReactView {
@@ -21,8 +22,8 @@ namespace Tests.ReactView {
 
         public event Action<string> Event;
 
-        public T EvaluateMethod<T>(string functionName, params object[] args) {
-            return ExecutionEngine.EvaluateMethod<T>(this, functionName, args);
+        public Task<T> EvaluateMethod<T>(string functionName, params object[] args) {
+            return ExecutionEngine.EvaluateMethodAsync<T>(this, functionName, args);
         }
 
         public void ExecuteMethod(string functionName, params object[] args) {
@@ -74,12 +75,29 @@ namespace Tests.ReactView {
 
         public InnerViewModule InnerView => MainModule.InnerView;
 
-        public T EvaluateMethod<T>(string functionName, params object[] args) {
+        public Task<T> EvaluateMethod<T>(string functionName, params object[] args) {
             return MainModule.EvaluateMethod<T>(functionName, args);
         }
 
         public void ExecuteMethod(string functionName, params object[] args) {
             MainModule.ExecuteMethod(functionName, args);
+        }
+
+        public void Load() => TryLoadComponent();
+
+        public Task<bool> AwaitReady() {
+            var taskCompletionSource = new TaskCompletionSource<bool>(TaskContinuationOptions.RunContinuationsAsynchronously);
+            void OnReady() {
+                Ready -= OnReady;
+                taskCompletionSource.SetResult(true);
+            }
+
+            Ready += OnReady;
+            if (IsReady) {
+                Ready -= OnReady;
+                return Task.FromResult(true);
+            }
+            return taskCompletionSource.Task;
         }
     }
 }

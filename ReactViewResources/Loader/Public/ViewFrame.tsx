@@ -1,7 +1,5 @@
 ﻿import * as React from "react";
 import { IViewFrameProps } from "ViewFrame";
-import { ObservableListCollection } from "../Internal/ObservableCollection";
-import { Task } from "../Internal/Task";
 import { ViewContext } from "../Internal/ViewContext";
 import { newView, ViewMetadata } from "../Internal/ViewMetadata";
 
@@ -71,6 +69,11 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
         const childView = newView(id, this.fullName, false, this.placeholder);
         childView.generation = this.generation;
         childView.parentView = this.parentView;
+
+        const loadedHandler = this.props.loaded;
+        if (loadedHandler) {
+            childView.viewLoadTask.promise.then(() => loadedHandler());
+        }
 
         this.parentView.childViews.add(childView);
     }
