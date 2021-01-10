@@ -86,10 +86,10 @@ namespace ReactViewControl {
 
         public ReactView Host { get; set; }
 
-        /// <summary>
-        /// True when hot reload is enabled.
-        /// </summary>
-        public bool IsHotReloadEnabled => DevServerUri != null;
+        ///// <summary>
+        ///// True when hot reload is enabled.
+        ///// </summary>
+        //public bool IsHotReloadEnabled => DevServerUri != null;
 
         public bool IsDisposing => WebView.IsDisposing;
 
@@ -507,14 +507,11 @@ namespace ReactViewControl {
         /// <param name="url"></param>
         /// <returns></returns>
         private string ToFullUrl(string url) {
+            System.Diagnostics.Debug.WriteLine("ToFullUrl " + url);
             if (url.Contains(Uri.SchemeDelimiter)) {
                 return url;
             } else if (url.StartsWith(ResourceUrl.PathSeparator)) {
-                if (IsHotReloadEnabled) {
-                    return new Uri(DevServerUri, url).ToString();
-                } else {
-                    return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
-                }
+                return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
             } else {
                 return new ResourceUrl(UserCallingAssembly, url).ToString();
             }

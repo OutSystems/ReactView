@@ -34,5 +34,7 @@ namespace ReactViewControl {
         T GetOrAddChildView<T>(string frameName) where T : IViewModule, new();
 
         ReactView Host { get; }
+
+        //static IModuleDependenciesProviderFactory ModuleDependenciesProviderFactory { get; set; }
     }
 }

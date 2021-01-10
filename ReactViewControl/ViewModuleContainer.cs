@@ -8,19 +8,20 @@ namespace ReactViewControl {
 
     public abstract class ViewModuleContainer : IViewModule {
 
-        private const string JsEntryFileExtension = ".js.entry";
-        private const string CssEntryFileExtension = ".css.entry";
-
         private IFrame frame;
         private IChildViewHost childViewHost;
-        private IDependenciesProvider dependenciesProvider;
+        private readonly IModuleDependenciesProvider dependenciesProvider;
 
         public ViewModuleContainer() {
             DependencyJsSourcesCache = new Lazy<string[]>(() => GetJsDependencies());
             CssSourcesCache = new Lazy<string[]>(() => GetCssDependencies());
-
+            
+            dependenciesProvider = ModuleDependenciesProviderFactory.CreateDependenciesProviderInstance(MainJsSource);
+            
             frame = new FrameInfo("dummy");
         }
+
+        public static IModuleDependenciesProviderFactory ModuleDependenciesProviderFactory { set; get; } = new ModuleDependenciesProviderFactory();
 
         private Lazy<string[]> DependencyJsSourcesCache { get; }
         private Lazy<string[]> CssSourcesCache { get; }
@@ -59,12 +60,6 @@ namespace ReactViewControl {
         KeyValuePair<string, object>[] IViewModule.PropertiesValues => PropertiesValues;
 
         void IViewModule.Bind(IFrame frame, IChildViewHost childViewHost) {
-            var devServerUri = childViewHost?.DevServerUri ?? DevServerUri;
-
-            if (devServerUri != null && dependenciesProvider == null) {
-                dependenciesProvider = new WebPackDependenciesProvider(devServerUri);
-            }
-
             frame.CustomResourceRequestedHandler += this.frame.CustomResourceRequestedHandler;
             frame.ExecutionEngine.MergeWorkload(this.frame.ExecutionEngine);
             this.frame = frame;
@@ -82,65 +77,9 @@ namespace ReactViewControl {
             }
         }
 
-        private string[] GetJsDependencies() {
-            var isHotReloadEnabled = dependenciesProvider != null;
+        private string[] GetJsDependencies() => dependenciesProvider.GetJsDependencies(MainJsSource);
 
-            if (isHotReloadEnabled) {
-                var dependencies = GetJsDependenciesFromWebPack();
-                if (dependencies.Length > 0) {
-                    return dependencies;
-                }
-            }
-
-            return GetDependenciesFromEntriesFile(JsEntryFileExtension);
-        }
-
-        private string[] GetCssDependencies() {
-            var isHotReloadEnabled = dependenciesProvider != null;
-
-            if (isHotReloadEnabled) {
-                var dependencies = GetCssDependenciesFromWebPack();
-                if (dependencies.Length > 0) {
-                    return dependencies;
-                }
-            }
-
-            return GetDependenciesFromEntriesFile(CssEntryFileExtension);
-        }
-
-        private string[] GetCssDependenciesFromWebPack() {
-            return dependenciesProvider.GetCssDependencies(ModuleName);
-        }
-
-        private string[] GetJsDependenciesFromWebPack() {
-            return dependenciesProvider.GetJsDependencies(ModuleName);
-        }
-
-        private string[] GetDependenciesFromEntriesFile(string extension) {
-            var entriesFilePath = Path.Combine(Path.GetDirectoryName(MainJsSource), Path.GetFileNameWithoutExtension(MainJsSource) + extension);
-            var resource = entriesFilePath.Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-
-            using (var stream = GetResourceStream(resource)) {
-                if (stream != null) {
-                    using (var reader = new StreamReader(stream)) {
-                        var allEntries = reader.ReadToEnd();
-                        if (allEntries != null && allEntries != string.Empty) {
-                            return allEntries.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-                        }
-                    }
-                }
-            }
-            return new string[0];
-        }
-
-        private Stream GetResourceStream(string[] resource) {
-            var isHotReloadEnabled = childViewHost?.IsHotReloadEnabled ?? DevServerUri != null;
-            if (isHotReloadEnabled) {
-                return File.OpenRead(Path.Combine(Path.GetDirectoryName(Source), resource.Last()));
-            }
-
-            return ResourcesManager.TryGetResourceWithFullPath(resource.First(), resource);
-        }
+        private string[] GetCssDependencies() => dependenciesProvider.GetCssDependencies(MainJsSource);
 
         public event CustomResourceRequestedEventHandler CustomResourceRequested {
             add => frame.CustomResourceRequestedHandler += value;
