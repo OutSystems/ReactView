@@ -2,7 +2,9 @@
 import ViewPlugin from "./ViewPlugin";
 import { IPluginsContext, PluginsContext } from "PluginsProvider";
 import "./SubExampleView.scss";
+import "./Bolos";
 import { ResourceLoader } from "ResourceLoader";
+import Bolos from "./Bolos";
 
 export interface ISubExampleViewProperties {
     click(): void;
@@ -62,6 +64,8 @@ export default class SubExampleView extends React.Component<ISubExampleViewPrope
     public render(): JSX.Element {
         return (
             <div className="wrapper">
+                <Bolos />
+
                 {this.props.constantMessage}
                 <br />
                 Current time (+1hr): {this.state.time}<br />
@@ -72,7 +76,7 @@ export default class SubExampleView extends React.Component<ISubExampleViewPrope
                 <br />
                 <SubExampleComponent />
                 <br />
-                Custom resource:
+                Custom resousssssSrce:
                 <ResourceLoader.Consumer>
                     {url => <img src={url("Completed.png", "size=normal")} />}
                 </ResourceLoader.Consumer>

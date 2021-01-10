@@ -13,6 +13,7 @@
     <None Remove="MainWindow.xaml" />
   </ItemGroup>
 
+
   <ItemGroup>
     <EmbeddedResource Include="App.xaml">
       <Generator></Generator>
@@ -26,6 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="0.10.0-preview6" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.6.2" />
     <PackageReference Include="ViewGenerator" Version="1.0.307">
       <PrivateAssets>all</PrivateAssets>
@@ -57,6 +59,18 @@
     <None Update="ts2lang.json">
       <Visible>True</Visible>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="ExampleView\Bolos.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ESLint_Inputs Remove="ExampleView\Bolos.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VGC_Inputs Remove="ExampleView\Bolos.tsx" />
   </ItemGroup>
     
 </Project>

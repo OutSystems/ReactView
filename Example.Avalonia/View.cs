@@ -18,6 +18,7 @@ namespace Example.Avalonia {
         private SubExampleViewModule childView;
 
         public View() {
+            ViewModuleContainer.ModuleDependenciesProviderFactory = new WebPackDependenciesProviderFactory();
             InitializeComponent();
         }
 
