@@ -16,7 +16,7 @@ namespace Example {
         }
 
         protected override void OnStartup(StartupEventArgs e) {
-            WebView.LogFile = "ceflog.txt";
+            WebView.Settings.LogFile = "ceflog.txt";
             base.OnStartup(e);
         }
     }

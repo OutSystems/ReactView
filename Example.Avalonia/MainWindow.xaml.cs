@@ -12,7 +12,7 @@ namespace Example.Avalonia {
         private TabControl tabs;
 
         public MainWindow() {
-            WebView.OsrEnabled = false;
+            WebView.Settings.OsrEnabled = false;
             InitializeComponent();
 
             CreateTab();
