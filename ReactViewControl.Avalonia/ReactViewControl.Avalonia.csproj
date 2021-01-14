@@ -25,6 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\ReactViewControl\EditCommands.cs" Link="EditCommands.cs" />
     <Compile Include="..\ReactViewControl\ExecutionEngine.cs" Link="ExecutionEngine.cs" />
     <Compile Include="..\ReactViewControl\ExtendedWebView.cs" Link="ExtendedWebView.cs" />
     <Compile Include="..\ReactViewControl\FrameInfo.cs" Link="FrameInfo.cs" />

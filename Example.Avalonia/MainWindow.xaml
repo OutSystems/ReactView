@@ -2,6 +2,27 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Example.Avalonia.MainWindow"
         Title="Example">
+
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="Edit">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Undo" Command="{Binding UndoCommand}" Gesture="CMD+Z" />
+                        <NativeMenuItem Header="Redo" Command="{Binding RedoCommand}" Gesture="Shift+CMD+Z" />
+                        <NativeMenuItemSeperator/>
+                        <NativeMenuItem Header="Cut" Command="{Binding CutCommand}" Gesture="CMD+X" />
+                        <NativeMenuItem Header="Copy" Command="{Binding CopyCommand}" Gesture="CMD+C" />
+                        <NativeMenuItem Header="Paste" Command="{Binding PasteCommand}" Gesture="CMD+V" />
+                        <NativeMenuItem Header="Delete" Command="{Binding DeleteCommand}" Gesture="CMD+Back" />
+                        <NativeMenuItemSeperator/>
+                        <NativeMenuItem Header="Select All" Command="{Binding SelectAllCommand}" Gesture="CMD+A" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
+
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Actions">

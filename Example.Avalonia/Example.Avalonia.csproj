@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="0.10.0-rc1" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.0-rc1" />
     <PackageReference Include="NLog" Version="4.6.2" />
     <PackageReference Include="ViewGenerator" Version="1.0.310">
       <PrivateAssets>all</PrivateAssets>

@@ -210,6 +210,15 @@ namespace ReactViewControl {
         public static int PreloadedCacheEntriesSize { get; set; } = 6;
 
         /// <summary>
+        /// Gets the edition commands.
+        /// </summary>
+        public EditCommands EditCommands { 
+            get { 
+                return View.EditCommands; 
+            } 
+        }
+
+        /// <summary>
         /// Called when executing a native method.
         /// </summary>
         protected virtual object OnNativeMethodCalled(Func<object> nativeMethod) => nativeMethod();

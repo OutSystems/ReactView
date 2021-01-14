@@ -34,6 +34,8 @@ namespace ReactViewControl {
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
+        private Lazy<EditCommands> editCommands;
+
         public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, int maxNativeMethodsParallelCalls, bool enableDebugMode, Uri devServerUri = null) {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
@@ -79,6 +81,8 @@ namespace ReactViewControl {
             if (preloadWebView) {
                 PreloadWebView();
             }
+
+            editCommands = new Lazy<EditCommands>(() => new EditCommands(WebView));
         }
 
         partial void ExtraInitialize();
@@ -572,5 +576,7 @@ namespace ReactViewControl {
             }
             return userMethod;
         }
+
+        public EditCommands EditCommands => editCommands.Value;
     }
 }

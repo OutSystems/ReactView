@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
+using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using ReactiveUI;
 using WebViewControl;
 
 namespace Example.Avalonia {
@@ -14,6 +16,34 @@ namespace Example.Avalonia {
         public MainWindow() {
             WebView.Settings.OsrEnabled = false;
             InitializeComponent();
+
+            CutCommand = ReactiveCommand.Create(() => {
+                SelectedView.EditCommands.Cut();
+            });
+
+            CopyCommand = ReactiveCommand.Create(() => {
+                SelectedView.EditCommands.Copy();
+            });
+
+            PasteCommand = ReactiveCommand.Create(() => {
+                SelectedView.EditCommands.Paste();
+            });
+
+            UndoCommand = ReactiveCommand.Create(() => {
+                SelectedView.EditCommands.Undo();
+            });
+
+            RedoCommand = ReactiveCommand.Create(() => {
+                SelectedView.EditCommands.Redo();
+            });
+
+            SelectAllCommand = ReactiveCommand.Create(() => {
+                SelectedView.EditCommands.SelectAll();
+            });
+
+            DeleteCommand = ReactiveCommand.Create(() => {
+                SelectedView.EditCommands.Delete();
+            });
 
             CreateTab();
         }
@@ -60,5 +90,19 @@ namespace Example.Avalonia {
         private void OnToggleIsEnabled(object sender, RoutedEventArgs e) {
             SelectedView.ToggleIsEnabled();
         }
+
+        public ReactiveCommand<Unit, Unit> CutCommand { get; }
+
+        public ReactiveCommand<Unit, Unit> CopyCommand { get; }
+
+        public ReactiveCommand<Unit, Unit> PasteCommand { get; }
+
+        public ReactiveCommand<Unit, Unit> UndoCommand { get; }
+
+        public ReactiveCommand<Unit, Unit> RedoCommand { get; }
+
+        public ReactiveCommand<Unit, Unit> SelectAllCommand { get; }
+
+        public ReactiveCommand<Unit, Unit> DeleteCommand { get; }
     }
 }
