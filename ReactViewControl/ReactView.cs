@@ -212,11 +212,7 @@ namespace ReactViewControl {
         /// <summary>
         /// Gets the edition commands.
         /// </summary>
-        public EditCommands EditCommands { 
-            get { 
-                return View.EditCommands; 
-            } 
-        }
+        public EditCommands EditCommands => View.EditCommands;
 
         /// <summary>
         /// Called when executing a native method.
