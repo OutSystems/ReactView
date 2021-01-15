@@ -73,6 +73,8 @@ namespace Example.Avalonia {
             view.IsEnabled = !view.IsEnabled;
         }
 
+        public ReactViewControl.EditCommands EditCommands => view.EditCommands;
+
         private string OnExampleViewGetTime() {
             return DateTime.Now.ToShortTimeString();
         }

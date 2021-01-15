@@ -79,6 +79,8 @@ namespace ReactViewControl {
             if (preloadWebView) {
                 PreloadWebView();
             }
+
+            EditCommands = new EditCommands(WebView);
         }
 
         partial void ExtraInitialize();
@@ -181,6 +183,11 @@ namespace ReactViewControl {
         /// Handle drag of text. Use this event to get the text content being dragged.
         /// </summary>
         internal event TextDraggingEventHandler TextDragging;
+
+        /// <summary>
+        /// Gets the edition commands.
+        /// </summary>
+        internal EditCommands EditCommands { get; }
 
         /// <summary>
         /// Javascript context was destroyed, cleanup everthing.
