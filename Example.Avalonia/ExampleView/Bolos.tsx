@@ -1,11 +1,9 @@
 ﻿import * as React from "react";
 
-export interface ICollapsibleProperties {
-    header?: string;
+class Bolos extends React.Component {
+    render() {
+        return <h1>migueeeaasdfasdfdfsfsdfdsfsasle</h1>;
+    }
 }
 
-export default ({
-    header = "",
-}: ICollapsibleProperties) => {
-    return <div>sssss</div>
-}
+export default Bolos

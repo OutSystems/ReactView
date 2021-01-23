@@ -76,7 +76,7 @@ export default class SubExampleView extends React.Component<ISubExampleViewPrope
                 <br />
                 <SubExampleComponent />
                 <br />
-                Custom resousssssSrce:
+                Custom resource:
                 <ResourceLoader.Consumer>
                     {url => <img src={url("Completed.png", "size=normal")} />}
                 </ResourceLoader.Consumer>

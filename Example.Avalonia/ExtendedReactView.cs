@@ -14,12 +14,12 @@ namespace Example.Avalonia {
 
         private void ExtendedReactView_EmbeddedResourceRequested(WebViewControl.ResourceHandler resourceHandler) {
             var resourceUrl = resourceHandler.Url;
-          
+
             if (resourceUrl.Contains("ReactViewResources")) {
                 return;
             }
 
-            resourceUrl = resourceUrl.Remove(0, "embedded://webview/".Length);
+            resourceUrl = new Uri(resourceUrl).PathAndQuery;
             var devServerHost = new Uri(Factory.DevServerURI.GetLeftPart(UriPartial.Authority));
             resourceHandler.Redirect(new Uri(devServerHost, resourceUrl).ToString());
         }
@@ -38,6 +38,9 @@ namespace Example.Avalonia {
 
         private readonly WebPackDependenciesProvider provider = new WebPackDependenciesProvider(new System.Uri("http://localhost:8080/Example.Avalonia/"));
 
-        public IModuleDependenciesProvider CreateDependenciesProviderInstance(string filename) => provider;
+        public IModuleDependenciesProvider CreateDependenciesProviderInstance(string filename) {
+            provider.RefreshDependencies();
+            return provider;
+        }
     }
 }

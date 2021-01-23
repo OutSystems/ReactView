@@ -6,6 +6,8 @@ import * as styles from "./ExampleView.scss";
 import * as Image from "./beach.jpg";
 import { ResourceLoader } from "ResourceLoader";
 import SubExampleView from "./SubExampleView";
+import Bolos from "./Bolos";
+
 
 export interface ISomeType {
     name: string;
@@ -96,11 +98,13 @@ export default class ExampleView extends React.Component<IExampleViewProperties,
     public render(): JSX.Element {
         return (
             <div className="wrapper">
+                <Bolos />
+
                 {this.props.constantMessage}
                 <br />
                 Current time: {this.state.time}
                 <br />	
-                This is a shared SASS vasriable value: '{styles.exportedVariable}'	
+                This is a shared SASS variable value: '{styles.exportedVariable}'	
                 <br />
                 {this.props.image === ImageKind.Beach ? <img className="image" src={Image} /> : null}
                 <br />

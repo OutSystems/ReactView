@@ -13,10 +13,12 @@ namespace ReactViewControl {
         private readonly string basePath;
         private const string ManifestPath = "manifest.json";
 
+        private DateTime lastRefresh;
+
         public WebPackDependenciesProvider(Uri uri) {
             this.uri = uri;
             basePath = GetBaseSegmentFromUri();
-            GetDependenciesFromUri();
+            RefreshDependencies();
         }
 
         public string GetBaseSegmentFromUri() {
@@ -38,7 +40,7 @@ namespace ReactViewControl {
 
         string[] IModuleDependenciesProvider.GetJsDependencies(string filename) {
             var entriesFilePath = Path.GetFileNameWithoutExtension(filename);
-            
+
             if (!dependencies.ContainsKey(entriesFilePath)) {
                 return new string[0];
             }
@@ -50,10 +52,22 @@ namespace ReactViewControl {
                 .ToArray();
         }
 
-        private void GetDependenciesFromUri() {
-            using (var wc = new WebClient()) {
-                var json = wc.DownloadString(new Uri(uri, ManifestPath));
-                dependencies = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(json);
+        public void RefreshDependencies() {
+            var shouldRefresh = true;
+
+            if (lastRefresh != null) {
+                var timeSpan = DateTime.Now.Subtract(lastRefresh);
+                if (timeSpan.TotalSeconds < 10) {
+                    shouldRefresh = false;
+                }
+            }
+
+            if (shouldRefresh) {
+                lastRefresh = DateTime.Now;
+                using (var wc = new WebClient()) {
+                    var json = wc.DownloadString(new Uri(uri, ManifestPath));
+                    dependencies = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(json);
+                }
             }
         }
     }

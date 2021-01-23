@@ -511,7 +511,8 @@ namespace ReactViewControl {
             if (url.Contains(Uri.SchemeDelimiter)) {
                 return url;
             } else if (url.StartsWith(ResourceUrl.PathSeparator)) {
-                return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
+                return new Uri(DevServerUri, url).ToString();
+                //return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
             } else {
                 return new ResourceUrl(UserCallingAssembly, url).ToString();
             }

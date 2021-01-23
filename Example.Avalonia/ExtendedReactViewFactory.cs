@@ -17,7 +17,7 @@ namespace Example.Avalonia {
         }
 
 
-        public override bool ShowDeveloperTools => false;
+        public override bool ShowDeveloperTools => true;
 
         public override bool EnableViewPreload => true;
 
@@ -26,7 +26,7 @@ namespace Example.Avalonia {
 #if DEBUG
         public override bool EnableDebugMode => true;
 
-        public override Uri DevServerURI => new Uri("http://localhost:8080/");
+        public override Uri DevServerURI => new Uri("http://localhost:8080/Example.Avalonia/");
 #endif
     }
 }
