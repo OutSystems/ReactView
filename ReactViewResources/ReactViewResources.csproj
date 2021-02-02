@@ -109,18 +109,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.6.3">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.9.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <Target Name="MergeLoaderFiles" AfterTargets="CompileTypeScriptWithTSConfig" BeforeTargets="AssignTargetPath">
-    <Exec
-      Command="cat &quot;$(ProjectDir)AMDLoader\AMDLoaderExports.js&quot; &quot;$(ProjectDir)AMDLoader\AMDLoader.js&quot; &quot;$(ProjectDir)Loader\_Loader.js&quot; &gt; &quot;$(ProjectDir)Loader.js&quot;"
-      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'" />
-    <Exec 
-      Command="copy /b &quot;$(ProjectDir)AMDLoader\AMDLoaderExports.js&quot; + &quot;$(ProjectDir)AMDLoader\AMDLoader.js&quot; + &quot;$(ProjectDir)Loader\_Loader.js&quot; &quot;$(ProjectDir)Loader.js&quot;"
-      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'" />
+    <Exec Command="cat &quot;$(ProjectDir)AMDLoader\AMDLoaderExports.js&quot; &quot;$(ProjectDir)AMDLoader\AMDLoader.js&quot; &quot;$(ProjectDir)Loader\_Loader.js&quot; &gt; &quot;$(ProjectDir)Loader.js&quot;" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'" />
+    <Exec Command="copy /b &quot;$(ProjectDir)AMDLoader\AMDLoaderExports.js&quot; + &quot;$(ProjectDir)AMDLoader\AMDLoader.js&quot; + &quot;$(ProjectDir)Loader\_Loader.js&quot; &quot;$(ProjectDir)Loader.js&quot;" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'" />
   </Target>
 </Project>
