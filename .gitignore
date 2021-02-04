@@ -54,6 +54,7 @@ launchSettings.json
 *.cache
 .npm-install-stamp
 **/TestResults.xml
+.eslintcache
 
 Example.Avalonia/.eslintcache
 Tests.ReactView/.eslintcache
