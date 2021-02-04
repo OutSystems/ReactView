@@ -86,7 +86,20 @@ namespace ReactViewControl {
         /// Tries to loads the main component.
         /// </summary>
         protected void TryLoadComponent() {
+            TryLoadComponent(true);
+        }
+
+        /// <summary>
+        /// Tries to loads the main component.
+        /// </summary>
+        /// <param name="ensureViewInitialized">Tries to initialize underlying view if wasn't yet.</param>
+        private void TryLoadComponent(bool ensureViewInitialized) {
             if (!View.IsMainComponentLoaded) {
+                if (ensureViewInitialized) {
+                    // we're performing an explicit load and view has not been initialized
+                    // try initializing it
+                    AsyncExecuteInUI(() => View.EnsureInitialized(), lowPriority: false);
+                }
                 View.LoadComponent(MainModule);
             }
         }

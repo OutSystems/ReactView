@@ -214,6 +214,15 @@ namespace ReactViewControl {
         }
 
         /// <summary>
+        /// Initialize the underlying webview if has been initialized yet.
+        /// </summary>
+        public void EnsureInitialized() {
+            if (!WebView.IsBrowserInitialized) {
+                PreloadWebView();
+            }
+        }
+
+        /// <summary>
         /// Binds the specified component to the main frame.
         /// </summary>
         /// <param name="component"></param>
