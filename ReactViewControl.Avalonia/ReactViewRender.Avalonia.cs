@@ -2,14 +2,15 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
 
 namespace ReactViewControl {
 
     partial class ReactViewRender : Control {
 
-        private static Window hiddenWindow;
+        private static WindowBase hiddenWindow;
 
-        private static Window GetHiddenWindow() {
+        private static WindowBase GetHiddenWindow() {
             if (hiddenWindow == null) {
                 hiddenWindow = new Window() {
                     IsVisible = false,
@@ -25,7 +26,7 @@ namespace ReactViewControl {
         }
 
         partial void PreloadWebView() {
-            var window = GetHiddenWindow();
+            var window = Host?.FindLogicalAncestorOfType<WindowBase>() ?? GetHiddenWindow();
             // initialize browser with full screen size to avoid html measure issues on initial render
             var initialBrowserSizeWidth = (int)window.Screens.All.Max(s => s.WorkingArea.Width * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
             var initialBrowserSizeHeight = (int)window.Screens.All.Max(s => s.WorkingArea.Height * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
