@@ -39,7 +39,7 @@
   </Target>
 
   <ItemGroup>
-    <VGC_Inputs Include="$(OverrideProjectDir)**\*.tsx" Exclude="$(OverrideProjectDir)node_modules\**\*.tsx" />
+    <VGC_Inputs Include="$(OverrideProjectDir)**\*.view.tsx" Exclude="$(OverrideProjectDir)node_modules\**\*.tsx" />
     <VGC_Inputs Include="$(OverrideProjectDir)**\*.ts" Exclude="$(OverrideProjectDir)node_modules\**\*.ts" />
     <UpToDateCheckInput Include="@(VGC_Inputs)" Exclude="@(UpToDateCheckInput)" />
   </ItemGroup>
