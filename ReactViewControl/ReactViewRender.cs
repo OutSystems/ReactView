@@ -95,14 +95,14 @@ namespace ReactViewControl {
         public bool IsHotReloadEnabled => DevServerUri != null;
 
         public bool IsDisposing => WebView.IsDisposing;
-
+        
         /// <summary>
         /// True when the main component has been rendered.
         /// </summary>
         public bool IsReady => Frames.TryGetValue(FrameInfo.MainViewFrameName, out var frame) && frame.LoadStatus == LoadStatus.Ready;
 
         /// <summary>
-        /// True when view component is loading or loaded
+        /// True when view component is loading or loaded.
         /// </summary>
         public bool IsMainComponentLoaded => Frames.TryGetValue(FrameInfo.MainViewFrameName, out var frame) && frame.LoadStatus >= LoadStatus.ComponentLoading;
 
@@ -214,6 +214,15 @@ namespace ReactViewControl {
         }
 
         /// <summary>
+        /// Initialize the underlying webview if has been initialized yet.
+        /// </summary>
+        public void EnsureInitialized() {
+            if (!WebView.IsBrowserInitialized) {
+                PreloadWebView();
+            }
+        }
+
+        /// <summary>
         /// Binds the specified component to the main frame.
         /// </summary>
         /// <param name="component"></param>
@@ -253,15 +262,17 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="frame"></param>
         private void TryLoadComponent(FrameInfo frame) {
-            if (frame.Component != null && frame.LoadStatus == LoadStatus.ViewInitialized && frame.IsComponentReadyToLoad) {
-                frame.LoadStatus = LoadStatus.ComponentLoading;
+            if (frame.Component == null || frame.LoadStatus != LoadStatus.ViewInitialized || !frame.IsComponentReadyToLoad) {
+                return;
+            }
 
-                RegisterNativeObject(frame.Component, frame);
+            frame.LoadStatus = LoadStatus.ComponentLoading;
 
-                Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0);
-                if (isInputDisabled && frame.IsMain) {
-                    Loader.DisableMouseInteractions();
-                }
+            RegisterNativeObject(frame.Component, frame);
+
+            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0);
+            if (isInputDisabled && frame.IsMain) {
+                Loader.DisableMouseInteractions();
             }
         }
 

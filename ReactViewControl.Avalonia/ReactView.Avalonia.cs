@@ -19,7 +19,7 @@ namespace ReactViewControl {
 
         private void OnAttachedToVisualTree(object sender, Avalonia.VisualTreeAttachmentEventArgs e) {
             AttachedToVisualTree -= OnAttachedToVisualTree;
-            TryLoadComponent();
+            TryLoadComponent(false);
         }
 
         internal static void AsyncExecuteInUI(Action action, bool lowPriority) {
