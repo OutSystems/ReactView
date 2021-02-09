@@ -12,7 +12,8 @@ import SassRuleSet from "./Rules/Sass";
 const config = (_, argv) => {
 
     const getEntryName = (entryPath: string): string => {
-        return /[^\\\/]+(?=\.[\w]+$)|[^\\\/]+$/.exec(entryPath)[0];
+        let fileExtensionLen: number = entryPath.length - entryPath.lastIndexOf(".");
+        return entryPath.slice(entryPath.replace(/\//g, '\\').lastIndexOf("\\") + 1, -fileExtensionLen);
     };
 
     let entries: string = argv.entryPath;
