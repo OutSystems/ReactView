@@ -13,7 +13,7 @@ const config = (_, argv) => {
 
     const getEntryName = (entryPath: string): string => {
         let fileExtensionLen: number = entryPath.length - entryPath.lastIndexOf(".");
-        return entryPath.slice(entryPath.lastIndexOf("\\") + 1, -fileExtensionLen);
+        return entryPath.slice(entryPath.replace(/\//g, '\\').lastIndexOf("\\") + 1, -fileExtensionLen);
     };
 
     let entries: string = argv.entryPath;
