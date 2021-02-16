@@ -36,13 +36,33 @@
       <__ViewGeneratorCoreNodeJsExe>@(_ViewGeneratorCoreNodeJsExeAfterCheckedPaths);</__ViewGeneratorCoreNodeJsExe>
       <ViewGeneratorCoreNodeJsExe>$(__ViewGeneratorCoreNodeJsExe.Substring(0, $(__ViewGeneratorCoreNodeJsExe.IndexOf(';'))))</ViewGeneratorCoreNodeJsExe>
     </PropertyGroup>
+
+      <PropertyGroup>
+          <VGCInputConfigFilePattern>input&quot;.*:.*&quot;(.*)&quot;</VGCInputConfigFilePattern>
+      </PropertyGroup>
+
+      <ItemGroup>
+          <Ts2LangConfigFile Include="$(MSBuildProjectDirectory)\ts2lang.json" />
+      </ItemGroup>
+
+      <ReadLinesFromFile File="@(Ts2LangConfigFile)">
+          <Output TaskParameter="Lines" ItemName="Ts2LangConfigFileContents" />
+      </ReadLinesFromFile>
+
+      <ItemGroup>
+          <Config Include="$([System.Text.RegularExpressions.Regex]::Match('%(Ts2LangConfigFileContents.Identity)', $(VGCInputConfigFilePattern)).Groups[1].Value)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Ts2LangConfigFileContents.Identity)', $(VGCInputConfigFilePattern)))" />
+      </ItemGroup>
+
+      <CreateItem Include="%(Config.Identity)">
+          <Output
+              TaskParameter="Include"
+              ItemName="VGC_Inputs"/>
+      </CreateItem>
   </Target>
 
-  <ItemGroup>
-    <VGC_Inputs Include="$(OverrideProjectDir)**\*.view.tsx" Exclude="$(OverrideProjectDir)node_modules\**\*.tsx" />
-    <VGC_Inputs Include="$(OverrideProjectDir)**\*.ts" Exclude="$(OverrideProjectDir)node_modules\**\*.ts" />
-    <UpToDateCheckInput Include="@(VGC_Inputs)" Exclude="@(UpToDateCheckInput)" />
-  </ItemGroup>
+    <ItemGroup>
+        <UpToDateCheckInput Include="@(VGC_Inputs)" Exclude="@(UpToDateCheckInput)" />
+    </ItemGroup>
 
   <Target Name="VGC_GenerateView" Inputs="@(VGC_Inputs)" Outputs="VGC_Build.cache" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" BeforeTargets="CustomTransformDuringBuild;TransformDuringBuild;AfterResolveReferences" DependsOnTargets="VGC_SetVariables;VGC_Setup">
     <CallTarget Targets="VGC_GenerateViewInner" />
