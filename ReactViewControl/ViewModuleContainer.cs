@@ -130,6 +130,6 @@ namespace ReactViewControl {
 
         public ReactView Host => childViewHost?.Host;
 
-        private string FormatChildViewName(string name) => frame.Name + (string.IsNullOrEmpty(name) ? "" : ".") + name;
+        private string FormatChildViewName(string name) => frame.Name + (string.IsNullOrEmpty(frame.Name) ? "" : ".") + name;
     }
 }
