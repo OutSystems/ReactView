@@ -382,6 +382,22 @@ namespace ReactViewControl {
         }
 
         /// <summary>
+        /// Adds the specified view instance and binds it to the frame.
+        /// </summary>
+        /// <param name="frameName"></param>
+        /// <returns>True if the view was bound to the frame. False if the frame already as a component bound.</returns>
+        public bool AddChildView(IViewModule childView, string frameName) {
+            lock (SyncRoot) {
+                var frame = GetOrCreateFrame(frameName);
+                if (frame.Component == null) {
+                    BindComponentToFrame(childView, frame);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Binds the coponent to the specified frame.
         /// </summary>
         /// <param name="component"></param>

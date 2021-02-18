@@ -118,9 +118,18 @@ namespace ReactViewControl {
             if (childViewHost == null) {
                 return default(T);
             }
-            return childViewHost.GetOrAddChildView<T>(frame.Name + (string.IsNullOrEmpty(frame.Name) ? "" : ".") + frameName);
+            return childViewHost.GetOrAddChildView<T>(FormatChildViewName(frameName));
+        }
+
+        public bool AddChildView(IViewModule childView, string frameName) {
+            if (childViewHost == null) {
+                return false;
+            }
+            return childViewHost.AddChildView(childView, FormatChildViewName(frameName));
         }
 
         public ReactView Host => childViewHost?.Host;
+
+        private string FormatChildViewName(string name) => frame.Name + (string.IsNullOrEmpty(frame.Name) ? "" : ".") + name;
     }
 }
