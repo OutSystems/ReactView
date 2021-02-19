@@ -31,6 +31,8 @@ namespace ReactViewControl {
 
         void Load();
 
+        bool AddChildView(IViewModule childView, string frameName);
+
         T GetOrAddChildView<T>(string frameName) where T : IViewModule, new();
 
         ReactView Host { get; }
