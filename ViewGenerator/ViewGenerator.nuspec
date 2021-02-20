@@ -12,7 +12,7 @@
     <developmentDependency>true</developmentDependency>
     <dependencies>
       <dependency id="ViewGeneratorCore" version="1.0.224" />
-      <dependency id="ViewPacker" version="1.0.14" />
+      <dependency id="ViewPacker" version="1.0.15" />
       <dependency id="OutSystems.ESLint.MSBuild" version="1.0.22" />
     </dependencies>
   </metadata>
