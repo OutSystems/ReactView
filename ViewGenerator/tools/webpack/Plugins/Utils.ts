@@ -1,7 +1,7 @@
 ﻿import Chalk from "chalk";
 import { outputFileSync } from "fs-extra";
 import { resolve } from "path";
-import { NormalizedMessage } from "fork-ts-checker-webpack-plugin/lib/NormalizedMessage";
+import { Issue } from "fork-ts-checker-webpack-plugin/lib/issue";
 import { FileDescriptor } from "webpack-manifest-plugin";
 
 import { CssExtension, EntryExtension, JsExtension, JsPlaceholder, OutputDirectoryDefault } from "./Resources";
@@ -86,34 +86,34 @@ export function generateManifest(
 /*
  * Custom typescript error formater for Visual Studio.
  * */
-export function customErrorFormatter(message: NormalizedMessage, enableColors: boolean, namespace: string) {
+export function customErrorFormatter(issue: Issue, enableColors: boolean, namespace: string) {
     const colors = Chalk.constructor({ enabled: enableColors });
     const defaultSeverity = "error";
     const defaultColor = colors.bold.red;
     const locationColor = colors.bold.cyan;
     const codeColor = colors.grey;
 
-    if (message.file && message.line && message.character) {
+    if (issue.file && issue.location.start.line && issue.location.start.column) {
 
         // e.g. file.ts(17,20): error TS0168: The variable 'foo' is declared but never used.
-        return locationColor(message.file + "(" + message.line + "," + message.character + ")") +
+        return locationColor(issue.file + "(" + issue.location.start + "," + issue.location.start.column + ")") +
             defaultColor(":") + " " +
             defaultColor(defaultSeverity.toUpperCase()) + " " +
-            codeColor("TS" + message.code) +
+            codeColor("TS" + issue.code) +
             defaultColor(":") + " " +
-            defaultColor(message.content);
+            defaultColor(issue.message);
     }
 
-    if (!message.file) {
+    if (!issue.file) {
         // some messages do not have file specified, although logger needs it
-        (message as any).file = namespace;
+        (issue as any).file = namespace;
     }
 
     // e.g. error TS6053: File 'file.ts' not found.
     return defaultColor(defaultSeverity.toUpperCase()) + " " +
-        codeColor("TS" + message.code) +
+        codeColor("TS" + issue.code) +
         defaultColor(":") + " " +
-        defaultColor(message.content);
+        defaultColor(issue.message);
 }
 
 /*
