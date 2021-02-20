@@ -96,7 +96,7 @@ export function customErrorFormatter(issue: Issue, enableColors: boolean, namesp
     if (issue.file && issue.location.start.line && issue.location.start.column) {
 
         // e.g. file.ts(17,20): error TS0168: The variable 'foo' is declared but never used.
-        return locationColor(issue.file + "(" + issue.location.start + "," + issue.location.start.column + ")") +
+        return locationColor(issue.file + "(" + issue.location.start.line + "," + issue.location.start.column + ")") +
             defaultColor(":") + " " +
             defaultColor(defaultSeverity.toUpperCase()) + " " +
             codeColor("TS" + issue.code) +
