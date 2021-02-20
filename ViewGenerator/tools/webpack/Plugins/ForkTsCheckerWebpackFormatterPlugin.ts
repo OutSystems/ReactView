@@ -11,8 +11,9 @@ export default class ForkTsCheckerWebpackFormatterPlugin extends ForkTsCheckerWe
 
         const hooks = ForkTsCheckerWebpackFormatterPlugin.getCompilerHooks(compiler);
 
-        hooks.issues.tapAsync("ForkTsCheckerWebpackFormatterPlugin", (issues => {
+        hooks.issues.tap("ForkTsCheckerWebpackFormatterPlugin", (issues => {
             issues.map(issue => customErrorFormatter(issue, true, currentDirectory));
+            return issues;
         }))
     }
 }
