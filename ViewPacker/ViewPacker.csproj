@@ -8,7 +8,7 @@
     <Product>ViewPacker</Product>
     <Description>Creates bundles for view files using webpack</Description>
     <Copyright>Copyright ©  2019</Copyright>
-    <Version>1.0.14</Version>
+    <Version>1.0.15</Version>
     <PackageId>ViewPacker</PackageId>
     <Authors>OutSystems</Authors>
     <PackageTags>Library</PackageTags>
