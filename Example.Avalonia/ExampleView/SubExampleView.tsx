@@ -3,6 +3,7 @@ import ViewPlugin from "./ViewPlugin";
 import { IPluginsContext, PluginsContext } from "PluginsProvider";
 import "./SubExampleView.scss";
 import { ResourceLoader } from "ResourceLoader";
+import { ExampleLinkComponent } from "./ExampleLinkComponent";
 
 export interface ISubExampleViewProperties {
     click(): void;
@@ -79,6 +80,9 @@ export default class SubExampleView extends React.Component<ISubExampleViewPrope
                 <br />
                 <input/>
                 <button accessKey="z" onClick={() => this.setState(s => { return { buttonClicksCount: s.buttonClicksCount + 1 }; })}>Click me!</button>&nbsp;
+                <br />
+                <br />
+                <ExampleLinkComponent example={"Parameter example!"} />
             </div>
         );
     }

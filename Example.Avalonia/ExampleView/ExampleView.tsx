@@ -40,6 +40,13 @@ enum SubViewShowStatus {
     Hide
 }
 
+type ExampleContextType = {
+    exampleCallBackWithParameter: (example?: string) => void;
+}
+
+const ExampleContext = React.createContext<ExampleContextType>({ exampleCallBackWithParameter: _ => { } });
+export const useExampleContext = (): ExampleContextType => React.useContext(ExampleContext);
+
 export default class ExampleView extends React.Component<IExampleViewProperties, { time: string; subViewShowStatus: SubViewShowStatus }> implements IExampleViewBehaviors {
 
     private viewplugin: ViewPlugin;
@@ -95,27 +102,31 @@ export default class ExampleView extends React.Component<IExampleViewProperties,
 
     public render(): JSX.Element {
         return (
-            <div className="wrapper">
-                {this.props.constantMessage}
-                <br />
-                Current time: {this.state.time}
-                <br />	
-                This is a shared SASS varible value: '{styles.exportedVariable}'	
-                <br />
-                {this.props.image === ImageKind.Beach ? <img className="image" src={Image} /> : null}
-                <br />
-                <input onChange={() => this.props.inputChanged()}/>
-                <div className="buttons-bar">
-                    <button accessKey="c" onClick={() => { this.props.click(null); }}>Click me!</button>&nbsp;
-                    <button onClick={this.onMountSubViewClick}>Mount/Wrap/Hide child view</button>
+            <ExampleContext.Provider value={{
+                exampleCallBackWithParameter: example => alert("React context passed through ViewFrame with parameter=" + example)
+            }}>
+                <div className="wrapper">
+                    {this.props.constantMessage}
+                    <br />
+                    Current time: {this.state.time}
+                    <br />	
+                    This is a shared SASS varible value: '{styles.exportedVariable}'	
+                    <br />
+                    {this.props.image === ImageKind.Beach ? <img className="image" src={Image} /> : null}
+                    <br />
+                    <input onChange={() => this.props.inputChanged()}/>
+                    <div className="buttons-bar">
+                        <button accessKey="c" onClick={() => { this.props.click(null); }}>Click me!</button>&nbsp;
+                        <button onClick={this.onMountSubViewClick}>Mount/Wrap/Hide child view</button>
+                    </div>
+                    Custom resource:
+                    <ResourceLoader.Consumer>
+                        {url => <img src={url("Ok.png")} />}
+                    </ResourceLoader.Consumer>
+                    <br />
+                    {this.renderSubView()}
                 </div>
-                Custom resource:
-                <ResourceLoader.Consumer>
-                    {url => <img src={url("Ok.png")} />}
-                </ResourceLoader.Consumer>
-                <br />
-                {this.renderSubView()}
-            </div>
+            </ExampleContext.Provider>
         );
     }
 }
