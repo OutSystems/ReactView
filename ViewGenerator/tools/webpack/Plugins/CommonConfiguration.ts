@@ -58,6 +58,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
     }
 
     const Configuration: Configuration = {
+        stats: "minimal",
 
         entry: entryMap,
 
