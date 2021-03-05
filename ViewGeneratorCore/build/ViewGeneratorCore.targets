@@ -39,7 +39,7 @@
   </Target>
 
     <Target Name="VGC_GetInputs" DependsOnTargets="VGC_SetVariables;VGC_Setup">
-        <Exec ConsoleToMSBuild="True" Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)..\tools\node_modules\@outsystems\ts2lang\ts2lang-main.js&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)..\tools\ViewGenerator.js&quot;">
+        <Exec ConsoleToMSBuild="True" Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)../tools/node_modules/@outsystems/ts2lang/ts2lang-main.js&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)../tools\ViewGenerator.js&quot;">
             <Output TaskParameter="ConsoleOutput" ItemName="VGC_Inputs"/>
         </Exec>
         <ItemGroup>
@@ -53,7 +53,7 @@
  
   <Target Name="VGC_GenerateViewInner" DependsOnTargets="VGC_CleanGenerated">
     <Message Importance="High" Text="Generating View files" />
-    <Exec Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)..\tools\node_modules\@outsystems\ts2lang\ts2lang-main.js&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)..\tools\ViewGenerator.js&quot;" />
+    <Exec Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)../tools/node_modules/@outsystems/ts2lang/ts2lang-main.js&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)../tools/ViewGenerator.js&quot;" />
 
     <Touch Files="VGC_Build.cache" AlwaysCreate="true" />
   </Target>
