@@ -39,7 +39,7 @@
   </Target>
 
     <Target Name="VGC_GetInputs" DependsOnTargets="VGC_SetVariables;VGC_Setup">
-        <Exec ConsoleToMSBuild="True" Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)../tools/node_modules/@outsystems/ts2lang/ts2lang-main.js&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)../tools\ViewGenerator.js&quot;">
+        <Exec ConsoleToMSBuild="True" Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)../tools/node_modules/@outsystems/ts2lang/ts2lang-main.js&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)../tools/ViewGenerator.js&quot;">
             <Output TaskParameter="ConsoleOutput" ItemName="VGC_Inputs"/>
         </Exec>
         <ItemGroup>
