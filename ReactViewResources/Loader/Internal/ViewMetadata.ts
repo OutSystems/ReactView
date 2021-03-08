@@ -16,6 +16,7 @@ export type ViewMetadata = {
     nativeObjectNames: string[]; // list of frame native objects
     childViews: ObservableListCollection<ViewMetadata>;
     parentView: ViewMetadata;
+    context: any;
     renderHandler?: (component: React.ReactElement) => Promise<void>;
 }
 
@@ -34,6 +35,7 @@ export function newView(id: number, name: string, isMain: boolean, placeholder: 
         viewLoadTask: new Task(),
         scriptsLoadTasks: new Map<string, Task<void>>(),
         childViews: new ObservableListCollection<ViewMetadata>(),
+        context: null,
         parentView: null!
     };
 }

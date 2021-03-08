@@ -1,7 +1,7 @@
 ﻿import dummy from "ModuleWithAlias";
 import { IPluginsContext } from 'PluginsProvider';
 import * as React from 'react';
-import { ViewFrame } from "ViewFrame";
+import { ViewFrame, ViewSharedContext } from "ViewFrame";
 import * as Image from "./imgs/image.png";
 import InnerView from "./InnerView";
 import Plugin from './PluginModule';
@@ -43,7 +43,9 @@ class App extends React.Component<IAppProperties> {
                     <img src={Image} />
                     <div>Cache timestamp: {uniqueTimestamp}</div>
                     <div>Property value: {this.props.propertyValue}</div>
-                    {this.renderInnerViewContainer()}
+                    <ViewSharedContext.Provider value={{ value: true }}>
+                        {this.renderInnerViewContainer()}
+                    </ViewSharedContext.Provider>
                 </div>
             </div>
         );

@@ -1,6 +1,6 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { ViewContext } from "../Internal/ViewContext";
+import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
 import { handleError } from "./ErrorHandler";
@@ -15,7 +15,7 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
     const makeResourceUrl = (resourceKey: string, ...params: string[]) => formatUrl(view.name, resourceKey, ...params);
 
     return (
-        <ViewContext.Provider value={view}>
+        <ViewMetadataContext.Provider value={view}>
             <PluginsContext.Provider value={new PluginsContextHolder(Array.from(view.modules.values()))}>
                 <ResourceLoader.Provider value={makeResourceUrl}>
                     <ViewPortalsCollection views={view.childViews}
@@ -25,7 +25,7 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
                     {React.createElement(componentClass, { ref: e => view.modules.set(componentName, e), ...properties })}
                 </ResourceLoader.Provider>
             </PluginsContext.Provider>
-        </ViewContext.Provider>
+        </ViewMetadataContext.Provider>
     );
 }
 

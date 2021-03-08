@@ -1,12 +1,37 @@
 ﻿import * as React from "react";
 import { IViewFrameProps } from "ViewFrame";
-import { ViewContext } from "../Internal/ViewContext";
 import { newView, ViewMetadata } from "../Internal/ViewMetadata";
+import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
+import { ViewSharedContext } from "./ViewSharedContext";
+
+interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
+    viewMetadata: ViewMetadata;
+    context: any;
+}
 
 /**
  * Placeholder were a child view is mounted.
  * */
 export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMetadata> {
+
+    constructor(props: IViewFrameProps<T>, context: any) {
+        super(props, context);
+    }
+
+    public render(): JSX.Element {
+        return (
+            <ViewMetadataContext.Consumer>
+                {viewMetadata =>
+                    <ViewSharedContext.Consumer>
+                        {viewcontext => <InternalViewFrame viewMetadata={viewMetadata} context={viewcontext} {...this.props} />}
+                    </ViewSharedContext.Consumer>
+                }
+            </ViewMetadataContext.Consumer>
+        );
+    }
+}
+
+class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {}, ViewMetadata> {
 
     private static generation = 0;
 
@@ -14,9 +39,7 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
     private placeholder: Element;
     private replacement: Element;
 
-    static contextType = ViewContext;
-
-    constructor(props: IViewFrameProps<T>, context: ViewMetadata) {
+    constructor(props: IInternalViewFrameProps<T>, context: any) {
         super(props, context);
         if (props.name === "") {
             throw new Error("View Frame name must be specified (not empty)");
@@ -28,7 +51,7 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
         }
 
         // keep track of this frame generation, so that we can keep tracking the most recent frame instance
-        this.generation = ++ViewFrame.generation;
+        this.generation = ++InternalViewFrame.generation;
 
         const view = this.getView();
         if (view) {
@@ -48,7 +71,7 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
     }
 
     private get parentView(): ViewMetadata {
-        return this.context as ViewMetadata;
+        return this.props.viewMetadata;
     }
 
     private getView(): ViewMetadata | undefined {
@@ -69,6 +92,7 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
         const childView = newView(id, this.fullName, false, this.placeholder);
         childView.generation = this.generation;
         childView.parentView = this.parentView;
+        childView.context = this.props.context;
 
         const loadedHandler = this.props.loaded;
         if (loadedHandler) {
@@ -96,4 +120,7 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMe
     }
 }
 
-window["ViewFrame"] = { ViewFrame: ViewFrame };
+window["ViewFrame"] = {
+    ViewFrame: ViewFrame,
+    ViewSharedContext: ViewSharedContext
+};

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using ReactViewControl;
 
 namespace Tests.ReactView {
@@ -17,14 +18,14 @@ namespace Tests.ReactView {
                 Owner.Loaded?.Invoke();
             }
 
-            public void MethodCalled() {
-                Owner.MethodCalled?.Invoke();
+            public void MethodCalled(bool contextLoaded) {
+                Owner.MethodCalled?.Invoke(contextLoaded);
             }
         }
 
         public event Action Loaded;
 
-        public event Action MethodCalled;
+        public event Action<bool> MethodCalled;
 
         public void TestMethod() {
             ExecutionEngine.ExecuteMethod(this, "testMethod");

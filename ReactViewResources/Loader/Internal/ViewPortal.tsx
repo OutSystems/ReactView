@@ -2,6 +2,7 @@
 import { webViewRootId } from "../Internal/Environment";
 import { getStylesheets } from "./Common";
 import { ViewMetadata } from "./ViewMetadata";
+import { ViewSharedContext } from "../Public/ViewSharedContext";
 
 export type ViewLifecycleEventHandler = (view: ViewMetadata) => void;
 export type ViewErrorHandler = (view: ViewMetadata, error: Error) => void;
@@ -30,8 +31,8 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     private head: Element;
     private shadowRoot: HTMLElement;
 
-    constructor(props: IViewPortalProps) {
-        super(props);
+    constructor(props: IViewPortalProps, context: any) {
+        super(props, context);
 
         this.state = { component: null! };
         
@@ -41,7 +42,12 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     private renderPortal(component: React.ReactElement) {
-        return new Promise<void>(resolve => this.setState({ component }, resolve));
+        const wrappedComponent = (
+            <ViewSharedContext.Provider value={this.props.view.context}>
+                {component}
+            </ViewSharedContext.Provider>
+        );
+        return new Promise<void>(resolve => this.setState({ component: wrappedComponent }, resolve));
     }
 
     public shouldComponentUpdate(nextProps: IViewPortalProps, nextState: IViewPortalState) {

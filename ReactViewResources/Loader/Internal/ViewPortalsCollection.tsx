@@ -17,8 +17,8 @@ interface IViewPortalsCollectionProps {
  * */
 export class ViewPortalsCollection extends React.Component<IViewPortalsCollectionProps> {
 
-    constructor(props: IViewPortalsCollectionProps) {
-        super(props);
+    constructor(props: IViewPortalsCollectionProps, context: any) {
+        super(props, context);
         props.views.addChangedListener(() => this.forceUpdate());
     }
 

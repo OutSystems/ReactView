@@ -1,4 +1,4 @@
 ﻿import * as React from "react";
 import { ViewMetadata } from "./ViewMetadata";
 
-export const ViewContext = React.createContext<ViewMetadata>(null!);
+export const ViewMetadataContext = React.createContext<ViewMetadata>(null!);
