@@ -65,6 +65,8 @@ declare module "ViewFrame" {
     }
 
     export class ViewFrame<T> extends React.Component<IViewFrameProps<T>> { }
+
+    export const ViewSharedContext: React.Context<any>;
 }
 
 declare interface IPlugin<NativeObjectType> {
