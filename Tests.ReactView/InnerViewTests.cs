@@ -55,7 +55,7 @@ namespace Tests.ReactView {
                 var taskCompletionSource = new TaskCompletionSource<bool>();
                 var innerView = TargetView.InnerView;
 
-                innerView.MethodCalled += () => taskCompletionSource.TrySetResult(true);
+                innerView.MethodCalled += _ => taskCompletionSource.TrySetResult(true);
 #if DEBUG
                 TargetView.Ready += () => innerView.Load();
 #endif
@@ -64,6 +64,24 @@ namespace Tests.ReactView {
                 var methodCalled = await taskCompletionSource.Task;
 
                 Assert.IsTrue(methodCalled, "Method was not called!");
+            });
+        }
+
+        [Test(Description = "Tests that the view shared context is propagated to inner views")]
+        public async Task InnerViewSharedContextIsAvailable() {
+            await Run(async () => {
+                var taskCompletionSource = new TaskCompletionSource<bool>();
+                var innerView = TargetView.InnerView;
+
+                innerView.MethodCalled += (contextLoaded) => taskCompletionSource.TrySetResult(contextLoaded);
+#if DEBUG
+                TargetView.Ready += () => innerView.Load();
+#endif
+                innerView.Load();
+                innerView.TestMethod();
+                var contextLoaded = await taskCompletionSource.Task;
+
+                Assert.IsTrue(contextLoaded, "Context was not loaded");
             });
         }
     }

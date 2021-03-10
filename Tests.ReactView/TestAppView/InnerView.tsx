@@ -1,8 +1,9 @@
 ﻿import * as React from 'react';
+import { ViewSharedContext } from 'ViewFrame';
 
 interface IInnerViewProperties {
     loaded: () => void;
-    methodCalled: () => void;
+    methodCalled: (contextLoaded: boolean) => void;
 }
 
 interface IInnerViewBehaviors {
@@ -11,15 +12,27 @@ interface IInnerViewBehaviors {
 
 export default class InnerView extends React.Component<IInnerViewProperties, {}> implements IInnerViewBehaviors {
 
+    private sharedContextLoaded = false;
+
     componentDidMount() {
         this.props.loaded();
     }
 
     render() {
-        return <div>"inner view"</div>;
+        return (
+            <ViewSharedContext.Consumer>
+                {context => (
+                    <div ref={() => {
+                        this.sharedContextLoaded = context && context.value;
+                    }}>
+                        inner view
+                    </div>
+                )}
+            </ViewSharedContext.Consumer>
+        );
     }
 
     testMethod() {
-        this.props.methodCalled();
+        this.props.methodCalled(this.sharedContextLoaded);
     }
 }
