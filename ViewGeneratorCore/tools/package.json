@@ -8,7 +8,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@outsystems/ts2lang": "1.0.12"
+    "@outsystems/ts2lang": "1.0.21"
   },
   "dependencies": {
     "@types/node": "^12.6.8"
