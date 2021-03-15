@@ -69,6 +69,8 @@ declare module "ViewFrame" {
     export const ViewSharedContext: React.Context<any>;
 }
 
-declare interface IPlugin<NativeObjectType> {
-    new(nativeObject: NativeObjectType, root: HTMLElement, viewLoadPromise: Promise<void>): IPlugin<NativeObjectType>;
+interface View { root: Element, getChildren(): View[] }
+
+declare interface IPlugin<NativeObjectType> {    
+    new(nativeObject: NativeObjectType, root: HTMLElement, viewLoadPromise: Promise<void>, roots: View): IPlugin<NativeObjectType>;
 }

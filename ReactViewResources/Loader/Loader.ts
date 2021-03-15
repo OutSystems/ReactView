@@ -18,6 +18,16 @@ export { showErrorMessage } from "./Internal/MessagesProvider";
 const bootstrapTask = new Task();
 const defaultStylesheetLoadTask = new Task();
 
+function getRoots(view: ViewMetadata): View {
+    function getChildViewRoots(view: ViewMetadata): View {
+        return {
+            root: view.root as Element,
+            getChildren: () => view.childViews.items.map(c => getChildViewRoots(c))
+        };
+    }
+    return getChildViewRoots(view);
+}
+
 export const loadDefaultStyleSheet = (() => {
     let defaultStyleSheetLink: HTMLLinkElement;
 
@@ -88,7 +98,9 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                     const pluginNativeObject = await bindNativeObject(nativeObjectFullName);
 
                     view.nativeObjectNames.push(nativeObjectFullName); // add to the native objects collection
-                    view.modules.set(moduleName, new module.default(pluginNativeObject, view.root, view.viewLoadTask.promise));
+
+                    const plugin: IPlugin<any> = module.default;
+                    view.modules.set(moduleName, new plugin(pluginNativeObject, view.root as HTMLElement, view.viewLoadTask.promise, getRoots(view)));
                 });
 
                 await Promise.all(pluginsPromises);
