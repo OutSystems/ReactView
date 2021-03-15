@@ -38,19 +38,22 @@
     </PropertyGroup>
   </Target>
 
-  <ItemGroup>
-    <VGC_Inputs Include="$(OverrideProjectDir)**\*.tsx" Exclude="$(OverrideProjectDir)node_modules\**\*.tsx" />
-    <VGC_Inputs Include="$(OverrideProjectDir)**\*.ts" Exclude="$(OverrideProjectDir)node_modules\**\*.ts" />
-    <UpToDateCheckInput Include="@(VGC_Inputs)" Exclude="@(UpToDateCheckInput)" />
-  </ItemGroup>
+    <Target Name="VGC_GetInputs" DependsOnTargets="VGC_SetVariables;VGC_Setup">
+        <Exec ConsoleToMSBuild="True" Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)../tools/node_modules/@outsystems/ts2lang/ts2lang-main.js&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)../tools/ViewGenerator.js&quot;">
+            <Output TaskParameter="ConsoleOutput" ItemName="VGC_Inputs"/>
+        </Exec>
+        <ItemGroup>
+            <UpToDateCheckInput Include="@(VGC_Inputs)" Exclude="@(UpToDateCheckInput)" />
+        </ItemGroup>
+    </Target>
 
-  <Target Name="VGC_GenerateView" Inputs="@(VGC_Inputs)" Outputs="VGC_Build.cache" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" BeforeTargets="CustomTransformDuringBuild;TransformDuringBuild;AfterResolveReferences" DependsOnTargets="VGC_SetVariables;VGC_Setup">
+  <Target Name="VGC_GenerateView" Inputs="@(VGC_Inputs)" Outputs="VGC_Build.cache" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" BeforeTargets="CustomTransformDuringBuild;TransformDuringBuild;AfterResolveReferences" DependsOnTargets="VGC_GetInputs">
     <CallTarget Targets="VGC_GenerateViewInner" />
   </Target>
  
   <Target Name="VGC_GenerateViewInner" DependsOnTargets="VGC_CleanGenerated">
     <Message Importance="High" Text="Generating View files" />
-    <Exec Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)..\tools\node_modules\@outsystems\ts2lang\ts2lang-main.js&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)..\tools\ViewGenerator.js&quot;" />
+    <Exec Command="&quot;$(ViewGeneratorCoreNodeJsExe)&quot; &quot;$(MSBuildThisFileDirectory)../tools/node_modules/@outsystems/ts2lang/ts2lang-main.js&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(MSBuildThisFileDirectory)../tools/ViewGenerator.js&quot;" />
 
     <Touch Files="VGC_Build.cache" AlwaysCreate="true" />
   </Target>
