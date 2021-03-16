@@ -18,14 +18,14 @@ export { showErrorMessage } from "./Internal/MessagesProvider";
 const bootstrapTask = new Task();
 const defaultStylesheetLoadTask = new Task();
 
-function getRoots(view: ViewMetadata): View {
-    function getChildViewRoots(view: ViewMetadata): View {
+function getViewInfo(view: ViewMetadata): View {
+    function getChildrenViewInfo(view: ViewMetadata): View {
         return {
             root: view.root as Element,
-            getChildren: () => view.childViews.items.map(c => getChildViewRoots(c))
+            getChildren: () => view.childViews.items.map(c => getChildrenViewInfo(c))
         };
     }
-    return getChildViewRoots(view);
+    return getChildrenViewInfo(view);
 }
 
 export const loadDefaultStyleSheet = (() => {
@@ -100,7 +100,7 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                     view.nativeObjectNames.push(nativeObjectFullName); // add to the native objects collection
 
                     const plugin: IPlugin<any> = module.default;
-                    view.modules.set(moduleName, new plugin(pluginNativeObject, view.root as HTMLElement, view.viewLoadTask.promise, getRoots(view)));
+                    view.modules.set(moduleName, new plugin(pluginNativeObject, view.root as HTMLElement, view.viewLoadTask.promise, getViewInfo(view)));
                 });
 
                 await Promise.all(pluginsPromises);

@@ -72,5 +72,5 @@ declare module "ViewFrame" {
 interface View { root: Element, getChildren(): View[] }
 
 declare interface IPlugin<NativeObjectType> {    
-    new(nativeObject: NativeObjectType, root: HTMLElement, viewLoadPromise: Promise<void>, roots: View): IPlugin<NativeObjectType>;
+    new(nativeObject: NativeObjectType, root: HTMLElement, viewLoadPromise: Promise<void>, viewInfo: View): IPlugin<NativeObjectType>;
 }
