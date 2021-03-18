@@ -8,7 +8,7 @@
     <Product>ViewPacker</Product>
     <Description>Creates bundles for view files using webpack</Description>
     <Copyright>Copyright ©  2019</Copyright>
-    <Version>1.0.15</Version>
+    <Version>1.0.16</Version>
     <PackageId>ViewPacker</PackageId>
     <Authors>OutSystems</Authors>
     <PackageTags>Library</PackageTags>
@@ -44,8 +44,5 @@
   </Target>
   <ItemGroup>
     <None Include="build\ViewPacker.props" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="tools\node_modules\node-gyp\lib\Find-VS2017.cs" />
   </ItemGroup>
 </Project>
