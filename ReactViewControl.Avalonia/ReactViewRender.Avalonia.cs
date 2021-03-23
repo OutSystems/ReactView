@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.ComponentModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 
@@ -15,8 +17,9 @@ namespace ReactViewControl {
                 hiddenWindow = new Window() {
                     IsVisible = false,
                     Focusable = false,
-                    Title = "Hidden React View Window"
+                    Title = "Hidden React View Window"                    
                 };
+                ((Window)hiddenWindow).Closing += OnHiddenWindowClosing;
             }
             return hiddenWindow;
         }
@@ -43,6 +46,16 @@ namespace ReactViewControl {
 
             if (!ExtendedWebView.Settings.OsrEnabled && change.Property == IsEffectivelyEnabledProperty) {
                  DisableInputInteractions(!IsEffectivelyEnabled);
+            }
+        }
+
+        private static void OnHiddenWindowClosing(object sender, CancelEventArgs e) {
+            e.Cancel = true;
+            var appWindows = ((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime).Windows;
+            if (hiddenWindow != null && appWindows.Count() == 0) {
+                ((Window)hiddenWindow).Closing -= OnHiddenWindowClosing;
+                ((Window)hiddenWindow).Close();
+                hiddenWindow = null;
             }
         }
 
