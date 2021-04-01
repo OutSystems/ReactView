@@ -17,7 +17,7 @@ namespace ReactViewControl {
                 hiddenWindow = new Window() {
                     IsVisible = false,
                     Focusable = false,
-                    Title = "Hidden React View Window"                    
+                    Title = "Hidden React View Window"
                 };
                 ((Window)hiddenWindow).Closing += OnHiddenWindowClosing;
             }
