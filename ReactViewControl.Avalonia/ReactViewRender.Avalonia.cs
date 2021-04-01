@@ -50,7 +50,7 @@ namespace ReactViewControl {
         }
 
         private static void OnHiddenWindowClosing(object sender, CancelEventArgs e) {
-            e.Cancel |= ((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime).Windows.Count() == 0;
+            e.Cancel |= ((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime).Windows.Count() != 0;
             if (!e.Cancel) {
                 ((Window)hiddenWindow).Closing -= OnHiddenWindowClosing;
                 hiddenWindow = null;
