@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,16 +11,16 @@ namespace ReactViewControl {
 
     partial class ReactViewRender : Control {
 
-        private static WindowBase hiddenWindow;
+        private static Window hiddenWindow;
 
-        private static WindowBase GetHiddenWindow() {
+        private static Window GetHiddenWindow() {
             if (hiddenWindow == null) {
                 hiddenWindow = new Window() {
                     IsVisible = false,
                     Focusable = false,
                     Title = "Hidden React View Window"
                 };
-                ((Window)hiddenWindow).Closing += OnHiddenWindowClosing;
+                hiddenWindow.Closing += OnHiddenWindowClosing;
             }
             return hiddenWindow;
         }
@@ -29,7 +30,7 @@ namespace ReactViewControl {
         }
 
         partial void PreloadWebView() {
-            var window = Host?.FindLogicalAncestorOfType<WindowBase>() ?? GetHiddenWindow();
+            var window = Host?.FindLogicalAncestorOfType<Window>() ?? GetHiddenWindow();
             // initialize browser with full screen size to avoid html measure issues on initial render
             var initialBrowserSizeWidth = (int)window.Screens.All.Max(s => s.WorkingArea.Width * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
             var initialBrowserSizeHeight = (int)window.Screens.All.Max(s => s.WorkingArea.Height * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
@@ -52,7 +53,7 @@ namespace ReactViewControl {
         private static void OnHiddenWindowClosing(object sender, CancelEventArgs e) {
             e.Cancel |= ((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime).Windows.Count() != 0;
             if (!e.Cancel) {
-                ((Window)hiddenWindow).Closing -= OnHiddenWindowClosing;
+                hiddenWindow.Closing -= OnHiddenWindowClosing;
                 hiddenWindow = null;
             }
         }
