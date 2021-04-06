@@ -29,7 +29,7 @@ namespace ReactViewControl {
         }
 
         partial void PreloadWebView() {
-            var window = Host?.FindLogicalAncestorOfType<Window>() ?? GetHiddenWindow();
+            var window = Host?.FindLogicalAncestorOfType<WindowBase>() ?? GetHiddenWindow();
             // initialize browser with full screen size to avoid html measure issues on initial render
             var initialBrowserSizeWidth = (int)window.Screens.All.Max(s => s.WorkingArea.Width * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
             var initialBrowserSizeHeight = (int)window.Screens.All.Max(s => s.WorkingArea.Height * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
@@ -51,10 +51,6 @@ namespace ReactViewControl {
 
         private static void OnHiddenWindowClosing(object sender, CancelEventArgs e) {
             e.Cancel |= ((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime).Windows.Count() != 0;
-            if (!e.Cancel) {
-                hiddenWindow.Closing -= OnHiddenWindowClosing;
-                hiddenWindow = null;
-            }
         }
 
         private static bool IsFrameworkAssemblyName(string name) {
