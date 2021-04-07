@@ -107,7 +107,7 @@
   
   <ItemGroup>
     <VG_Inputs Include="**\*.tsx" Exclude="node_modules\**\*.tsx" />
-    <VG_Inputs Include="**\*.ts" Exclude="node_modules\**\*.ts;**\*.d.ts" />
+    <VG_Inputs Include="**\*.ts" Exclude="node_modules\**\*.ts" />
     <VG_Inputs Include="**\*.scss" Exclude="node_modules\**\*.scss" />
     <VG_Inputs Condition="'$(PluginsRelativePath)' != ''" Include="$(PluginsRelativePath)VG_Build.cache" />
   </ItemGroup>
