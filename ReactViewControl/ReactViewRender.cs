@@ -24,6 +24,7 @@ namespace ReactViewControl {
         private static Assembly ResourcesAssembly { get; } = typeof(ReactViewResources.Resources).Assembly;
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
+        private Dictionary<string, WeakReference<FrameInfo>> RecoverableFrames { get; } = new Dictionary<string, WeakReference<FrameInfo>>();
 
         private ExtendedWebView WebView { get; }
         private Assembly UserCallingAssembly { get; }
@@ -201,6 +202,10 @@ namespace ReactViewControl {
 
             lock (SyncRoot) {
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
+                foreach (var frame in Frames) {
+                    RecoverableFrames[frame.Key] = new WeakReference<FrameInfo>(frame.Value);
+                }
+
                 Frames.Clear();
                 Frames.Add(mainFrame.Name, mainFrame);
                 var previousComponentReady = mainFrame.IsComponentReadyToLoad;
@@ -211,6 +216,8 @@ namespace ReactViewControl {
 
         public void Dispose() {
             WebView.Dispose();
+            Frames.Clear();
+            RecoverableFrames.Clear();
         }
 
         /// <summary>
@@ -589,12 +596,21 @@ namespace ReactViewControl {
         }
 
         private FrameInfo GetOrCreateFrame(string frameName) {
-            if (!Frames.TryGetValue(frameName, out var frame)) {
-                frame = new FrameInfo(frameName);
-                Frames[frameName] = frame;
-                AddPlugins(PluginsFactory(), frame);
+            if (Frames.TryGetValue(frameName, out var frame)) {
+                return frame;
             }
-            return frame;
+
+            if (RecoverableFrames.TryGetValue(frameName, out var weakReferenceFrame) && weakReferenceFrame.TryGetTarget(out var recoverableFrame)) {
+                Frames[frameName] = recoverableFrame;
+                RecoverableFrames.Remove(frameName);
+                return recoverableFrame;
+            }
+
+            var newFrame = new FrameInfo(frameName);
+            Frames[frameName] = newFrame;
+            AddPlugins(PluginsFactory(), newFrame);
+
+            return newFrame;
         }
 
         private static MethodBase GetUserCallingMethod(bool captureFilenames = false) {
