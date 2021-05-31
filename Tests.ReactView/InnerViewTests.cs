@@ -35,13 +35,13 @@ namespace Tests.ReactView {
                 var loadCount = 0;
                 var taskCompletionSource = new TaskCompletionSource<bool>();
 
-                TargetView.InnerView.Load();
                 TargetView.InnerView.Loaded += () => {
                     if (++loadCount == 2) {
                         taskCompletionSource.TrySetResult(true);
                     }
                 };
 
+                TargetView.InnerView.Load();
                 TargetView.ExecuteMethod("reload");
 
                 var isReloaded = await taskCompletionSource.Task;
