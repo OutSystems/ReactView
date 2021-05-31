@@ -38,11 +38,7 @@ namespace Tests.ReactView {
 #endif
                 TargetView.InnerView.Load();
 
-                TargetView.Event += (name) => {
-                    if (name == "initialize") {
-                        taskCompletionSource.TrySetResult(true);
-                    }
-                };
+                TargetView.InnerView.Loaded += () => taskCompletionSource.SetResult(true);
                 TargetView.ExecuteMethod("reload");
 
                 var isReloaded = await taskCompletionSource.Task;

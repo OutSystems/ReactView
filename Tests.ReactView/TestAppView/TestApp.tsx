@@ -28,8 +28,6 @@ class App extends React.Component<IAppProperties> {
         super(props);
         this.pluginsContext = context;
         this.firstRenderHtml = this.getHtml();
-
-        this.props.event("initialize");
     }
 
     renderInnerViewContainer() {
