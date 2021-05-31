@@ -64,7 +64,7 @@ namespace ReactViewControl {
             WebView.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
             WebView.TextDragging += textContent => TextDragging?.Invoke(textContent);
             WebView.KeyPressed += OnWebViewKeyPressed;
-            
+
             ExtraInitialize();
 
             var urlParams = new string[] {
@@ -96,7 +96,7 @@ namespace ReactViewControl {
         public bool IsHotReloadEnabled => DevServerUri != null;
 
         public bool IsDisposing => WebView.IsDisposing;
-        
+
         /// <summary>
         /// True when the main component has been rendered.
         /// </summary>
@@ -202,6 +202,9 @@ namespace ReactViewControl {
 
             lock (SyncRoot) {
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
+
+                Frames.Remove(mainFrame.Name);
+                RecoverableFrames.Clear();
                 foreach (var frame in Frames) {
                     RecoverableFrames[frame.Key] = new WeakReference<FrameInfo>(frame.Value);
                 }
@@ -216,8 +219,6 @@ namespace ReactViewControl {
 
         public void Dispose() {
             WebView.Dispose();
-            Frames.Clear();
-            RecoverableFrames.Clear();
         }
 
         /// <summary>
@@ -302,7 +303,7 @@ namespace ReactViewControl {
                 var pluginName = invalidPlugins.First().Name + "|" + invalidPlugins.First().GetType().Name;
                 throw new ArgumentException($"Plugin '{pluginName}' is invalid");
             }
-            
+
             if (frame.LoadStatus > LoadStatus.ViewInitialized) {
                 throw new InvalidOperationException($"Cannot add plugins after component has been loaded");
             }
@@ -381,7 +382,7 @@ namespace ReactViewControl {
                     component = new T();
                     BindComponentToFrame(component, frame);
                 } else {
-                    component = (T) frame.Component;
+                    component = (T)frame.Component;
                 }
             }
 
@@ -487,7 +488,7 @@ namespace ReactViewControl {
         /// <returns></returns>
         private void HandleCustomResourceRequested(ResourceHandler resourceHandler) {
             var url = resourceHandler.Url;
-            
+
             if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Segments.Length > 1 && uri.Host.Equals(CustomResourceBaseUrl, StringComparison.InvariantCultureIgnoreCase)) {
                 var frameName = uri.Segments.ElementAt(1).TrimEnd(ResourceUrl.PathSeparator.ToCharArray());
                 if (frameName != null && Frames.TryGetValue(frameName, out var frame)) {
@@ -600,10 +601,12 @@ namespace ReactViewControl {
                 return frame;
             }
 
-            if (RecoverableFrames.TryGetValue(frameName, out var weakReferenceFrame) && weakReferenceFrame.TryGetTarget(out var recoverableFrame)) {
-                Frames[frameName] = recoverableFrame;
+            if (RecoverableFrames.TryGetValue(frameName, out var weakReferenceFrame)) {
                 RecoverableFrames.Remove(frameName);
-                return recoverableFrame;
+                if (weakReferenceFrame.TryGetTarget(out var recoverableFrame)) {
+                    Frames[frameName] = recoverableFrame;
+                    return recoverableFrame;
+                }
             }
 
             var newFrame = new FrameInfo(frameName);
