@@ -191,7 +191,7 @@ namespace ReactViewControl {
         internal EditCommands EditCommands { get; }
 
         /// <summary>
-        /// Javascript context was destroyed, cleanup everthing.
+        /// Javascript context was destroyed, cleanup everything.
         /// </summary>
         /// <param name="frameName"></param>
         private void OnWebViewJavascriptContextReleased(string frameName) {
