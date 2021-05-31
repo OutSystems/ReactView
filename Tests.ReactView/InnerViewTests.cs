@@ -16,7 +16,7 @@ namespace Tests.ReactView {
         public async Task InnerViewIsLoaded() {
             await Run(async () => {
                 var taskCompletionSource = new TaskCompletionSource<bool>();
-                
+
                 TargetView.InnerView.Loaded += () => taskCompletionSource.TrySetResult(true);
 #if DEBUG
                 TargetView.Ready += () => TargetView.InnerView.Load();
@@ -34,9 +34,7 @@ namespace Tests.ReactView {
             await Run(async () => {
                 var loadCount = 0;
                 var taskCompletionSource = new TaskCompletionSource<bool>();
-#if DEBUG
-                TargetView.Ready += () => TargetView.InnerView.Load();
-#endif
+
                 TargetView.InnerView.Load();
                 TargetView.InnerView.Loaded += () => {
                     if (++loadCount == 2) {
