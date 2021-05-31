@@ -21,6 +21,7 @@ namespace Tests.ReactView {
 #if DEBUG
                 TargetView.Ready += () => TargetView.InnerView.Load();
 #endif
+                TargetView.InnerView.Load();
 
                 var isLoaded = await taskCompletionSource.Task;
 
@@ -28,27 +29,25 @@ namespace Tests.ReactView {
             });
         }
 
-        
         [Test(Description = "Tests inner view reload")]
         public async Task InnerViewIsReloaded() {
             await Run(async () => {
                 var taskCompletionSource = new TaskCompletionSource<bool>();
-                
-                TargetView.InnerView.Loaded += () => taskCompletionSource.TrySetResult(true);
 #if DEBUG
                 TargetView.Ready += () => TargetView.InnerView.Load();
 #endif
-                TargetView.Load();
+                TargetView.InnerView.Load();
 
-                TargetView.Dispose();
-                TargetView.Load();
+                TargetView.Event += (name) => {
+                    if (name == "initialize") {
+                        taskCompletionSource.TrySetResult(true);
+                    }
+                };
+                TargetView.ExecuteMethod("reload");
 
-                var isLoaded = await taskCompletionSource.Task;
+                var isReloaded = await taskCompletionSource.Task;
 
-                TargetView.ExecuteMethod("checkInnerViewUnloaded");
-
-
-                Assert.IsTrue(isLoaded, "Inner view module was not loaded!");
+                Assert.IsTrue(isReloaded, "Inner view module was not reloaded!");
             });
         }
 

@@ -28,6 +28,8 @@ class App extends React.Component<IAppProperties> {
         super(props);
         this.pluginsContext = context;
         this.firstRenderHtml = this.getHtml();
+
+        this.props.event("initialize");
     }
 
     renderInnerViewContainer() {
@@ -122,6 +124,10 @@ class App extends React.Component<IAppProperties> {
 
     getStartTime() {
         return window.performance.timing.navigationStart;
+    }
+
+    reload() {
+        window.location.reload();
     }
 
     private getRoot() {
