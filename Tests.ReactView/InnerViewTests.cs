@@ -32,13 +32,18 @@ namespace Tests.ReactView {
         [Test(Description = "Tests inner view reload")]
         public async Task InnerViewIsReloaded() {
             await Run(async () => {
+                var loadCount = 0;
                 var taskCompletionSource = new TaskCompletionSource<bool>();
 #if DEBUG
                 TargetView.Ready += () => TargetView.InnerView.Load();
 #endif
                 TargetView.InnerView.Load();
+                TargetView.InnerView.Loaded += () => {
+                    if (++loadCount == 2) {
+                        taskCompletionSource.TrySetResult(true);
+                    }
+                };
 
-                TargetView.InnerView.Loaded += () => taskCompletionSource.SetResult(true);
                 TargetView.ExecuteMethod("reload");
 
                 var isReloaded = await taskCompletionSource.Task;
