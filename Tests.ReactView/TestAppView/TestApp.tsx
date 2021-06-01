@@ -18,20 +18,41 @@ interface IChildViews {
     test: InnerView;
 }
 
-class App extends React.Component<IAppProperties> {
+interface IAppState {
+    shouldRenderInnerView: boolean;
+}
 
+interface IAppBehaviors {
+    setShouldRenderInnerView(value: boolean): void;
+}
+
+class App extends React.Component<IAppProperties, IAppState> implements IAppBehaviors {
     firstRenderHtml: string;
     pluginsContext: IPluginsContext;
     innerViewLoadedTask = new Task<boolean>();
 
     constructor(props: IAppProperties, context: IPluginsContext) {
         super(props);
+
+        this.state = {
+            shouldRenderInnerView: props.autoShowInnerView
+        };
+
         this.pluginsContext = context;
         this.firstRenderHtml = this.getHtml();
     }
 
+    setShouldRenderInnerView(shouldRenderInnerView: boolean): void {
+        this.setState({ shouldRenderInnerView });
+    }
+
     renderInnerViewContainer() {
-        return this.props.autoShowInnerView ? <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} /> : null;
+        if (this.props.autoShowInnerView && this.state.shouldRenderInnerView) {
+            return <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} />;
+        }
+
+        this.props.event("NoInnerView");
+        return null;
     }
 
     render() {

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Tests.ReactView {
@@ -29,24 +30,56 @@ namespace Tests.ReactView {
             });
         }
 
-        [Test(Description = "Tests inner view reload")]
-        public async Task InnerViewIsReloaded() {
+        [Test(Description = "Tests inner view reload when web view is reloaded")]
+        public async Task InnerViewIsReloadedWhenWebviewIsReloaded() {
             await Run(async () => {
-                var loadCount = 0;
+                // Load view for the first time
                 var taskCompletionSource = new TaskCompletionSource<bool>();
-
                 TargetView.InnerView.Loaded += () => {
-                    if (++loadCount == 2) {
-                        taskCompletionSource.TrySetResult(true);
-                    }
+                    taskCompletionSource.TrySetResult(true);
                 };
 
                 TargetView.InnerView.Load();
-                TargetView.ExecuteMethod("reload");
+                await taskCompletionSource.Task;
 
+                // Reload view
+                taskCompletionSource = new TaskCompletionSource<bool>();
+                TargetView.ExecuteMethod("reload");
                 var isReloaded = await taskCompletionSource.Task;
 
                 Assert.IsTrue(isReloaded, "Inner view module was not reloaded!");
+            });
+        }
+
+        [Test(Description = "Tests inner view is collected when destroyed")]
+        public async Task InnerViewIsCollectedWhenDestroyed() {
+            await Run(async () => {
+                var weakRef = new WeakReference(TargetView.InnerView);
+
+                // Load view for the first time
+                var taskCompletionSource = new TaskCompletionSource<bool>();
+                TargetView.InnerView.Loaded += () => {
+                    taskCompletionSource.TrySetResult(true);
+                };
+
+                TargetView.InnerView.Load();
+                await taskCompletionSource.Task;
+
+                // Reload view
+                var targetViewCompletionSource = new TaskCompletionSource<bool>();
+                TargetView.ExecuteMethod("setShouldRenderInnerView", false);
+                TargetView.ExecuteMethod("reload");
+
+                TargetView.Event += (string name) => {
+                    if (name == "NoInnerView") {
+                        targetViewCompletionSource.SetResult(true);
+                    }
+                };
+
+                await targetViewCompletionSource.Task;
+                GC.Collect();
+
+                Assert.IsFalse(weakRef.IsAlive, "Inner view was not collected!");
             });
         }
 
