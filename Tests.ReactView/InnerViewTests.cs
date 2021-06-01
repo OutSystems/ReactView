@@ -77,8 +77,12 @@ namespace Tests.ReactView {
                 };
 
                 await targetViewCompletionSource.Task;
+                
+                // Ensure inner view was not collected
+                Assert.IsTrue(weakRef.IsAlive, "Inner view was collected!");
                 GC.Collect();
 
+                // Ensure inner view was collected
                 Assert.IsFalse(weakRef.IsAlive, "Inner view was not collected!");
             });
         }
