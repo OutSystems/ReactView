@@ -30,8 +30,8 @@ namespace Tests.ReactView {
             });
         }
 
-        [Test(Description = "Tests inner view reload when web view is reloaded")]
-        public async Task InnerViewIsReloadedWhenWebviewIsReloaded() {
+        [Test(Description = "Tests inner view load when web view is reloaded")]
+        public async Task InnerViewIsLoadedWhenWebviewIsReloaded() {
             await Run(async () => {
                 // Load view for the first time
                 var taskCompletionSource = new TaskCompletionSource<bool>();
@@ -67,7 +67,8 @@ namespace Tests.ReactView {
 
                 // Reload view
                 var targetViewCompletionSource = new TaskCompletionSource<bool>();
-                TargetView.ExecuteMethod("setShouldRenderInnerView", false);
+                TargetView.AutoShowInnerView = false;
+                //TargetView.ExecuteMethod("setShouldRenderInnerView", false);
                 TargetView.ExecuteMethod("reload");
 
                 TargetView.Event += (string name) => {
