@@ -51,8 +51,8 @@ namespace Tests.ReactView {
             });
         }
 
-        [Test(Description = "Tests inner view is collected when destroyed")]
-        public async Task InnerViewIsCollectedWhenDestroyed() {
+        [Test(Description = "Tests inner view is collected when web view is reloaded")]
+        public async Task InnerViewIsCollectedWhenWebviewIsReloaded() {
             await Run(async () => {
                 var weakRef = new WeakReference(TargetView.InnerView);
 
@@ -61,16 +61,14 @@ namespace Tests.ReactView {
                 TargetView.InnerView.Loaded += () => {
                     taskCompletionSource.TrySetResult(true);
                 };
-
                 TargetView.InnerView.Load();
                 await taskCompletionSource.Task;
 
                 // Reload view
                 var targetViewCompletionSource = new TaskCompletionSource<bool>();
                 TargetView.AutoShowInnerView = false;
-                //TargetView.ExecuteMethod("setShouldRenderInnerView", false);
                 TargetView.ExecuteMethod("reload");
-
+                
                 TargetView.Event += (string name) => {
                     if (name == "NoInnerView") {
                         targetViewCompletionSource.SetResult(true);
@@ -78,7 +76,7 @@ namespace Tests.ReactView {
                 };
 
                 await targetViewCompletionSource.Task;
-                
+
                 // Ensure inner view was not collected
                 Assert.IsTrue(weakRef.IsAlive, "Inner view was collected!");
                 GC.Collect();

@@ -29,10 +29,6 @@ class App extends React.Component<IAppProperties> {
         this.firstRenderHtml = this.getHtml();
     }
 
-    setShouldRenderInnerView(shouldRenderInnerView: boolean): void {
-        this.setState({ shouldRenderInnerView });
-    }
-
     renderInnerViewContainer() {
         if (this.props.autoShowInnerView) {
             return <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} />;

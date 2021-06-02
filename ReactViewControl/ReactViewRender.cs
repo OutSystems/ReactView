@@ -205,8 +205,9 @@ namespace ReactViewControl {
 
                 Frames.Remove(mainFrame.Name);
                 RecoverableFrames.Clear();
-                foreach (var frame in Frames) {
-                    RecoverableFrames[frame.Key] = new WeakReference<FrameInfo>(frame.Value);
+                foreach (var keyValuePair in Frames) {
+                    RecoverableFrames[keyValuePair.Key] = new WeakReference<FrameInfo>(keyValuePair.Value);
+                    UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value);
                 }
 
                 Frames.Clear();
