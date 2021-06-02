@@ -19,7 +19,6 @@ interface IChildViews {
 }
 
 class App extends React.Component<IAppProperties> {
-
     firstRenderHtml: string;
     pluginsContext: IPluginsContext;
     innerViewLoadedTask = new Task<boolean>();
@@ -31,7 +30,17 @@ class App extends React.Component<IAppProperties> {
     }
 
     renderInnerViewContainer() {
-        return this.props.autoShowInnerView ? <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} /> : null;
+        if (this.props.autoShowInnerView) {
+            return <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} />;
+        }
+
+        return null;
+    }
+
+    componentDidMount() {
+        if (!this.props.autoShowInnerView) {
+            this.props.event("NoInnerView");
+        }
     }
 
     render() {
@@ -122,6 +131,10 @@ class App extends React.Component<IAppProperties> {
 
     getStartTime() {
         return window.performance.timing.navigationStart;
+    }
+
+    reload() {
+        window.location.reload();
     }
 
     private getRoot() {

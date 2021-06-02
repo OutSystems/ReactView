@@ -24,6 +24,7 @@ namespace ReactViewControl {
         private static Assembly ResourcesAssembly { get; } = typeof(ReactViewResources.Resources).Assembly;
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
+        private Dictionary<string, WeakReference<FrameInfo>> RecoverableFrames { get; } = new Dictionary<string, WeakReference<FrameInfo>>();
 
         private ExtendedWebView WebView { get; }
         private Assembly UserCallingAssembly { get; }
@@ -63,7 +64,7 @@ namespace ReactViewControl {
             WebView.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
             WebView.TextDragging += textContent => TextDragging?.Invoke(textContent);
             WebView.KeyPressed += OnWebViewKeyPressed;
-            
+
             ExtraInitialize();
 
             var urlParams = new string[] {
@@ -95,7 +96,7 @@ namespace ReactViewControl {
         public bool IsHotReloadEnabled => DevServerUri != null;
 
         public bool IsDisposing => WebView.IsDisposing;
-        
+
         /// <summary>
         /// True when the main component has been rendered.
         /// </summary>
@@ -190,7 +191,7 @@ namespace ReactViewControl {
         internal EditCommands EditCommands { get; }
 
         /// <summary>
-        /// Javascript context was destroyed, cleanup everthing.
+        /// Javascript context was destroyed, cleanup everything.
         /// </summary>
         /// <param name="frameName"></param>
         private void OnWebViewJavascriptContextReleased(string frameName) {
@@ -201,6 +202,14 @@ namespace ReactViewControl {
 
             lock (SyncRoot) {
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
+
+                Frames.Remove(mainFrame.Name);
+                RecoverableFrames.Clear();
+                foreach (var keyValuePair in Frames) {
+                    RecoverableFrames[keyValuePair.Key] = new WeakReference<FrameInfo>(keyValuePair.Value);
+                    UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value);
+                }
+
                 Frames.Clear();
                 Frames.Add(mainFrame.Name, mainFrame);
                 var previousComponentReady = mainFrame.IsComponentReadyToLoad;
@@ -295,7 +304,7 @@ namespace ReactViewControl {
                 var pluginName = invalidPlugins.First().Name + "|" + invalidPlugins.First().GetType().Name;
                 throw new ArgumentException($"Plugin '{pluginName}' is invalid");
             }
-            
+
             if (frame.LoadStatus > LoadStatus.ViewInitialized) {
                 throw new InvalidOperationException($"Cannot add plugins after component has been loaded");
             }
@@ -374,7 +383,7 @@ namespace ReactViewControl {
                     component = new T();
                     BindComponentToFrame(component, frame);
                 } else {
-                    component = (T) frame.Component;
+                    component = (T)frame.Component;
                 }
             }
 
@@ -480,7 +489,7 @@ namespace ReactViewControl {
         /// <returns></returns>
         private void HandleCustomResourceRequested(ResourceHandler resourceHandler) {
             var url = resourceHandler.Url;
-            
+
             if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Segments.Length > 1 && uri.Host.Equals(CustomResourceBaseUrl, StringComparison.InvariantCultureIgnoreCase)) {
                 var frameName = uri.Segments.ElementAt(1).TrimEnd(ResourceUrl.PathSeparator.ToCharArray());
                 if (frameName != null && Frames.TryGetValue(frameName, out var frame)) {
@@ -589,12 +598,23 @@ namespace ReactViewControl {
         }
 
         private FrameInfo GetOrCreateFrame(string frameName) {
-            if (!Frames.TryGetValue(frameName, out var frame)) {
-                frame = new FrameInfo(frameName);
-                Frames[frameName] = frame;
-                AddPlugins(PluginsFactory(), frame);
+            if (Frames.TryGetValue(frameName, out var frame)) {
+                return frame;
             }
-            return frame;
+
+            if (RecoverableFrames.TryGetValue(frameName, out var weakReferenceFrame)) {
+                RecoverableFrames.Remove(frameName);
+                if (weakReferenceFrame.TryGetTarget(out var recoverableFrame)) {
+                    Frames[frameName] = recoverableFrame;
+                    return recoverableFrame;
+                }
+            }
+
+            var newFrame = new FrameInfo(frameName);
+            Frames[frameName] = newFrame;
+            AddPlugins(PluginsFactory(), newFrame);
+
+            return newFrame;
         }
 
         private static MethodBase GetUserCallingMethod(bool captureFilenames = false) {

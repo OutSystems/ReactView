@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using ReactViewControl;
 
@@ -34,6 +35,7 @@ namespace Tests.ReactView {
 
         public bool AutoShowInnerView { get; set; }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public InnerViewModule InnerView { get => GetOrAddChildView<InnerViewModule>("test"); }
 
         protected override string MainJsSource => "/Tests.ReactView/Generated/TestApp.js";
@@ -73,6 +75,7 @@ namespace Tests.ReactView {
 
         public bool AutoShowInnerView { get => MainModule.AutoShowInnerView; set => MainModule.AutoShowInnerView = value; }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public InnerViewModule InnerView => MainModule.InnerView;
 
         public Task<T> EvaluateMethod<T>(string functionName, params object[] args) {
