@@ -1,7 +1,7 @@
 ﻿import * as Types from "@outsystems/ts2lang/ts-types";
 import * as Units from "@outsystems/ts2lang/ts-units";
 
-const GeneratedFilesHeader = "/*** Auto-generated ***/";
+const GeneratedFilesHeader = "/*** Auto-generated (ViewGeneratorCore) ***/";
 
 const DelegateSuffix = "EventHandler";
 const BaseComponentAliasName = "BaseComponent";
@@ -117,13 +117,14 @@ class Generator {
         const generateNativeApiMethod = (func: Units.TsFunction) => {
             let isVoid = func.returnType.name === Types.TsVoidType.name;
             return (
+                this.generateDocString(func) +
                 `public ${this.generateMethodSignature(func)} => ${ownerPropertyName}.${toPascalCase(func.name)}?.Invoke(${func.parameters.map(p => p.name).join(", ")})${isVoid ? "" : ` ?? default(${this.getFunctionReturnType(func)})`};\n`
             );
         }
 
         return (
             `internal interface I${PropertiesClassName} {\n` +
-            `    ${f(this.propsInterface ? this.propsInterface.functions.map(f => this.generateMethodSignature(f) + ";").join("\n") : "")}\n` +
+            `    ${f(this.propsInterface ? this.propsInterface.functions.map(f => this.generateDocString(f) + this.generateMethodSignature(f) + ";").join("\n") : "")}\n` +
             `}\n` +
             `\n` +
             `private class ${PropertiesClassName} : I${PropertiesClassName} {\n` +
@@ -140,17 +141,34 @@ class Generator {
             .join("\n\n");
     }
 
+    private generateDocString(objInterface?: Units.INamedTsUnit | null) {
+        if (objInterface && objInterface.documentation) {
+            return [
+                "/// <summary>",
+                objInterface.documentation.replace(/\r\n/g,"\n").split("\n").map(line => `/// ${line}`).join("\n"),
+                "/// </summary>",
+                ""
+            ].join("\n");
+        }
+        return "";
+    }
+
     private generateNativeApiObject(objInterface: Units.TsInterface) {
         const objKind = objInterface.annotations.find(a => a.name === "class") ? "class" : "struct";
         return (
+            this.generateDocString(objInterface) +
             `public partial ${objKind} ${this.getTypeNameAlias(objInterface.name)} {\n` +
-            `    ${f(objInterface.properties.map(p => `public ${this.getTypeName(p.type)} ${p.name} { get; set; }`).join("\n"))}\n` +
+            `    ${f(objInterface.properties.map(p =>
+                    this.generateDocString(p) +
+                    `public ${this.getTypeName(p.type)} ${p.name} { get; set; }`
+                ).join("\n"))}\n` +
             `}`
         );
     }
 
     private generateNativeApiEnum(enumerate: Units.TsEnum) {
         return (
+            this.generateDocString(enumerate) +
             `public enum ${enumerate.name} {\n` +
             `    ${f(enumerate.options.map(o => `${o.name}`).join(",\n"))}\n` +
             `}`
@@ -241,6 +259,7 @@ class Generator {
             }
 
             return (
+                this.generateDocString(func) +
                 `public ${this.generateMethodSignature(func)} => ${body};`
             );
         };
@@ -298,10 +317,18 @@ class Generator {
     }
 
     private generateComponentInterface() {
-        const generatePropertyEvent = (func: Units.TsFunction) => `${this.generatePropertyEvent(func, "")};`;
-        const generateProperty = (prop: Units.TsProperty) => this.generateProperty(prop, "");
-        const generateBehaviorMethod = (func: Units.TsFunction) => `${this.generateMethodSignature(func)};`;
-        const generateChildViewProperty = (prop: Units.TsProperty) => `I${this.getTypeName(prop.type)}${ModuleSuffix} ${toPascalCase(prop.name)} { get; }\n`;
+        const generatePropertyEvent = (func: Units.TsFunction) =>
+            this.generateDocString(func) +
+            `${this.generatePropertyEvent(func, "")};`;
+        const generateProperty = (prop: Units.TsProperty) =>
+            this.generateDocString(prop) +
+            this.generateProperty(prop, "");
+        const generateBehaviorMethod = (func: Units.TsFunction) =>
+            this.generateDocString(func) +
+            `${this.generateMethodSignature(func)};`;
+        const generateChildViewProperty = (prop: Units.TsProperty) =>
+            this.generateDocString(prop) +
+            `I${this.getTypeName(prop.type)}${ModuleSuffix} ${toPascalCase(prop.name)} { get; }\n`;
 
         const moduleInterfaceName = "I" + this.moduleName;
         const componentInterface = "I" + this.componentName;
@@ -315,6 +342,7 @@ class Generator {
         }
 
         return (
+            this.generateDocString(this.propsInterface) +
             `public partial interface ${moduleInterfaceName} ${this.baseModuleInterface ? `: ${this.baseModuleInterface} ` : ""}{\n` +
             `    ${f(this.generateComponentBody(generatePropertyEvent, generateProperty, generateBehaviorMethod, generateChildViewProperty))}\n` +
             `}\n` +
@@ -338,7 +366,8 @@ class Generator {
 
         const generatePropertyDelegate = (func: Units.TsFunction, accessibility: string = "public"): string => {
             accessibility = accessibility ? accessibility + " " : "";
-            return `${accessibility}delegate ${this.generateMethodSignature(func, this.componentName, DelegateSuffix)}`;
+            return this.generateDocString(func) +
+                `${accessibility}delegate ${this.generateMethodSignature(func, this.componentName, DelegateSuffix)}`;
         }
 
         const generatePropertiesDelegates = () => this.propsInterface ? this.propsInterface.functions.map(f => `${generatePropertyDelegate(f)};`).join("\n") : "";

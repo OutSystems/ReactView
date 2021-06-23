@@ -8,7 +8,7 @@
     <Product>ViewGenerator</Product>
     <Description>Generates .NET View bindings from typescript</Description>
     <Copyright>Copyright ©  2018</Copyright>
-    <Version>1.0.320</Version>
+    <Version>1.0.321</Version>
     <PackageId>ViewGenerator</PackageId>
     <Authors>OutSystems</Authors>
     <PackageTags>Library</PackageTags>
@@ -41,7 +41,7 @@
     <Touch Files="$(ProjectDir)contentFiles\VG.cache" AlwaysCreate="true" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.6.0">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.3.2">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
