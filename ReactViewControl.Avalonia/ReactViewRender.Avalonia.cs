@@ -34,16 +34,16 @@ namespace ReactViewControl {
             var initialBrowserSizeWidth = 2000;
             var initialBrowserSizeHeight = 2000;
 
-            var screens = window?.Screens;
-            if (screens == null || screens.ScreenCount == 0) {
+            var screens = window?.Screens?.All;
+            if (screens == null || screens.Count == 0) {
                 window = GetHiddenWindow();
-                screens = window?.Screens;
+                screens = window?.Screens?.All;
             }
 
-            if (screens?.ScreenCount > 0) {
+            if (screens?.Count > 0) {
                 // initialize browser with full screen size to avoid html measure issues on initial render
-                initialBrowserSizeWidth = (int) window.Screens.All.Max(s => s.WorkingArea.Width * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
-                initialBrowserSizeHeight = (int) window.Screens.All.Max(s => s.WorkingArea.Height * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
+                initialBrowserSizeWidth = (int) screens.Max(s => s.WorkingArea.Width * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
+                initialBrowserSizeHeight = (int) screens.Max(s => s.WorkingArea.Height * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
             }
 
             WebView.InitializeBrowser(window, initialBrowserSizeWidth, initialBrowserSizeHeight);
