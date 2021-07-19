@@ -24,14 +24,15 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                         // Context represents the path of the project being built by webpack, e.g. "C:\Git\Path\to\Project\"
                         //
                         const buildUrl = (url: string, resourceBase: string): string => {
-                            let isWebComponentsPackage = false;
+                            const PackagesFolder = "/packages/";
+                            let isOutSystemsWebPackage = false;
                             let idx: number = url.indexOf(`/${resourceBase}/`);
                             if (idx < 0 && pluginsBase) {                       
                                 idx = url.indexOf(`/${pluginsBase}/`);
-                            } else if (idx < 0 && url.indexOf("/packages/") > 0) {
-                                // web-components packages
+                            } else if (idx < 0 && url.indexOf(PackagesFolder) > 0) {
+                                // OutSystems web components packages
                                 idx = url.indexOf(`${url}`);
-                                isWebComponentsPackage = true;
+                                isOutSystemsWebPackage = true;
                             }
 
                             // relative paths starting with ".." are replaced by "_"
@@ -42,8 +43,9 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                                 }
 
                                 // URL (argument) is a relative path and contains the resource base path or the plugin assembly in its content
-                                if(isWebComponentsPackage) {
-                                    return "../node_modules/webview.plugins/@outsystems/web-" + url.substring(url.indexOf("/packages/") + "/packages/".length);
+                                if(isOutSystemsWebPackage) {
+                                    let packg = url.substring(url.indexOf(PackagesFolder) + PackagesFolder.length);
+                                    return `/${pluginsBase}/node_modules/@outsystems/web-${packg}`;
                                 } else {
                                     return url.substring(idx);
                                 }
