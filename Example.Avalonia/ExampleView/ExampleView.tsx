@@ -7,25 +7,35 @@ import * as Image from "./beach.jpg";
 import { ResourceLoader } from "ResourceLoader";
 import SubExampleView from "./SubExampleView";
 
+/** complex type */
 export interface ISomeType {
     name: string;
 }
 
+/** enum type */
 export enum ImageKind {
     None,
     Beach
 }
 
+/** interface with API for JS to call, to be handled by .NET */
 export interface IExampleViewProperties {
     click(arg: ISomeType): void;
+    /**
+     * a call that .NET handles
+     * and yields a result
+     * */
     getTime(): Promise<string>;
+    /** a call that .NET handles */
     viewMounted(): void;
     inputChanged(): void;
     readonly constantMessage: string;
     readonly image: ImageKind;
 }
 
+/** interface that JS exposes to .NET */
 export interface IExampleViewBehaviors {
+    /** call that JS handles from .NET */
     callMe(): void;
 }
 
