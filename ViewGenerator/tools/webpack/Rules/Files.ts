@@ -61,9 +61,10 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                             const PackagesFolder = "/packages/";
                             let isOutSystemsWebPackage = false;
                             let idx: number = url.indexOf(`/${resourceBase}/`);
-                            if (idx < 0 && pluginsBase) {                       
+                            if (idx < 0 && pluginsBase) {
                                 idx = url.indexOf(`/${pluginsBase}/`);
-                            } else if (idx < 0 && url.indexOf(PackagesFolder) > 0) {
+                            }
+                            if (idx < 0 && url.indexOf(PackagesFolder) > 0) {
                                 // OutSystems web components packages
                                 idx = url.indexOf(`${url}`);
                                 isOutSystemsWebPackage = true;
