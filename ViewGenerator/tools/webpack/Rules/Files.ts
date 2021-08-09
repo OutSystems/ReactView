@@ -23,51 +23,17 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                         //
                         // Context represents the path of the project being built by webpack, e.g. "C:\Git\Path\to\Project\"
                         //
-                        const PackagesFolder = "/packages/";
-                        const isOutSystemsPackagesWithOldNaming = (url) => {
-                            // means that the package name is (example) "web_feedback-message" or "web_image" instead of "web-feedback-message" or "web-image"
-                            const OutSystemsPackagesWithOldNaming = [
-                                "/carousel/",
-                                "/checkbox/",
-                                "/collapsible/",
-                                "/common/",
-                                "/editable-label/",
-                                "/feedback-message/",
-                                "/image/",
-                                "/input/",
-                                "/loading-legacy/",
-                                "/loading-wheel/",
-                                "/navigation-bar/",
-                                "/optioncards/",
-                                "/overlay/",
-                                "/progressbar/",
-                                "/radio-button/",
-                                "/slider/",
-                                "/splitter/",
-                                "/tabs/",
-                                "/theme/",
-                                "/theme-provider/",
-                                "/toggle/",
-                            ];
-
-                            for(var i = 0; i < OutSystemsPackagesWithOldNaming.length; ++i) {
-                                if(url.indexOf(OutSystemsPackagesWithOldNaming[i]) > 0) {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        }
                         const buildUrl = (url: string, resourceBase: string): string => {
                             const PackagesFolder = "/packages/";
-                            let isOutSystemsWebPackage = false;
+                            let isOutSystemsDesignSystemPackage = false;
                             let idx: number = url.indexOf(`/${resourceBase}/`);
                             if (idx < 0 && pluginsBase) {
                                 idx = url.indexOf(`/${pluginsBase}/`);
                             }
                             if (idx < 0 && url.indexOf(PackagesFolder) > 0) {
-                                // OutSystems web components packages
+                                // OutSystems design system components packages
                                 idx = url.indexOf(`${url}`);
-                                isOutSystemsWebPackage = true;
+                                isOutSystemsDesignSystemPackage = true;
                             }
 
                             // relative paths starting with ".." are replaced by "_"
@@ -78,9 +44,9 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                                 }
 
                                 // URL (argument) is a relative path and contains the resource base path or the plugin assembly in its content
-                                if(isOutSystemsWebPackage) {
+                                if(isOutSystemsDesignSystemPackage) {
                                     let packg = url.substring(url.indexOf(PackagesFolder) + PackagesFolder.length);
-                                    return `/${pluginsBase}/node_modules/@outsystems/web${(isOutSystemsPackagesWithOldNaming(url)) ? "_" : "-"}${packg}`;
+                                    return `/${pluginsBase}/node_modules/@os-designsystem/${packg}`;
                                 } else {
                                     return url.substring(idx);
                                 }
