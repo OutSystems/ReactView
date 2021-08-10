@@ -1,6 +1,6 @@
 # ReactView
 
-ReactView is an Avalonia/WPF control for building React based UIs on Avalonia/WPF applications.
+ReactView is a framework for building react.js based UIs that can be hosted in Avalonia/WPF applications.
 
 # Sample
 
