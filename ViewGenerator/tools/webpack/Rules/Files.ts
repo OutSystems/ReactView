@@ -24,18 +24,13 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                         // Context represents the path of the project being built by webpack, e.g. "C:\Git\Path\to\Project\"
                         //
                         const buildUrl = (url: string, resourceBase: string): string => {
-                            const PackagesFolder = "/packages/";
-                            let isOutSystemsDesignSystemPackage = false;
+
                             let idx: number = url.indexOf(`/${resourceBase}/`);
+
                             if (idx < 0 && pluginsBase) {
                                 idx = url.indexOf(`/${pluginsBase}/`);
                             }
-                            if (idx < 0 && url.indexOf(PackagesFolder) > 0) {
-                                // OutSystems design system components packages
-                                idx = url.indexOf(`${url}`);
-                                isOutSystemsDesignSystemPackage = true;
-                            }
-
+                            
                             // relative paths starting with ".." are replaced by "_"
                             if (url.startsWith("_")) {
                                 if (idx < 0) {
@@ -43,13 +38,7 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                                     throw new Error("VG001: Resource not found: using a resource from another namespace without an absolute URL.");
                                 }
 
-                                // URL (argument) is a relative path and contains the resource base path or the plugin assembly in its content
-                                if(isOutSystemsDesignSystemPackage) {
-                                    let packg = url.substring(url.indexOf(PackagesFolder) + PackagesFolder.length);
-                                    return `/${pluginsBase}/node_modules/@os-designsystem/${packg}`;
-                                } else {
-                                    return url.substring(idx);
-                                }
+                                return url.substring(idx);
                             }
 
                             if (idx >= 0) {
