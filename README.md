@@ -2,6 +2,10 @@
 
 ReactView is an Avalonia/WPF control for building React based UIs on Avalonia/WPF applications.
 
+# Sample
+
+Inside the Sample.Avalonia folder you may find a Task List application that showcases most of the functionalities provided by this framework.
+
 # Build pre-requisites
 - NodeJS
 
