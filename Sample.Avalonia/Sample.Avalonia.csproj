@@ -1,0 +1,117 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+    <RuntimeIdentifiers>osx-x64;win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="App.xaml" />
+    <None Remove="MainView\Tasks.png" />
+    <None Remove="MainWindow.xaml" />
+    <None Remove="Users\User1.png" />
+    <None Remove="Users\User2.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="App.xaml" />
+    <EmbeddedResource Include="MainView\Tasks.png" />
+    <EmbeddedResource Include="MainWindow.xaml" />
+    <EmbeddedResource Include="Users\User1.png" />
+    <EmbeddedResource Include="Users\User2.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DefaultStyleSheet Include="Styles\LightTheme.scss" />
+    <DefaultStyleSheet Include="Styles\DarkTheme.scss" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.6" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.6" />
+    <PackageReference Include="NLog" Version="4.6.2" />
+    <PackageReference Include="ViewGenerator" Version="1.0.323">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="ViewGeneratorCore" Version="1.0.227">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\ReactViewControl.Avalonia\ReactViewControl.Avalonia.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="tsconfig.json">
+      <Visible>True</Visible>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ts2lang.json">
+      <Visible>True</Visible>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="MainView\MainView.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ESLint_Inputs Remove="MainView\MainView.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VGC_Inputs Remove="MainView\MainView.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="TaskListView\TaskListView.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ESLint_Inputs Remove="TaskListView\TaskListView.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VGC_Inputs Remove="TaskListView\TaskListView.tsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="Styles\LightTheme.scss" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="Styles\DarkTheme.scss" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="ViewPlugin\ViewPlugin.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ESLint_Inputs Remove="ViewPlugin\ViewPlugin.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_StyleSheet_Inputs Remove="MainView\MainView.scss" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="MainView\MainView.scss" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_StyleSheet_Inputs Remove="TaskListView\TaskListView.scss" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_Inputs Remove="TaskListView\TaskListView.scss" />
+  </ItemGroup>
+    
+</Project>

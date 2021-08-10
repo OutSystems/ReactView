@@ -59,3 +59,7 @@ tsconfig.tsbuildinfo
 
 Example.Avalonia/.eslintcache
 Tests.ReactView/.eslintcache
+Sample.Avalonia/global.d.ts
+Sample.Avalonia/.wpcache/
+Sample.Avalonia/Generated/
+Sample.Avalonia/node_modules/

@@ -1,0 +1,23 @@
+﻿{
+  "compilerOptions": {
+    "incremental": true,
+    "module": "amd",
+    "target": "es2017",
+    "jsx": "react",
+    "moduleResolution": "node",
+    "sourceMap": false,
+    "allowJs": true,
+    "rootDir": ".",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "suppressImplicitAnyIndexErrors": true
+  },
+  "compileOnSave": false,
+  "buildOnSave": false,
+  "exclude": [
+    "dist",
+    "Generated"
+  ]
+}
