@@ -19,7 +19,9 @@ See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List
 
 ## Releases
 Stable binaries are released on NuGet, and contain everything you need to start creating ReactView based apps.
-
+- [ReactViewControl-Avalonia](https://www.nuget.org/packages/ReactViewControl-Avalonia/)
+- [ReactViewControl-WPF](https://www.nuget.org/packages/ReactViewControl-WPF/)
+- [ViewGenerator](https://www.nuget.org/packages/ViewGenerator/)
 
 # View Generator
 
