@@ -6,6 +6,14 @@ ReactView is a framework for building react.js based UIs that can be hosted in A
 
 Inside the Sample.Avalonia folder you may find a Task List application that showcases most of the functionalities provided by this framework.
 
+![Screenshot](docs/images/screenshot.png "Sample Task List app screenshot")
+
+# Getting Started
+
+1) Add the ReactView and ViewGenerator Nuget packages to your WPF/Avalonia project.
+2) Follow [these](ViewGenerator/readme.txt "Instructions") intructions 
+3) For more details check the Sample project.
+
 # Build pre-requisites
 - NodeJS
 
