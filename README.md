@@ -19,6 +19,8 @@ See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List
 
 # View Generator
 
+ViewGenerator is the companion tool of the ReactView framework which generates the C# code from the TypeScript declarations and is responsible for compiling and packing all the application assets into the app bundle.
+
 ## Build pre-requisites
 - NodeJS
 
