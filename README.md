@@ -17,10 +17,12 @@ See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List
 2) Follow [these](ViewGenerator/readme.txt "Instructions") intructions 
 3) For more details check the Sample project.
 
-# Build pre-requisites
+# View Generator
+
+## Build pre-requisites
 - NodeJS
 
-# ViewPacker
+## ViewPacker
 
 We have a node package, _**node-sass**_ which creates a folder of vendors for each OS. However, to generate these vendors, the following command needs to run in each OS:
 Inside ViewPacker with node_modules installed, the user should run `node scripts/install.js` which will generate a new vendor folder inside `node_modules/node_sass/vendor/` for the user's selected OS. This new vendor folder (e.g. `darwin-x64-72/`) and its **binding.node** content file shall then be added to ViewPacker's `build/node-sass-vendors/`.
