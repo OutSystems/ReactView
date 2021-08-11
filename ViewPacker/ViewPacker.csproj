@@ -7,10 +7,8 @@
     <AssemblyTitle>ViewPacker</AssemblyTitle>
     <Product>ViewPacker</Product>
     <Description>Creates bundles for view files using webpack</Description>
-    <Copyright>Copyright ©  2019</Copyright>
-    <Version>1.0.16</Version>
+    <Version>1.0.17</Version>
     <PackageId>ViewPacker</PackageId>
-    <Authors>OutSystems</Authors>
     <PackageTags>Library</PackageTags>
 
     <NuspecFile>ViewPacker.nuspec</NuspecFile>

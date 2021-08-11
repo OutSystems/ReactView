@@ -4,18 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl Avalonia</AssemblyTitle>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
     <Description>ReactViewControl for Avalonia powered by CefGlue</Description>
     <Configuration></Configuration>
-    <Company></Company>
-    <Product>ReactViewControl</Product>
-    <Copyright>Copyright ©  2019</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.91.0</Version>
     <PackageId>ReactViewControl-Avalonia</PackageId>
-    <Authors>OutSystems</Authors>
-    <PackageOutputPath>$(MSBuildProjectDirectory)\..\nuget</PackageOutputPath>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>

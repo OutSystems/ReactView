@@ -9,6 +9,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <copyright>$copyright$</copyright>
+    <projectUrl>$packageprojecturl$</projectUrl>
     <developmentDependency>true</developmentDependency>
     <dependencies>
       <dependency id="Node.js.redist" version="12.18.4" />
