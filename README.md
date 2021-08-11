@@ -6,7 +6,7 @@ ReactView is a framework for building react.js based UIs that can be hosted in A
 
 Inside the Sample.Avalonia folder you may find a Task List application that showcases most of the functionalities provided by this framework.
 
-![Screenshot](docs/images/screenshot.png "Sample Task List app screenshot")
+![Screenshot](docs/images/screenshot.png | width=100)
 
 # Getting Started
 
