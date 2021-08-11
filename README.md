@@ -13,9 +13,13 @@ See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List
 
 ## Getting Started
 
-1) Add the ReactView and ViewGenerator Nuget packages to your WPF/Avalonia project.
+1) Add the ReactViewControl-Avalonia (or ReactViewControl-WPF) and ViewGenerator Nuget packages to your WPF/Avalonia project.
 2) Follow [these](ViewGenerator/readme.txt "Instructions") intructions 
 3) For more details check the Sample project.
+
+## Releases
+Stable binaries are released on NuGet, and contain everything you need to start creating ReactView based apps.
+
 
 # View Generator
 
