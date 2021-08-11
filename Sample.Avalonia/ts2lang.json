@@ -1,0 +1,35 @@
+{
+    "tasks": [
+        {
+            "input": "**/*.tsx",
+            "output": "Generated/",
+            "template": "",
+            "parameters": {
+                "namespace": "Sample.Avalonia",
+                "baseComponentClass": "Sample.Avalonia.ExtendedReactView",
+                "baseComponentInterface": "",
+                "javascriptDistPath": "",
+                "emitComponent": true,
+                "emitComponentInterface": true,
+                "emitComponentAdapter": false,
+                "emitViewObjects": true
+            }
+        },
+        {
+            "input": "**/*.ts",
+            "output": "Generated/",
+            "template": "",
+            "parameters": {
+                "namespace": "Sample.Avalonia",
+                "baseComponentClass": "ReactViewControl.ViewModuleContainer",
+                "baseComponentInterface": "",
+                "javascriptDistPath": "",
+                "isModule": true,
+                "emitComponent": true,
+                "emitComponentInterface": true,
+                "emitComponentAdapter": false,
+                "emitViewObjects": true
+            }
+        }
+    ]
+}

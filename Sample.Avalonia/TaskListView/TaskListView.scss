@@ -1,0 +1,38 @@
+﻿body {
+    background: none;
+}
+
+.list-item {
+    padding: 10px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 10px;
+    border: 1px solid lightgray;
+    margin: 10px 0px;
+
+    .content {
+        display: inline-block;
+    }
+
+    .check {
+        display: inline-block;
+        margin-right: 15px;
+        vertical-align: super;
+        height: 20px;
+        width: 20px;
+    }
+
+    .text {
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+
+    .user {
+        font-size: smaller;
+        font-style: italic;
+    }
+
+    .user-pic {
+        height: 12px;
+        vertical-align: baseline;
+    }
+}

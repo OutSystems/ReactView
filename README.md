@@ -1,11 +1,30 @@
 # ReactView
 
-ReactView is an Avalonia/WPF control for building React based UIs on Avalonia/WPF applications.
+ReactView is a framework for building react.js based UIs that can be hosted in Avalonia/WPF applications.
+Using this framework you can build .NET desktop applications that run on Windows or macOS (using the Avalonia version) and mix TypeScript and .NET code in the same app in a seamless way.
 
-# Build pre-requisites
+## Documentation
+
+See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List application that showcases most of the functionalities provided by this framework.
+
+<p align="center">
+  <img src="docs/images/screenshot.png" height="400">
+</p>
+
+## Getting Started
+
+1) Add the ReactView and ViewGenerator Nuget packages to your WPF/Avalonia project.
+2) Follow [these](ViewGenerator/readme.txt "Instructions") intructions 
+3) For more details check the Sample project.
+
+# View Generator
+
+ViewGenerator is the companion tool of the ReactView framework which generates the C# code from the TypeScript declarations and is responsible for compiling and packing all the application assets into the app bundle.
+
+## Build pre-requisites
 - NodeJS
 
-# ViewPacker
+## ViewPacker
 
 We have a node package, _**node-sass**_ which creates a folder of vendors for each OS. However, to generate these vendors, the following command needs to run in each OS:
 Inside ViewPacker with node_modules installed, the user should run `node scripts/install.js` which will generate a new vendor folder inside `node_modules/node_sass/vendor/` for the user's selected OS. This new vendor folder (e.g. `darwin-x64-72/`) and its **binding.node** content file shall then be added to ViewPacker's `build/node-sass-vendors/`.

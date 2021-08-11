@@ -1,0 +1,38 @@
+﻿:export {
+    exportedVariable: "Some SASS Defined value";
+}
+
+body {
+    height: 100vh;
+    width: 100vw;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    overflow-y: hidden;
+}
+
+.title {
+    font-size: large;
+    margin-bottom: 20px;
+}
+
+.wrapper {
+    margin: 10px;
+}
+
+.task-input {
+    padding: 5px;
+    width: 200px;
+    margin-right: 10px;
+}
+
+button {
+    padding: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.blocked-list {
+    opacity: 0.5;
+    pointer-events: none;
+}

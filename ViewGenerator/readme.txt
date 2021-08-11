@@ -1,28 +1,13 @@
-﻿*****************
-* ViewGenerator *
-*****************
+﻿******************
+* View Generator *
+******************
 
-Generates the .Net bindings to the React Web views based on the typescript declarations.
-
-Notes:
-------
-
-This tools uses nodejs to generate the .Net bindings. If you need to use a different nodejs version you can customize the path of the node executable. 
-Edit your .csproj file and search for the following:
-
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-
-Add the following snippet to your csproj file with the path of the folder where to place the C# generated files (optional):
-
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-	  <ViewGeneratorGeneratedFolder>Generated</ViewGeneratorGeneratedFolder>
-    </PropertyGroup>
+This tool generates the .NET bindings for the React Web views based on the TypeScript declarations on the UI components.
 
 How to use:
 -----------
 
-1) Change the ts2lang.json file on the root of your project to match your needs:
+1) Change the ts2lang.json configuration file on the root of your project to match your needs:
 
 	{
 		"tasks": [
@@ -39,35 +24,40 @@ How to use:
 		]
 	}
 
-2) Create the typescript of your component. 
-	The properties and behaviors interfaces must follow the following naming conventions start with I and end with Properties or Behaviors suffix.
-	Don't forget to export default your component.
-	Any types present in the IProperties or IBehaviors interfaces must be defined on the entry module.
-	Behavior methods cannot return any values i.e. their return type must be void.
-	All types must be exported in order for its C# binding be generated.
+2) Create the TypeScript definition of your component.
+   Some conventions must be followed to comply with the View Generator requirements:
+   - The properties and behaviors interfaces must follow the following naming conventions start with I and end with Properties or Behaviors suffix.
+   - Don't forget to export default your component.
+   - Any types present in the IProperties or IBehaviors interfaces must be defined on the same file where the interfaces are declared.
+   - Behavior methods cannot return any values i.e. their return type must be void.
+   - All types must be exported in order for its C# binding be generated.
 
 	Eg:
 
 	import * as React from "react";
-	import "third-party-lib";
-	import "./LocalModule";
-	import "css!styles.css";
+	import "third-party-lib"; /// import third-party lib modules
+	import "./LocalModule"; /// import local js modules
+	import "./Styles.scss"; /// import local sass
 
 	export interface ISomeType {
 		name: string;
 	}
 
+	/// This interface will contain all the component events that can be subscribed on the C# code.
+	/// Use the Properties interface expose an API to get data from C#.
 	export interface IExampleProperties {
 		click(arg: ISomeType): void;
+		getData(): Promise<string>;
 	}
 
+	/// This interface will contain all the component methods that can be called on the C# code.
 	export interface IExampleBehaviors {
-		callMe(): void;
+		refresh(): void;
 	}
 
 	export default class Example extends React.Component<IExampleProperties, {}> implements IExampleBehaviors {
 
-	    callMe(): void {
+	    refresh(): void {
 			alert("hey");
 		}
 
@@ -78,23 +68,4 @@ How to use:
 
 
 3) Build the project and run.
-
-
-Development Notes:
-------------------
-
-A) To import css's use the following instruction:
-
-	import "css!<name-of-the-css-file.css>";
-
-
-B) To import 3rd party modules, place the module (must be AMD) javascript and the Typescript definition file (d.ts) under the node_modules folder:
-
-	import "<name-of-the-3rd-party-lib-module>";
-
-
-C) To import local modules:
-
-	import "./LocalModule";
-
 

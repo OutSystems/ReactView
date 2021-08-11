@@ -1,0 +1,42 @@
+﻿<Window xmlns="https://github.com/avaloniaui" Width="500" MinHeight="300"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Sample.Avalonia.MainWindow"
+        Title="Task List">
+
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="Edit">
+                <NativeMenuItem.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Undo" Command="{Binding UndoCommand}" Gesture="CMD+Z" />
+                        <NativeMenuItem Header="Redo" Command="{Binding RedoCommand}" Gesture="Shift+CMD+Z" />
+                        <NativeMenuItemSeperator/>
+                        <NativeMenuItem Header="Cut" Command="{Binding CutCommand}" Gesture="CMD+X" />
+                        <NativeMenuItem Header="Copy" Command="{Binding CopyCommand}" Gesture="CMD+C" />
+                        <NativeMenuItem Header="Paste" Command="{Binding PasteCommand}" Gesture="CMD+V" />
+                        <NativeMenuItem Header="Delete" Command="{Binding DeleteCommand}" Gesture="CMD+Back" />
+                        <NativeMenuItemSeperator/>
+                        <NativeMenuItem Header="Select All" Command="{Binding SelectAllCommand}" Gesture="CMD+A" />
+                    </NativeMenu>
+                </NativeMenuItem.Menu>
+            </NativeMenuItem>
+        </NativeMenu>
+    </NativeMenu.Menu>
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="Actions">
+                <MenuItem Header="New tab" Click="OnNewTabClick"></MenuItem>
+                <MenuItem Header="Hide / Show Completed Tasks" Click="OnToggleHideCompletedTasksMenuItemClick"></MenuItem>
+                <MenuItem Header="Toggle Theme" Click="OnToggleThemeStyleSheetMenuItemClick"></MenuItem>
+                <MenuItem Header="Show dev tools" Click="OnShowDevToolsMenuItemClick"></MenuItem>
+                <MenuItem Header="Disable / Enable" Click="OnToggleIsEnabledMenuItemClick"></MenuItem>
+            </MenuItem>
+        </Menu>
+        
+        <TextBox Name="status" DockPanel.Dock="Bottom" Height="50"></TextBox>
+
+        <TabControl x:Name="tabs"/>
+
+    </DockPanel>
+</Window>
