@@ -1,16 +1,17 @@
 # ReactView
 
 ReactView is a framework for building react.js based UIs that can be hosted in Avalonia/WPF applications.
+Using this framework you can build .NET desktop applications that run on Windows or macOS (using the Avalonia version) and mix TypeScript and .NET code in the same app in a seamless way.
 
-# Sample
+## Documentation
 
-Inside the Sample.Avalonia folder you may find a Task List application that showcases most of the functionalities provided by this framework.
+See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List application that showcases most of the functionalities provided by this framework.
 
 <p align="center">
   <img src="docs/images/screenshot.png" height="400">
 </p>
 
-# Getting Started
+## Getting Started
 
 1) Add the ReactView and ViewGenerator Nuget packages to your WPF/Avalonia project.
 2) Follow [these](ViewGenerator/readme.txt "Instructions") intructions 
