@@ -50,7 +50,7 @@ How to use:
 		getData(): Promise<string>;
 	}
 
-    /// This interface will contain all the component methods that can be called on the C# code.
+	/// This interface will contain all the component methods that can be called on the C# code.
 	export interface IExampleBehaviors {
 		refresh(): void;
 	}
