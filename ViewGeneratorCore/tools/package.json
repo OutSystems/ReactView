@@ -11,6 +11,6 @@
     "@outsystems/ts2lang": "1.0.21"
   },
   "dependencies": {
-    "@types/node": "^12.6.8"
+    "@types/node": "^12.20.28"
   }
 }
