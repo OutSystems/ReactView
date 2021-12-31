@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using WebViewControl;
 using Xilium.CefGlue;
 
@@ -35,7 +36,7 @@ namespace ReactViewControl {
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, int maxNativeMethodsParallelCalls, bool enableDebugMode, Uri devServerUri = null) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, Uri devServerUri = null) {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -43,8 +44,7 @@ namespace ReactViewControl {
                 DisableBuiltinContextMenus = true,
                 IsSecurityDisabled = true,
                 IgnoreMissingResources = false,
-                IsHistoryDisabled = true,
-                MaxNativeMethodsParallelCalls = maxNativeMethodsParallelCalls
+                IsHistoryDisabled = true
             };
 
             NativeAPI.Initialize(this);
@@ -166,7 +166,7 @@ namespace ReactViewControl {
 
         /// <summary>
         /// Handle external resource requests. 
-        /// Call <see cref="WebView.ResourceHandler.BeginAsyncResponse"/> to handle the request in an async way.
+        /// Call <see cref="ResourceHandler.BeginAsyncResponse"/> to handle the request in an async way.
         /// </summary>
         public event ResourceRequestedEventHandler ExternalResourceRequested;
 
@@ -524,15 +524,15 @@ namespace ReactViewControl {
         /// <param name="forceNativeSyncCalls"></param>
         private void RegisterNativeObject(IViewModule module, FrameInfo frame) {
             var nativeObjectName = module.GetNativeObjectFullName(frame.Name);
-            WebView.RegisterJavascriptObject(nativeObjectName, module.CreateNativeObject(), interceptCall: CallNativeMethod, executeCallsInUI: false);
+            WebView.RegisterJavascriptObject(nativeObjectName, module.CreateNativeObject(), interceptCall: CallNativeMethod);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object CallNativeMethod(Func<object> nativeMethod) {
+        private Task<object> CallNativeMethod(Func<object> nativeMethod) {
             if (Host != null) {
                 return Host.CallNativeMethod(nativeMethod);
             }
-            return nativeMethod();
+            return Task.FromResult(nativeMethod());
         }
 
         /// <summary>

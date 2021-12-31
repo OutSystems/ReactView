@@ -35,12 +35,5 @@ namespace ReactViewControl {
         /// Webpack dev server url. Setting this value will enable hot reload. eg: new Uri("http://localhost:8080")
         /// </summary>
         public virtual Uri DevServerURI => null;
-
-        /// <summary>
-        /// Defines the number of simultaneous native methods calls from javascript allowed.
-        /// When 1, this will prevent reentrancy, ie, native calls will be executed sequentially and one at a time.
-        /// Defaults to int.MaxValue, calls will be executed in parallel and reentrancy can occur.
-        /// </summary>
-        public virtual int MaxNativeMethodsParallelCalls => int.MaxValue;
     }
 }
