@@ -3,7 +3,7 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
 import { Configuration } from "webpack";
-import ManifestPlugin from "webpack-manifest-plugin";
+import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
 // Plugins / Resources
 import RenameChunksPlugin from "./RenameChunksPlugin";
@@ -18,7 +18,7 @@ import getTypeScriptRuleSet from "../Rules/TypeScript";
 
 let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyName?: string, pluginsRelativePath?: string): Configuration => {
 
-    const entryMap: Dictionary<string> = {}
+    const entryMap: Dictionary<any> = {}
     const outputMap: Dictionary<string> = {};
     const namespaceMap: Dictionary<string> = {};
 
@@ -30,7 +30,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             if (!f.includes("node_modules") && !f.endsWith(DtsExtension)) {
 
                 let entryName: string = parse(f).name;
-                entryMap[entryName] = "./" + f;
+                entryMap[entryName] = { import: "./" + f, filename: OutputDirectoryDefault + JsChunkPlaceholder };
                 outputMap[entryName] = output;
                 namespaceMap[entryName] = namespace;
             }
@@ -114,7 +114,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
                 chunkFilename: OutputDirectoryDefault + CssChunkPlaceholder
             }),
 
-            new ManifestPlugin({
+            new WebpackManifestPlugin({
                 fileName: "manifest.json",
                 generate: (seed, files) => generateManifest(seed, files, outputMap, namespaceMap)
             })

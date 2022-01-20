@@ -13,10 +13,11 @@
         "@types/dts-generator": "^2.1.4",
         "@types/fs-extra": "^8.0.0",
         "@types/glob": "^7.1.1",
-        "@types/mini-css-extract-plugin": "^0.8.0",
-        "@types/webpack": "^4.32.1",
+        "@types/mini-css-extract-plugin": "^2.4.0",
+        "@types/sass-loader": "^8.0.2",
+        "@types/webpack": "^5.28.0",
         "@types/webpack-dev-server": "^3.10.1",
-        "@types/webpack-manifest-plugin": "^2.0.0",
+        "@types/webpack-manifest-plugin": "^3.0.5",
         "fork-ts-checker-webpack-plugin": "^6.1.0"
     },
     "dependencies": {}

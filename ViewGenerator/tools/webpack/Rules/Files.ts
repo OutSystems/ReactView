@@ -12,6 +12,7 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                 options: {
                     emitFile: false,
                     name: '[path][name].[ext]',
+                    esModule: false,
                     publicPath: (url: string, _, context: string) => {
 
                         // URL can be one of the following:

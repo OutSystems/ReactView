@@ -1,5 +1,12 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import { LoaderOptions } from "sass-loader/interfaces";
 import { RuleSetRule } from "webpack";
+
+const sassOptions: LoaderOptions = {
+    sourceMap: true,
+    s
+    
+}; 
 
 // .sass / .scss / .css files
 const SassRuleSet: RuleSetRule = {
@@ -8,11 +15,19 @@ const SassRuleSet: RuleSetRule = {
         {
             loader: MiniCssExtractPlugin.loader,
             options: {
-                hmr: false
+                esModule: false
             }
         },
         "@teamsupercell/typings-for-css-modules-loader",
         "css-loader",
+        {
+            loader: "css-loader",
+            options:  {
+                esModule: false,
+                modules: true
+            }
+
+        },
         {
             loader: "resolve-url-loader",
             options: {
@@ -23,7 +38,7 @@ const SassRuleSet: RuleSetRule = {
             loader: "sass-loader",
             options: {
                 sourceMap: true,
-                sourceMapContents: false
+                //sourceMapContents: false
             }
         }
     ]

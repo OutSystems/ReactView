@@ -43,20 +43,20 @@ export function generateManifest(
             });
         }
     });
-
+    
     let entryArrayManifest = entries.reduce((acc, entry) => {
         let name: string = (entry.options || {}).name || (entry.runtimeChunk || {}).name;
         let files: string[] = [];
         if (entry.chunks) {
             entry.chunks.forEach(c => {
                 if (c.files) {
-                    files = files.concat(c.files);
+                    files = files.concat(Array.from(c.files));
                 }
             });
         }
         if (name) {
-            var relativePath = relativePaths[name];
-            var namespace = namespaces[name];
+            const relativePath = relativePaths[name];
+            const namespace = namespaces[name];
 
             // CSS
             generateEntryFile(files,
