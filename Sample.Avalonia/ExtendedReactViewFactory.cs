@@ -19,8 +19,6 @@ namespace Sample.Avalonia {
 
         public override bool EnableViewPreload => true;
 
-        public override int MaxNativeMethodsParallelCalls => 1;
-
 #if DEBUG
         public override bool EnableDebugMode => true;
 

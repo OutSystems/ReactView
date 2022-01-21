@@ -2,9 +2,9 @@
 import { ViewFrame } from "ViewFrame";
 import ViewPlugin from "./../ViewPlugin/ViewPlugin";
 import { IPluginsContext } from "PluginsProvider";
-import "./Mainview.scss"; // import a stylesheet
+import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
-import * as Styles from "./Mainview.scss"; // import variables from SASS
+import * as Styles from "./MainView.scss"; // import variables from SASS
 import * as BackgroundImage from "./Tasks.png"; // import images
 
 export interface ITaskCreationDetails {
