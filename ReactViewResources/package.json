@@ -2,9 +2,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "@types/react-dom": "^16.9.0",
-    "react": "^16.9.0",
-    "react-dom": "^16.9.0"
+    "@types/react-dom": "16.9.14",
+    "react": "16.14.0",
+    "react-dom": "16.14.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
