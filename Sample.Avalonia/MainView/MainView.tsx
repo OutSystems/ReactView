@@ -5,7 +5,8 @@ import { IPluginsContext } from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
 import * as Styles from "./MainView.scss"; // import variables from SASS
-import * as BackgroundImage from "./Tasks.png"; // import images
+import * as BackgroundImage from "./Tasks.png";
+import ComponentTest from "./ComponentTest"; // import images
 
 export interface ITaskCreationDetails {
     text: string;
@@ -126,6 +127,7 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
                 <button className="tasks-toggle-show" onClick={this.toggleShowTasks}>Show/Block/Hide Tasks</button>
                 {this.renderListView()}
                 <div>{this.state.tasksCount} task(s)</div>
+                <ComponentTest />
             </div>
         );
     }

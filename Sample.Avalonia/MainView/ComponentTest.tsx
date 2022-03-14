@@ -1,8 +1,6 @@
 
 const ComponentTest = () => {
-    //const [flag] = React.useState(true);
-    
-    return <div> The flag is!! </div>; 
+    return <div> Test React Component with New JSX Transform!! </div>; 
 };
 
 export default ComponentTest;
