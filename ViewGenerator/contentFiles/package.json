@@ -8,6 +8,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/react-dom": "16.8.0"
+    "@types/react-dom": "^16.9.14"
   }
 }

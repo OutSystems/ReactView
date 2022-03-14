@@ -7,7 +7,7 @@
     <AssemblyTitle>ViewGenerator</AssemblyTitle>
     <Product>ViewGenerator</Product>
     <Description>Generates .NET View bindings from typescript</Description>
-    <Version>1.0.325</Version>
+    <Version>1.0.326</Version>
     <PackageId>ViewGenerator</PackageId>
     <PackageTags>Library</PackageTags>
 
@@ -39,7 +39,7 @@
     <Touch Files="$(ProjectDir)contentFiles\VG.cache" AlwaysCreate="true" />
   </Target>
   <ItemGroup>
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.6.0">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.2.2">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

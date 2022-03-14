@@ -4,7 +4,7 @@
     "target": "es2017",
     "sourceMap": false,
     "allowJs": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "moduleResolution": "node",
     "rootDir": "TestAppView",
     "forceConsistentCasingInFileNames": true,
