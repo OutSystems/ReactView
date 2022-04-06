@@ -23,6 +23,13 @@ export abstract class ObservableCollection<T> {
         this.listeners.push(listener);
     }
 
+    public removeChangedListener(listener: CollectionChangedListener<T>) {
+        const index = this.listeners.indexOf(listener);
+        if (index > 0) {
+            this.listeners.splice(index, 1);
+        }
+    }
+
     private triggerCollectionChangedListeners(item: T, operation: Operation) {
         this.listeners.forEach(l => l(item, operation));
     }

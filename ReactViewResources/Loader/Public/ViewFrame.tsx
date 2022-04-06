@@ -38,6 +38,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     private generation: number;
     private placeholder: Element;
     private replacement: Element;
+    private childViewsLoaded: Map<ViewMetadata, boolean> = new Map<ViewMetadata, boolean>();
 
     constructor(props: IInternalViewFrameProps<T>, context: any) {
         super(props, context);
@@ -58,6 +59,8 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
             // update the existing view generation
             view.generation = this.generation;
         }
+
+        this.parentView.childViews.addChangedListener(this.onChildViewAdded);
     }
 
     private get fullName() {
@@ -93,14 +96,28 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
         childView.generation = this.generation;
         childView.parentView = this.parentView;
         childView.context = this.props.context;
-
-        const loadedHandler = this.props.loaded;
-        if (loadedHandler) {
-            childView.viewLoadTask.promise.then(() => loadedHandler());
-        }
+        childView.viewLoadTask.promise.then(() => this.onChildViewLoaded(childView));
 
         this.parentView.childViews.add(childView);
     }
+
+    private onChildViewAdded = (child: ViewMetadata) => {
+        this.childViewsLoaded.set(child, false);
+    };
+
+    private onChildViewLoaded = (child: ViewMetadata) => {
+        this.childViewsLoaded.set(child, true);
+
+        let allViewsLoaded = true;
+        // if all child views have been loaded, trigger loaded event
+        for (const isLoaded of this.childViewsLoaded.values()) {
+            allViewsLoaded = allViewsLoaded && isLoaded;
+        }
+
+        if (allViewsLoaded && this.props.loaded) {
+            this.props.loaded();
+        }
+    };
 
     public componentWillUnmount() {
         if (this.replacement) {
@@ -113,6 +130,8 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
             // this is the most recent frame - meaning it was not replaced by another one - so the view should be removed
             this.parentView.childViews.remove(existingView);
         }
+
+        this.parentView.childViews.removeChangedListener(this.onChildViewAdded);
     }
 
     public render() {
