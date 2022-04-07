@@ -108,13 +108,15 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     private onChildViewLoaded = (child: ViewMetadata) => {
         this.childViewsLoaded.set(child, true);
 
-        let allViewsLoaded = true;
         // if all child views have been loaded, trigger loaded event
         for (const isLoaded of this.childViewsLoaded.values()) {
-            allViewsLoaded = allViewsLoaded && isLoaded;
+            if (!isLoaded) {
+                return;
+            }
         }
 
-        if (allViewsLoaded && this.props.loaded) {
+        // Trigger load event when all inner views are loaded
+        if (this.props.loaded) {
             this.props.loaded();
         }
     };
