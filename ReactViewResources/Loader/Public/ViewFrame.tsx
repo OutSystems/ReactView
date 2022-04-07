@@ -96,7 +96,10 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
         childView.generation = this.generation;
         childView.parentView = this.parentView;
         childView.context = this.props.context;
-        childView.viewLoadTask.promise.then(() => this.onChildViewLoaded(childView));
+
+        if (this.props.loaded) {
+            childView.viewLoadTask.promise.then(() => this.onChildViewLoaded(childView));
+        }
 
         this.parentView.childViews.add(childView);
     }
@@ -106,6 +109,10 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     };
 
     private onChildViewLoaded = (child: ViewMetadata) => {
+        if (!this.props.loaded) {
+            return;
+        }
+
         this.childViewsLoaded.set(child, true);
 
         for (const isLoaded of this.childViewsLoaded.values()) {
@@ -115,9 +122,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
         }
 
         // Trigger loaded event only when all inner views were loaded
-        if (this.props.loaded) {
-            this.props.loaded();
-        }
+        this.props.loaded();
     };
 
     public componentWillUnmount() {
