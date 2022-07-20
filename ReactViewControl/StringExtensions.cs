@@ -3,11 +3,11 @@ using System.Globalization;
 
 namespace ReactViewControl {
 
-    internal static class StringExtensions {
-        public static bool InvariantContains(this string str, string value) => str.IndexOf(value, 0, StringComparison.InvariantCulture) > -1;
+      internal static class StringExtensions {
+        public static bool ContainsOrdinal(this string str, string value) => str.IndexOf(value, 0, StringComparison.Ordinal) > -1;
 
-        public static bool InvariantStartsWith(this string str, string value) => str.StartsWith(value, false, CultureInfo.InvariantCulture);
+        public static bool StartsWithOrdinal(this string str, string value) => str.StartsWith(value, StringComparison.Ordinal);
 
-        public static int InvariantIndexOf(this string str, string value) => str.IndexOf(value, 0, StringComparison.InvariantCulture);
+        public static int IndexOfOrdinal(this string str, string value) => str.IndexOf(value, 0, StringComparison.Ordinal);
     }
 }
