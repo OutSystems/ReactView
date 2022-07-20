@@ -421,7 +421,7 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="request"></param>
         private void OnWebViewBeforeNavigate(Request request) {
-            if (request.IsMainFrame && !request.Url.StartsWith(ResourceUrl.EmbeddedScheme)) {
+            if (request.IsMainFrame && !request.Url.InvariantStartsWith($"{ResourceUrl.EmbeddedScheme}{Uri.SchemeDelimiter}")) {
                 UrlHelper.OpenInExternalBrowser(request.Url);
                 request.Cancel();
             }
@@ -433,7 +433,7 @@ namespace ReactViewControl {
         /// <param name="resourceHandler"></param>
         private void OnWebViewBeforeResourceLoad(ResourceHandler resourceHandler) {
             var url = resourceHandler.Url;
-            var scheme = url.Substring(0, Math.Max(0, url.IndexOf(Uri.SchemeDelimiter)));
+            var scheme = url.Substring(0, Math.Max(0, url.InvariantIndexOf(Uri.SchemeDelimiter)));
 
             switch (scheme.ToLowerInvariant()) {
                 case ResourceUrl.CustomScheme:
@@ -551,9 +551,9 @@ namespace ReactViewControl {
         /// <param name="url"></param>
         /// <returns></returns>
         private string ToFullUrl(string url) {
-            if (url.Contains(Uri.SchemeDelimiter)) {
+            if (url.InvariantContains(Uri.SchemeDelimiter)) {
                 return url;
-            } else if (url.StartsWith(ResourceUrl.PathSeparator)) {
+            } else if (url.InvariantStartsWith(ResourceUrl.PathSeparator)) {
                 if (IsHotReloadEnabled) {
                     return new Uri(DevServerUri, url).ToString();
                 } else {

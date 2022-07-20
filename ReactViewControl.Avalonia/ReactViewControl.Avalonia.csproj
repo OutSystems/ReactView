@@ -34,6 +34,7 @@
     <Compile Include="..\ReactViewControl\Resource.cs" Link="Resource.cs" />
     <Compile Include="..\ReactViewControl\ViewModuleContainer.cs" Link="ViewModuleContainer.cs" />
     <Compile Include="..\ReactViewControl\ViewModuleExtensions.cs" Link="ViewModuleExtensions.cs" />
+    <Compile Include="..\ReactViewControl\StringExtensions.cs" Link="StringExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>
