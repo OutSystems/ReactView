@@ -8,7 +8,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WebViewControl;
 using Xilium.CefGlue;
-using StringExtensionMethods;
 
 namespace ReactViewControl {
 
@@ -422,7 +421,7 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="request"></param>
         private void OnWebViewBeforeNavigate(Request request) {
-            if (request.IsMainFrame && !request.Url.StartsWith(ResourceUrl.EmbeddedScheme,  false, System.Globalization.CultureInfo.InvariantCulture)) {
+            if (request.IsMainFrame && !request.Url.InvariantStartsWith(ResourceUrl.EmbeddedScheme)) {
                 UrlHelper.OpenInExternalBrowser(request.Url);
                 request.Cancel();
             }
@@ -434,7 +433,7 @@ namespace ReactViewControl {
         /// <param name="resourceHandler"></param>
         private void OnWebViewBeforeResourceLoad(ResourceHandler resourceHandler) {
             var url = resourceHandler.Url;
-            var scheme = url.Substring(0, Math.Max(0, url.IndexOf(Uri.SchemeDelimiter, 0, StringComparison.InvariantCulture)));
+            var scheme = url.Substring(0, Math.Max(0, url.InvariantIndexOf(Uri.SchemeDelimiter)));
 
             switch (scheme.ToLowerInvariant()) {
                 case ResourceUrl.CustomScheme:
@@ -554,7 +553,7 @@ namespace ReactViewControl {
         private string ToFullUrl(string url) {
             if (url.InvariantContains(Uri.SchemeDelimiter)) {
                 return url;
-            } else if (url.StartsWith(ResourceUrl.PathSeparator, false, System.Globalization.CultureInfo.InvariantCulture)) {
+            } else if (url.InvariantStartsWith(ResourceUrl.PathSeparator)) {
                 if (IsHotReloadEnabled) {
                     return new Uri(DevServerUri, url).ToString();
                 } else {
