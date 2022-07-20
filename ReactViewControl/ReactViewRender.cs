@@ -433,7 +433,7 @@ namespace ReactViewControl {
         /// <param name="resourceHandler"></param>
         private void OnWebViewBeforeResourceLoad(ResourceHandler resourceHandler) {
             var url = resourceHandler.Url;
-            var scheme = url.Substring(0, Math.Max(0, url.IndexOf(Uri.SchemeDelimiter)));
+            var scheme = url.Substring(0, Math.Max(0, url.IndexOf(Uri.SchemeDelimiter, 0, StringComparison.InvariantCulture)));
 
             switch (scheme.ToLowerInvariant()) {
                 case ResourceUrl.CustomScheme:
