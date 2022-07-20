@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WebViewControl;
 using Xilium.CefGlue;
+using StringExtensionMethods;
 
 namespace ReactViewControl {
 
@@ -421,7 +422,7 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="request"></param>
         private void OnWebViewBeforeNavigate(Request request) {
-            if (request.IsMainFrame && !request.Url.StartsWith(ResourceUrl.EmbeddedScheme)) {
+            if (request.IsMainFrame && !request.Url.StartsWith(ResourceUrl.EmbeddedScheme,  false, System.Globalization.CultureInfo.InvariantCulture)) {
                 UrlHelper.OpenInExternalBrowser(request.Url);
                 request.Cancel();
             }
@@ -551,9 +552,9 @@ namespace ReactViewControl {
         /// <param name="url"></param>
         /// <returns></returns>
         private string ToFullUrl(string url) {
-            if (url.Contains(Uri.SchemeDelimiter)) {
+            if (url.InvariantContains(Uri.SchemeDelimiter)) {
                 return url;
-            } else if (url.StartsWith(ResourceUrl.PathSeparator)) {
+            } else if (url.StartsWith(ResourceUrl.PathSeparator, false, System.Globalization.CultureInfo.InvariantCulture)) {
                 if (IsHotReloadEnabled) {
                     return new Uri(DevServerUri, url).ToString();
                 } else {
