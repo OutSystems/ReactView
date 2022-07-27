@@ -324,7 +324,8 @@ class Generator {
     }
 
     public generateComponent(emitComponentClass: boolean, emitComponentInterface: boolean, emitComponentAdapter: boolean, emitViewObjects: boolean) {
-        if (!this.component) {
+        if (!((this.component && this.behaviorsInterface && this.behaviorsInterface.functions.length > 0) ||
+            (this.propsInterface && this.propsInterface.functions.length > 0))) {
             return "";
         }
 
