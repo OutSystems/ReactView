@@ -130,7 +130,7 @@ class Generator {
             `    protected ${this.moduleName} Owner { get; }\n` +
             `    public ${PropertiesClassName}(${this.moduleName} owner) => ${ownerPropertyName} = owner;\n` +
             `    ${f(this.propsInterface ? (this.propsInterface.functions.length > 0 ? this.propsInterface.functions.map(f => generateNativeApiMethod(f)).join("\n") : "// the interface does not contain methods") : "")}\n` +
-            `}`
+            `}\n`
         );
     }
 
@@ -177,7 +177,7 @@ class Generator {
             this.propsInterface ? this.propsInterface.functions.map(generatePropertyEvent).concat(this.propsInterface.properties.map(generateProperty)) : [])
             .concat(this.behaviorsInterface ? this.behaviorsInterface.functions.map(generateBehaviorMethod) : [])
             .concat(this.childViewsInterface ? this.childViewsInterface.properties.map(generateChildViewProperty) : [])
-            .join("\n");
+            .join("\n") + "\n";
     }
 
     private generateComponentWrapperBody(hostPropertyName: string) {
@@ -273,21 +273,23 @@ class Generator {
             `public partial class ${this.moduleName} : ${BaseModuleAliasName}, I${this.moduleName} {\n` +
             `    \n` +
             `    ${f(this.generateNativeApi())}\n` +
-            `    \n` +
             `    ${f(this.generateComponentBody(generatePropertyEvent, generateProperty, generateBehaviorMethod, generateChildViewProperty))}\n` +
-            `    \n` +
             `    protected override string MainJsSource => \"${this.relativePath}\";\n` +
             `    protected override string NativeObjectName => \"${this.propsInterfaceCoreName}\";\n` +
             `    protected override string ModuleName => \"${this.filename}\";\n` +
             `    protected override object CreateNativeObject() => new ${PropertiesClassName}(this);\n` +
-            `    protected override string[] Events => ${this.propsInterface ? `new string[] { ${this.propsInterface.functions.map(p => `"${p.name}"`).join(",")} }` : ``};\n` +
-            `    protected override ${keyValuePairType}[] PropertiesValues {\n` +
-            `        get { \n` +
-            `            return new ${keyValuePairType}[] {\n` +
-            `    ${this.propsInterface ? f(this.propsInterface.properties.map(p => `            new ${keyValuePairType}("${p.name}", ${toPascalCase(p.name)})`).join(",\n")) : `` }\n` +
-            `            };\n` +
-            `        }\n` +
-            `    }\n` +
+            `${this.propsInterface && this.propsInterface.functions.length > 0
+                ? `    protected override string[] Events => new string[] { ${this.propsInterface.functions.map(p => `"${p.name}"`).join(",")} };\n`
+                : ``}` +
+            `${this.propsInterface && this.propsInterface.properties.length > 0
+                ? `    protected override ${keyValuePairType}[] PropertiesValues {\n` +
+                `        get { \n` +
+                `            return new ${keyValuePairType}[] {\n` +
+                `    ${f(this.propsInterface.properties.map(p => `            new ${keyValuePairType}("${p.name}", ${toPascalCase(p.name)})`).join(",\n")) }\n` +
+                `            };\n` +
+                `        }\n` +
+                `    }\n`
+                : ``}` +
             `    #if DEBUG\n` +
             `    protected override string Source => \"${this.fullPath}\";\n` +
             `    #endif\n` +
@@ -324,8 +326,7 @@ class Generator {
     }
 
     public generateComponent(emitComponentClass: boolean, emitComponentInterface: boolean, emitComponentAdapter: boolean, emitViewObjects: boolean) {
-        if (!((this.component && this.behaviorsInterface && this.behaviorsInterface.functions.length > 0) ||
-            (this.propsInterface && this.propsInterface.functions.length > 0))) {
+        if (!this.component && !this.behaviorsInterface && !this.propsInterface) {
             return "";
         }
 
@@ -391,7 +392,7 @@ export function transform(module: Units.TsModule, context: Object): string {
 
     output = combinePath(output, filenameWithoutExtension + ".Generated.cs");
     context["$output"] = output;
-    
+
     let generator = new Generator(
         module,
         namespace,
