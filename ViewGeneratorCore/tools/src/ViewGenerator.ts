@@ -252,6 +252,30 @@ class Generator {
 
         const partialInitializeMethodName = `Initialize${this.componentName}`;
 
+        const generateEventsProperty = () => {
+            if (this.propsInterface && this.propsInterface.functions.length > 0) {
+                return `protected override string[] Events => new string[] { ${this.propsInterface.functions.map(p => `"${p.name}"`).join(",")} };`;
+            }
+
+            return "";
+        };
+
+        const generatePropertiesValuesProperty = () => {
+            if (this.propsInterface && this.propsInterface.properties.length > 0) {
+                return (
+                    `protected override ${keyValuePairType}[] PropertiesValues {\n` +
+                    `        get { \n` +
+                    `            return new ${keyValuePairType}[] {\n` +
+                    `    ${f(this.propsInterface.properties.map(p => `            new ${keyValuePairType}("${p.name}", ${toPascalCase(p.name)})`).join(",\n"))}\n` +
+                    `            };\n` +
+                    `        }\n` +
+                    `    }\n`
+                );
+            }
+
+            return "";
+        };
+
         const generateComponentClass = () => {
             return (
                 `public partial class ${this.componentName} : ${BaseComponentAliasName}, I${this.moduleName} {\n` +
@@ -280,18 +304,8 @@ class Generator {
             `    protected override string NativeObjectName => \"${this.propsInterfaceCoreName}\";\n` +
             `    protected override string ModuleName => \"${this.filename}\";\n` +
             `    protected override object CreateNativeObject() => new ${PropertiesClassName}(this);\n` +
-            `${this.propsInterface && this.propsInterface.functions.length > 0
-                ? `    protected override string[] Events => new string[] { ${this.propsInterface.functions.map(p => `"${p.name}"`).join(",")} };\n`
-                : ``}` +
-            `${this.propsInterface && this.propsInterface.properties.length > 0
-                ? `    protected override ${keyValuePairType}[] PropertiesValues {\n` +
-                `        get { \n` +
-                `            return new ${keyValuePairType}[] {\n` +
-                `    ${f(this.propsInterface.properties.map(p => `            new ${keyValuePairType}("${p.name}", ${toPascalCase(p.name)})`).join(",\n")) }\n` +
-                `            };\n` +
-                `        }\n` +
-                `    }\n`
-                : ``}` +
+            `    ${generateEventsProperty()}\n` +
+            `    ${generatePropertiesValuesProperty()}\n` +
             `    #if DEBUG\n` +
             `    protected override string Source => \"${this.fullPath}\";\n` +
             `    #endif\n` +
