@@ -130,7 +130,7 @@ class Generator {
             `    protected ${this.moduleName} Owner { get; }\n` +
             `    public ${PropertiesClassName}(${this.moduleName} owner) => ${ownerPropertyName} = owner;\n` +
             `    ${f(this.propsInterface ? (this.propsInterface.functions.length > 0 ? this.propsInterface.functions.map(f => generateNativeApiMethod(f)).join("\n") : "// the interface does not contain methods") : "")}\n` +
-            `}\n`
+            `}`
         );
     }
 
@@ -177,7 +177,7 @@ class Generator {
             this.propsInterface ? this.propsInterface.functions.map(generatePropertyEvent).concat(this.propsInterface.properties.map(generateProperty)) : [])
             .concat(this.behaviorsInterface ? this.behaviorsInterface.functions.map(generateBehaviorMethod) : [])
             .concat(this.childViewsInterface ? this.childViewsInterface.properties.map(generateChildViewProperty) : [])
-            .join("\n") + "\n";
+            .join("\n");
     }
 
     private generateComponentWrapperBody(hostPropertyName: string) {
@@ -273,7 +273,9 @@ class Generator {
             `public partial class ${this.moduleName} : ${BaseModuleAliasName}, I${this.moduleName} {\n` +
             `    \n` +
             `    ${f(this.generateNativeApi())}\n` +
+            `    \n` +
             `    ${f(this.generateComponentBody(generatePropertyEvent, generateProperty, generateBehaviorMethod, generateChildViewProperty))}\n` +
+            `    \n` +
             `    protected override string MainJsSource => \"${this.relativePath}\";\n` +
             `    protected override string NativeObjectName => \"${this.propsInterfaceCoreName}\";\n` +
             `    protected override string ModuleName => \"${this.filename}\";\n` +
