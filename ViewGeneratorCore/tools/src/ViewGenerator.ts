@@ -252,6 +252,30 @@ class Generator {
 
         const partialInitializeMethodName = `Initialize${this.componentName}`;
 
+        const generateEventsProperty = () => {
+            if (this.propsInterface && this.propsInterface.functions.length > 0) {
+                return `protected override string[] Events => new string[] { ${this.propsInterface.functions.map(p => `"${p.name}"`).join(",")} };`;
+            }
+
+            return "";
+        };
+
+        const generatePropertiesValuesProperty = () => {
+            if (this.propsInterface && this.propsInterface.properties.length > 0) {
+                return (
+                    `protected override ${keyValuePairType}[] PropertiesValues {\n` +
+                    `        get { \n` +
+                    `            return new ${keyValuePairType}[] {\n` +
+                    `    ${f(this.propsInterface.properties.map(p => `            new ${keyValuePairType}("${p.name}", ${toPascalCase(p.name)})`).join(",\n"))}\n` +
+                    `            };\n` +
+                    `        }\n` +
+                    `    }\n`
+                );
+            }
+
+            return "";
+        };
+
         const generateComponentClass = () => {
             return (
                 `public partial class ${this.componentName} : ${BaseComponentAliasName}, I${this.moduleName} {\n` +
@@ -280,14 +304,8 @@ class Generator {
             `    protected override string NativeObjectName => \"${this.propsInterfaceCoreName}\";\n` +
             `    protected override string ModuleName => \"${this.filename}\";\n` +
             `    protected override object CreateNativeObject() => new ${PropertiesClassName}(this);\n` +
-            `    protected override string[] Events => ${this.propsInterface ? `new string[] { ${this.propsInterface.functions.map(p => `"${p.name}"`).join(",")} }` : ``};\n` +
-            `    protected override ${keyValuePairType}[] PropertiesValues {\n` +
-            `        get { \n` +
-            `            return new ${keyValuePairType}[] {\n` +
-            `    ${this.propsInterface ? f(this.propsInterface.properties.map(p => `            new ${keyValuePairType}("${p.name}", ${toPascalCase(p.name)})`).join(",\n")) : `` }\n` +
-            `            };\n` +
-            `        }\n` +
-            `    }\n` +
+            `    ${generateEventsProperty()}\n` +
+            `    ${generatePropertiesValuesProperty()}\n` +
             `    #if DEBUG\n` +
             `    protected override string Source => \"${this.fullPath}\";\n` +
             `    #endif\n` +
@@ -324,8 +342,7 @@ class Generator {
     }
 
     public generateComponent(emitComponentClass: boolean, emitComponentInterface: boolean, emitComponentAdapter: boolean, emitViewObjects: boolean) {
-        if (!((this.component && this.behaviorsInterface && this.behaviorsInterface.functions.length > 0) ||
-            (this.propsInterface && this.propsInterface.functions.length > 0))) {
+        if (!this.component && !this.behaviorsInterface && !this.propsInterface) {
             return "";
         }
 
@@ -391,7 +408,7 @@ export function transform(module: Units.TsModule, context: Object): string {
 
     output = combinePath(output, filenameWithoutExtension + ".Generated.cs");
     context["$output"] = output;
-    
+
     let generator = new Generator(
         module,
         namespace,
