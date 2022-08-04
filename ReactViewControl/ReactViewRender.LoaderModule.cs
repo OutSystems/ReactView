@@ -93,7 +93,7 @@ namespace ReactViewControl {
             /// </summary>
             /// <param name="url"></param>
             public void ShowResourceLoadFailedMessage(string url) {
-                ShowErrorMessage($"Failed to load resource '{url}'. Press F12 to open developer tools and see more details.");
+                ShowErrorMessage($"Failed to load resource '{url}'. Open developer tools and see more details.");
             }
 
             /// <summary>
