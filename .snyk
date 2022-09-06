@@ -1,0 +1,7 @@
+
+version: v1.25.0
+ignore:
+  SNYK-JS-VIEWGENERATOR-3008513:
+    - '*':
+      reason: The vulnerable package is used in IDE but not shipped to production
+      expires: 2032-09-01T00:00:00.000Z
