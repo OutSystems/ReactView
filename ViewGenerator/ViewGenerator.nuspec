@@ -13,7 +13,7 @@
     <developmentDependency>true</developmentDependency>
     <dependencies>
       <dependency id="ViewGeneratorCore" version="1.0.226" />
-      <dependency id="ViewPacker" version="1.0.16" />
+      <dependency id="ViewPacker" version="1.0.18" />
     </dependencies>
   </metadata>
   <files>
