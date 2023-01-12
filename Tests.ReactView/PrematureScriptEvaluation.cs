@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using NLog.Targets;
 using NUnit.Framework;
 
 namespace Tests.ReactView {
