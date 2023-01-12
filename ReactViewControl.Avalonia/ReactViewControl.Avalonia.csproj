@@ -55,29 +55,29 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Avalonia.Animation, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Animation.dll</HintPath>
+    <Reference Include="Avalonia.Animation, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Animation.dll</HintPath>
     </Reference>
-    <Reference Include="Avalonia.Base, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Base.dll</HintPath>
+    <Reference Include="Avalonia.Base, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Base.dll</HintPath>
     </Reference>
-    <Reference Include="Avalonia.Controls, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Controls.dll</HintPath>
+    <Reference Include="Avalonia.Controls, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Controls.dll</HintPath>
     </Reference>
-    <Reference Include="Avalonia.Input, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Input.dll</HintPath>
+    <Reference Include="Avalonia.Input, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Input.dll</HintPath>
     </Reference>
-    <Reference Include="Avalonia.Interactivity, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Interactivity.dll</HintPath>
+    <Reference Include="Avalonia.Interactivity, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Interactivity.dll</HintPath>
     </Reference>
-    <Reference Include="Avalonia.Layout, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Layout.dll</HintPath>
+    <Reference Include="Avalonia.Layout, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Layout.dll</HintPath>
     </Reference>
-    <Reference Include="Avalonia.Styling, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Styling.dll</HintPath>
+    <Reference Include="Avalonia.Styling, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Styling.dll</HintPath>
     </Reference>
-    <Reference Include="Avalonia.Visuals, Version=0.10.15.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
-      <HintPath>..\packages\avalonia\0.10.15\lib\netcoreapp2.0\Avalonia.Visuals.dll</HintPath>
+    <Reference Include="Avalonia.Visuals, Version=0.10.17.0, Culture=neutral, PublicKeyToken=c8d484a7012f9a8b">
+      <HintPath>..\packages\avalonia\0.10.17\lib\netcoreapp2.0\Avalonia.Visuals.dll</HintPath>
     </Reference>
   </ItemGroup>
 
