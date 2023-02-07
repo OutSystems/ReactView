@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>$(DotnetVersion)</TargetFramework>
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl Avalonia</AssemblyTitle>
     <Description>ReactViewControl for Avalonia powered by CefGlue</Description>
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" Version="2.106.0" />
+    <PackageReference Include="WebViewControl-Avalonia" Version="2.106.0-preview-1" />
   </ItemGroup>
 
   <ItemGroup>
