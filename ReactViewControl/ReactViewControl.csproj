@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>$(DotnetVersion)-windows</TargetFramework>
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl WPF</AssemblyTitle>
     <Description>ReactViewControl for WPF powered by CefGlue</Description>
@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-WPF" Version="2.91.17" />
+    <PackageReference Include="WebViewControl-WPF" Version="2.106.0" />
   </ItemGroup>
 
   <ItemGroup>
