@@ -38,7 +38,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" Version="2.106.0" />
+    <PackageReference Include="WebViewControl-Avalonia" Version="2.106.0">
+      <IncludeAssets>All</IncludeAssets>
+      <PrivateAssets>None</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Avalonia.Desktop" Version="0.10.17" />
   </ItemGroup>
 
