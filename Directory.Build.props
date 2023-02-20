@@ -3,13 +3,13 @@
     <DotnetVersion>net6.0</DotnetVersion>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.106.0</Version>
+    <Version>2.106.1</Version>
     <Authors>OutSystems</Authors>
     <Product>ReactView</Product>
     <Copyright>Copyright © OutSystems 2021</Copyright>
     <PackageProjectUrl>https://github.com/OutSystems/ReactView</PackageProjectUrl>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\nuget</PackageOutputPath>
-    
+
     <!-- File with mtime of last successful npm install -->
     <NpmInstallStampFile>.npm-install-stamp</NpmInstallStampFile>
   </PropertyGroup>
