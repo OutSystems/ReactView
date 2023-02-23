@@ -8,6 +8,7 @@
     <Configuration></Configuration>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactViewControl-WPF</PackageId>
+    <UseWpf>true</UseWpf>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>
@@ -17,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-WPF" Version="2.106.1" />
+    <PackageReference Include="WebViewControl-WPF" Version="2.106.4" />
   </ItemGroup>
 
   <ItemGroup>
