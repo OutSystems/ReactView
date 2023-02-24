@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" Version="2.106.0"/>
+    <PackageReference PrivateAssets="None" Include="WebViewControl-Avalonia" Version="2.106.6-preview2"/>
     <PackageReference Include="Avalonia" Version="0.10.17" />
   </ItemGroup>
 
