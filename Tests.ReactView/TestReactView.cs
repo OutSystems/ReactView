@@ -89,7 +89,7 @@ namespace Tests.ReactView {
         public void Load() => TryLoadComponent();
 
         public Task<bool> AwaitReady() {
-            var taskCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var taskCompletionSource = new TaskCompletionSource<bool>(TaskContinuationOptions.RunContinuationsAsynchronously);
             void OnReady() {
                 Ready -= OnReady;
                 taskCompletionSource.SetResult(true);

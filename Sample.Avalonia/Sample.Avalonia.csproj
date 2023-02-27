@@ -30,14 +30,14 @@
   </ItemGroup>
     
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop"/>
-    <PackageReference Include="Avalonia.ReactiveUI"/>
-    <PackageReference Include="NLog"/>
-    <PackageReference Include="ViewGenerator">
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.17" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.17" />
+    <PackageReference Include="NLog" Version="4.6.2" />
+    <PackageReference Include="ViewGenerator" Version="1.0.327">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="ViewGeneratorCore">
+    <PackageReference Include="ViewGeneratorCore" Version="1.0.229">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
