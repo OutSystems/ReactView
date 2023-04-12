@@ -35,11 +35,11 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                             // relative paths starting with ".." are replaced by "_"
                             if (url.startsWith("_")) {
                                 if(url.indexOf(".pnpm") > 0) {
-                                    const nodeModulesIdx = url.lastIndexOf("node_modules");
+                                    const nodeModules = url.substring(url.lastIndexOf("node_modules"));
                                     if(pluginsBase){
-                                        return `/${pluginsBase}/` + url.substring(nodeModulesIdx);
+                                        return `/${pluginsBase}/${nodeModules}`;
                                     } else {
-                                        return `/${resourceBase}/` + url.substring(nodeModulesIdx);
+                                        return `/${resourceBase}/${nodeModules}`;
                                     }
                                 }
 
