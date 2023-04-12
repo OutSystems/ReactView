@@ -20,6 +20,7 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                         // - 2) A relative path to a resource in the assembly itself, e.g. "Path/to/Resource.png"
                         // - 3) An absolute path to a resource in another assembly, e.g. "Z:/MyOtherAssembly/Path/to/Resource.png"
                         // - 4) An absolute path to a resource in assembly itself, e.g. "Z:/MyAssembly/Path/to/Resource.png"
+                        // - 5) A relative path to a resource in pnpm linked node_modules, e.g "_/_/node_modules/.pnpm/@os-designsystem+feedback-message@2.0.0_wcqkhtmu7mswc6yz4uyexck3ty/node_modules/@os-designsystem/feedback-message/lib/assets/1C3rjyS.png"
                         //
                         // Context represents the path of the project being built by webpack, e.g. "C:\Git\Path\to\Project\"
                         //
@@ -30,9 +31,18 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                             if (idx < 0 && pluginsBase) {
                                 idx = url.indexOf(`/${pluginsBase}/`);
                             }
-                            
+
                             // relative paths starting with ".." are replaced by "_"
                             if (url.startsWith("_")) {
+                                if(url.indexOf(".pnpm") > 0) {
+                                    const nodeModulesIdx = url.lastIndexOf("node_modules");
+                                    if(pluginsBase){
+                                        return `/${pluginsBase}/` + url.substring(nodeModulesIdx);
+                                    } else {
+                                        return `/${resourceBase}/` + url.substring(nodeModulesIdx);
+                                    }
+                                }
+
                                 if (idx < 0) {
                                     // URL (argument) is a relative path and we did not find the resource base path or the plugin assembly in its content
                                     throw new Error("VG001: Resource not found: using a resource from another namespace without an absolute URL.");
