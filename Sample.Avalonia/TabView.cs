@@ -68,7 +68,7 @@ namespace Sample.Avalonia {
                 window.Content = aiView;
                 window.Opened += delegate {
                     Dispatcher.UIThread.InvokeAsync(() => {
-                        mainView.Focus();
+                        aiView.Focus();
                     }, DispatcherPriority.Background);
                 };
                 window.ConfigurePosition(this, new Point(100, 100));
