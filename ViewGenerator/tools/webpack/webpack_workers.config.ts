@@ -6,7 +6,7 @@ const config = (_, __) => {
 
     let entryMap = {};
 
-    sync("**/*.worker.js").forEach(f => {
+    sync("**/*.worker.js", { follow: true }).forEach(f => {
         let entryName: string = parse(f).name;
         entryMap[entryName] = "./" + f;
     });
