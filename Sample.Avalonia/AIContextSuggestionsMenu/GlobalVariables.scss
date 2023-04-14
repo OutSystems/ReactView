@@ -1,0 +1,104 @@
+﻿// This file only exist due to the SASS 'import' limitation.
+// Since it's not possible to import only variables.
+$primary-icon-color: black;
+$border-radius: 4px;
+
+// Scrollbar
+$scrollbar-size: 8px;
+$scrollbar-thumb-border-radius: 6px;
+
+// Dialogs
+$dialog-default-padding: 20px;
+
+// Fonts
+$body-line-height: 16px;
+$body-font-size: 12px;
+$small-text-font-size: 10px;
+$body-font-color: black;
+$font-family: noto-sans;
+
+// The following variables were added for Julieo
+
+/* Typography */
+$font-size-display: 36px;
+
+$font-size-h1: 32px;
+$font-size-h2: 28px;
+$font-size-h3: 26px;
+$font-size-h4: 22px;
+$font-size-h5: 20px;
+$font-size-h6: 16px;
+
+$font-size-base: 14px;
+$font-size-s: 12px;
+$font-size-xs: 9px;
+
+/* Typography - Weight */
+$font-light: 300;
+$font-regular: 400;
+$font-semi-bold: 600;
+$font-bold: 700;
+
+/* Space */
+$space-xs: 4px;
+$space-s: 8px;
+$space-base: 16px;
+$space-m: 24px;
+$space-l: 32px;
+$space-xl: 40px;
+$space-xxl: 48px;
+
+/* Transition Time */
+$time-s: 110ms;
+$time-m: 150ms;
+$time-l: 150ms;
+$time-xl: 300ms;
+
+/* Transition Eases */
+$ease-in: ease-in;
+$ease-out: ease-out;
+$linear: linear;
+
+/* Icons */
+$base-icon-selector: '[class^="product-icon-"], [class*=" product-icon-"]';
+
+$small-size-icon: 16px;
+$medium-size-icon: 24px;
+$large-size-icon: 32px;
+
+$icon-disabled-opacity: 0.4;
+
+/* Inputs */
+$inputs-border-width: 1px;
+
+$inputs-vertical-padding: $space-s - $inputs-border-width;
+$inputs-horizontal-padding: 8px;
+
+$inputs-small-vertical-padding: $space-xs - $inputs-border-width;
+$inputs-small-horizontal-padding: $space-xs;
+
+$language-input-padding: 5px;
+
+/* Buttons */
+$buttons-border-width: 1px;
+$buttons-margin-between-normal-buttons: 8px;
+$buttons-margin-between-small-buttons: 3px;
+$buttons-margin-between-icon-buttons: 4px;
+
+/* Dropdown */
+$dropdown-menu-border-width: 1px;
+
+/* Filters */
+$white-filter: brightness(0) invert(1);
+
+/* Decorations */
+$decoration-created: decoration-created;
+$decoration-conflict: decoration-conflict;
+$decoration-deleted: decoration-deleted;
+$decoration-updated: decoration-updated;
+$decoration-incompatible-reference: decoration-incompatible-reference;
+$decoration-missing-reference: decoration-missing-reference;
+$decoration-modified-reference: decoration-modified-reference;
+
+/* Monaco */
+$monaco-suggest-widget-zindex: 40;

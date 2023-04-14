@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using Avalonia.Layout;
 using ReactViewControl;
 using WebViewControl;
-
 namespace Sample.Avalonia {
 
     internal class TabView : ContentControl, IStyleable {
@@ -45,14 +49,32 @@ namespace Sample.Avalonia {
         }
 
         private void OnMainViewAddTaskButtonClicked(TaskCreationDetails taskDetails) {
-            taskList.Add(new Task() {
-                id = taskCounter++,
-                text = taskDetails.text,
-                user = "User1"
+            // window
+            
+            Dispatcher.UIThread.Post(() => {
+                var window = new PopupWindow();
+                var aiView = new AIContextSuggestionsMenuView();
+
+                aiView.GetMenuEntries += () => {
+                    return new MenuEntriesList() {
+                        entries = new MenuEntry[] {
+                            new MenuEntry() { actionKey = "1",icon = "", isHighlighted = false, kind = "", label = "First", tooltip = "tooltip1" },
+                            new MenuEntry() { actionKey = "2",icon = "", isHighlighted = false, kind = "", label = "Second", tooltip = "tooltip2" },
+                        }
+                    };
+                };
+                aiView.WithPlugin<ViewPlugin>().NotifyViewLoaded += viewName => AppendLog(viewName + " loaded");
+                
+                window.Content = aiView;
+                window.Opened += delegate {
+                    Dispatcher.UIThread.InvokeAsync(() => {
+                        mainView.Focus();
+                    }, DispatcherPriority.Background);
+                };
+                window.ConfigurePosition(this, new Point(100, 100));
+
+                window.ShowPopup();
             });
-            mainView.Refresh(); // refresh task counter
-            taskListView.Refresh(); // refresh task list
-            AppendLog("Added task: " + taskDetails.text);
         }
 
         public void ToggleHideCompletedTasks() => taskListView.ToggleHideCompletedTasks();
@@ -72,6 +94,85 @@ namespace Sample.Avalonia {
 
         private Resource OnTaskListViewCustomResourceRequested(string resourceKey, params string[] options) {
             return new Resource(ResourcesManager.GetResource(GetType().Assembly, new[] { "Users", resourceKey + ".png" }));
+        }
+    }
+
+
+    public class PopupWindow : Window {
+
+        private Window parent;
+        private ManagedPopupPositioner positioner;
+        private PopupPositionerParameters positionerParameters;
+
+        public PopupWindow() {
+            ShowInTaskbar = false;
+            SystemDecorations = SystemDecorations.BorderOnly;
+            //SizeToContent = SizeToContent.WidthAndHeight;
+            //VerticalContentAlignment = VerticalAlignment.Top;
+            //HorizontalContentAlignment = HorizontalAlignment.Left;
+        }
+
+        public void ConfigurePosition(IVisual target, Point offset, PopupAnchor anchor = PopupAnchor.TopLeft, PopupGravity gravity = PopupGravity.BottomRight) {
+            var newParent = (Window)target.GetVisualRoot();
+
+            if (newParent == null) {
+                return;
+            }
+
+            if (parent != newParent) {
+                parent = newParent;
+                positioner = new ManagedPopupPositioner(new ManagedPopupPositionerPopupImplHelper(parent.PlatformImpl, MoveResizeDelegate));
+            }
+
+            positionerParameters = GetNewPositionerParametersRelativeToOffset(target, offset, anchor, gravity);
+
+            if (positionerParameters.Size != default) {
+                UpdatePosition();
+            }
+        }
+
+        private PopupPositionerParameters GetNewPositionerParametersRelativeToOffset(IVisual target, Point offset, PopupAnchor anchor = PopupAnchor.TopLeft, PopupGravity gravity = PopupGravity.BottomRight) {
+            var matrix = target.TransformToVisual(parent);
+            if (matrix.HasValue) {
+                var bounds = new Rect(default, target.Bounds.Size);
+                var anchorRect = new Rect(offset, new Size(1, 1));
+
+                var newpositionerParameters = new PopupPositionerParameters() {
+                    ConstraintAdjustment = PopupPositionerConstraintAdjustment.All,
+                    AnchorRectangle = anchorRect.Intersect(bounds).TransformToAABB(matrix.Value),
+                    Anchor = anchor,
+                    Gravity = gravity,
+                    Size = positionerParameters.Size
+                };
+
+                return newpositionerParameters;
+            }
+
+            return positionerParameters;
+        }
+
+        private void MoveResizeDelegate(PixelPoint position, Size size, double scaling) {
+            Position = position;
+            Height = size.Height;
+            Width = size.Width;
+        }
+
+        private void UpdatePosition() {
+            positioner?.Update(positionerParameters);
+        }
+
+        protected override Size ArrangeOverride(Size finalSize) {
+            positionerParameters.Size = finalSize;
+            UpdatePosition();
+            return base.ArrangeOverride(finalSize);
+        }
+
+        public void ShowPopup() {
+            if (parent != null) {
+                Show(parent);
+            } else {
+                Show();
+            }
         }
     }
 }

@@ -1,0 +1,139 @@
+﻿@import "./GlobalVariables";
+
+$open-search-animation: "open-search-animation";
+$close-search-animation: "close-search-animation";
+
+@keyframes #{$open-search-animation} {
+  100% {
+    right: 0;
+  }
+}
+
+@keyframes #{$close-search-animation} {
+  100% {
+    right: calc(-100% + 35px);
+  }
+}
+
+@mixin search-border-radius($custom-border-radius: 30px) {
+  border-radius: $custom-border-radius;
+
+  .icon-wrapper {
+    border-radius: $custom-border-radius 0 0 $custom-border-radius;
+  }
+
+  .clear-button-wrapper {
+    border-radius: 0 $custom-border-radius $custom-border-radius 0;
+  }
+}
+
+.search {
+  font-size: $font-size-h6;
+  padding-right: $space-s;
+  color: $primary-icon-color;
+  cursor: pointer;
+  opacity: 0.7;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.search-input {
+  @include search-border-radius(); // use default value
+  &.base-border-radius {
+    @include search-border-radius($border-radius); // use value from global theme
+  }
+
+  align-items: center;
+  border: 1px solid green;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+
+  &:not(.readonly) {
+    background-color: green
+  }
+
+  &:hover:not(:focus-within):not(.readonly) {
+    border: $inputs-border-width solid blue;
+  }
+
+  &:focus-within {
+    border: $inputs-border-width solid red;
+    outline: 0;
+  }
+
+  .icon-wrapper {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    padding-left: 6px;
+    padding-right: 4px;
+
+    .icon {
+      color: gray;
+      font-size: $small-size-icon;
+    }
+  }
+
+  .input {
+    border: 0;
+    height: 100%;
+    padding: 0;
+    width: 100%;
+
+    &:hover {
+      border: none !important;
+    }
+
+    outline: none;
+  }
+
+  .clear-button-wrapper {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    padding-right: 8px;
+    padding-left: 4px;
+
+    .clear-button {
+      color: blue;
+      display: block;
+
+      &:hover {
+        color: blue;
+      }
+    }
+  }
+
+  &.readonly {
+    border: $inputs-border-width solid blue;
+
+    .icon-wrapper,
+    .clear-button-wrapper {
+      background-color: blue;
+
+      .icon {
+        color: blue;
+      }
+    }
+
+    input:disabled {
+      background: blue;
+    }
+  }
+
+  &.opening-search {
+    position: absolute;
+    right: calc(-100% + 35px);
+    animation: #{$open-search-animation} $time-s $ease-out forwards;
+  }
+
+  &.closing-search {
+    position: absolute;
+    right: 0;
+    animation: #{$close-search-animation} $time-s $ease-out forwards;
+  }
+}

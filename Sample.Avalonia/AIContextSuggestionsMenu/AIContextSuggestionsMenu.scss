@@ -1,0 +1,138 @@
+
+@import "./GlobalVariables";
+
+
+body {
+    overflow: hidden;
+    // prevent child from moving body: https://medium.com/fed-or-dead/margin-collapse-or-why-your-child-element-is-moving-the-parent-b199a0b60497
+    padding: 0.1px 0 0 0;
+    margin: 0px 0 0 0;
+}
+
+.header {
+    height: $space-l;
+    padding: $space-s $space-xs;
+
+    &-quick-search-collapsed {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    &-quick-search-expanded {
+        padding: $space-xs;
+    }
+
+    .icon-and-title-container {
+        display: flex;
+
+        img.icon {
+            min-height: $small-size-icon;
+            min-width: $small-size-icon;
+        }
+
+        .inline-suggestions-title {
+            margin-left: $space-xs;
+        }
+    }
+
+    .search-bar {
+        border-radius: $border-radius;
+        /* Override the size defined in Search.scss */
+        .icon {
+            font-size: $body-font-size;
+        }
+    }
+
+    .search-input {
+        max-width: 100%;
+    }
+}
+
+.no-suggestions-message {
+    margin: 0;
+    padding: $space-xs $space-base $space-xs $space-s;
+    display: flex;
+    width: 250px;
+
+    img.icon {
+        min-height: $small-size-icon;
+        min-width: $small-size-icon;
+        margin: auto 0;
+    }
+
+    .no-suggestions-icon {
+        display: inline-flex;
+        justify-content: center;
+        padding: $space-xs;
+        flex-direction: column;
+        font-size: $font-size-h6;
+    }
+
+    .no-suggestions-text {
+        margin-left: $space-xs;
+        text-align: center;
+    }
+}
+
+.no-quick-search-suggestions-message {
+    margin: 0;
+    padding: $space-s;
+}
+
+nav.context-menu {
+    min-width: 180px;
+    max-width: 300px;
+    display: inline-flex;
+    flex-direction: column;
+    background-color: lightblue;
+    border: 1px solid darkblue;
+    /*border-radius: $border-radius;*/
+    /*background-clip: padding-box;*/
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+            margin: 0;
+            padding: $space-s $space-base $space-s $space-xs;
+            cursor: pointer;
+            display: flex;
+
+            .icon {
+                min-height: $small-size-icon;
+                min-width: $small-size-icon;
+            }
+
+            .label {
+                white-space: nowrap;
+                margin-left: $space-xs;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            &.highlighted {
+                background-color: lightgreen;
+                color: darkslategrey;
+            }
+
+            &.selected {
+                background-color: lightgreen;
+                color: darkslategrey;
+                // TODO RMAC-4932 delete this block when we are properly handling the keyboard navigation 
+                &:not(:hover) {
+                    color: red;
+                }
+            }
+
+            &:hover {
+                background-color: darkblue;
+            }
+        }
+    }
+
+    &:focus {
+        outline: none;
+    }
+}
