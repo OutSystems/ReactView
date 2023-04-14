@@ -20,7 +20,7 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                         // - 2) A relative path to a resource in the assembly itself, e.g. "Path/to/Resource.png"
                         // - 3) An absolute path to a resource in another assembly, e.g. "Z:/MyOtherAssembly/Path/to/Resource.png"
                         // - 4) An absolute path to a resource in assembly itself, e.g. "Z:/MyAssembly/Path/to/Resource.png"
-                        // - 5) A relative path to a resource in pnpm linked node_modules, e.g "_/_/node_modules/.pnpm/@os-designsystem+feedback-message@2.0.0_wcqkhtmu7mswc6yz4uyexck3ty/node_modules/@os-designsystem/feedback-message/lib/assets/1C3rjyS.png"
+                        // - 5) A relative path to a resource in pnpm linked node_modules, e.g "_/_/node_modules/.pnpm/NodePackage@2.0.0_wcqkhtmu7mswc6yz4uyexck3ty/node_modules/NodePackage/lib/assets/Resource.png"
                         //
                         // Context represents the path of the project being built by webpack, e.g. "C:\Git\Path\to\Project\"
                         //
