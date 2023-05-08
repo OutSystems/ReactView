@@ -15,7 +15,7 @@
   <ItemGroup>
     <None Remove="**\*.cache"/>
   </ItemGroup>
-  
+
   <Target Name="VG_SetVariables">
       <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
           <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\$(NodeVersion)\tools\win-x64\node.exe"/>
@@ -31,7 +31,7 @@
     <PropertyGroup>
       <ViewGeneratorPath>$([System.IO.Path]::GetFullPath(&quot;$(MSBuildThisFileDirectory)..\&quot;))</ViewGeneratorPath>
       <ViewGeneratorToolsPath>$(ViewGeneratorPath)tools</ViewGeneratorToolsPath>
-      <ViewGeneratorContentFilesPath>$(ViewGeneratorPath)contentFiles\</ViewGeneratorContentFilesPath> 
+      <ViewGeneratorContentFilesPath>$(ViewGeneratorPath)contentFiles\</ViewGeneratorContentFilesPath>
       <__ViewGeneratorNodeJsExe>@(_ViewGeneratorCoreNodeJsExeAfterCheckedPaths);</__ViewGeneratorNodeJsExe>
       <ViewGeneratorNodeJsExe>$(__ViewGeneratorNodeJsExe.Substring(0, $(__ViewGeneratorNodeJsExe.IndexOf(';'))))</ViewGeneratorNodeJsExe>
     </PropertyGroup>
@@ -43,13 +43,13 @@
       <Exec Condition="'$(OS)' != 'Windows_NT'" Command="ln -s &quot;$(ProjectDir)$(PluginsRelativePath)node_modules&quot; &quot;$(ProjectDir)node_modules/webview.plugins&quot;" />
   </Target>
 
-  <Target Name="VG_UnlinkNodeModules">     
+  <Target Name="VG_UnlinkNodeModules">
     <RemoveDir Condition="Exists('$(ProjectDir)node_modules\webview.plugins')" Directories="$(ProjectDir)node_modules\webview.plugins" />
   </Target>
-    
+
   <Target Name="VG_CleanEntryFiles" >
     <ItemGroup>
-      <EntryFilesToDelete Include="**\*.entry" />
+      <EntryFilesToDelete Include="**\*.entry" Exclude="node_modules\**\*.entry" />
     </ItemGroup>
     <Message Condition="'@(EntryFilesToDelete)' != ''" Text="Deleting old files: @(EntryFilesToDelete)" Importance="high" />
     <Delete Files="@(EntryFilesToDelete)"/>
@@ -104,7 +104,7 @@
     <WP_DevTool>false</WP_DevTool>
     <WP_UseCache>false</WP_UseCache>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <VG_Inputs Include="**\*.tsx" Exclude="node_modules\**\*.tsx" />
     <VG_Inputs Include="**\*.ts" Exclude="node_modules\**\*.ts;**\*.d.ts" />
@@ -117,7 +117,7 @@
     <VG_StyleSheet_Inputs Condition="'@(DefaultStyleSheet)' != ''" Include="**\*.scss" Exclude="node_modules\**\*.scss" />
     <VG_Workers_Inputs Include="@(Workers)" />
   </ItemGroup>
-    
+
   <ItemGroup>
     <UpToDateCheckInput Include="@(VG_Inputs)" Exclude="@(UpToDateCheckInput)" />
     <UpToDateCheckInput Include="@(DefaultStyleSheet)" Exclude="@(UpToDateCheckInput)" />
@@ -140,12 +140,12 @@
 
     <!-- Main bundle generation -->
     <Exec Command="&quot;$(ViewGeneratorNodeJsExe)&quot; &quot;$(ViewPackerToolScript)&quot; --config='$(ViewGeneratorToolsPath)/webpack/$(WP_ConfigFileName).config.js' --mode=$(WP_Mode) --devtool=$(WP_DevTool) --useCache=$(WP_UseCache) --pluginsRelativePath='$(PluginsRelativePath)' --assemblyName='$(AssemblyName)'" />
-    
+
     <Touch Files="VG_Build.cache" AlwaysCreate="true" />
   </Target>
 
   <!-- Default stylesheet related target -->
-  <Target Name="VG_GenerateDefaultStyleSheet" > 
+  <Target Name="VG_GenerateDefaultStyleSheet" >
     <Exec Command="&quot;$(ViewGeneratorNodeJsExe)&quot; &quot;$(ViewPackerToolScript)&quot; --config='$(ViewGeneratorToolsPath)/webpack/webpack_stylesheets.config.js' --mode=$(WP_Mode) --devtool=$(WP_DevTool) --entryPath='@(DefaultStyleSheet)' --assemblyName='$(AssemblyName)'" />
   </Target>
 
@@ -165,30 +165,30 @@
       <EmbeddedResource Include="**\*.entry" Exclude="@(EmbeddedResource)" />
     </ItemGroup>
   </Target>
-  
-  <Target Name="VG_Setup" DependsOnTargets="VG_SetVariables" Condition="!Exists('$(ProjectDir)VG.cache') OR $([System.IO.File]::GetLastWriteTime('$(ViewGeneratorContentFilesPath)VG.cache').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('$(ProjectDir)VG.cache').Ticks)">      
-    
+
+  <Target Name="VG_Setup" DependsOnTargets="VG_SetVariables" Condition="!Exists('$(ProjectDir)VG.cache') OR $([System.IO.File]::GetLastWriteTime('$(ViewGeneratorContentFilesPath)VG.cache').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('$(ProjectDir)VG.cache').Ticks)">
+
     <CreateItem Include="$(ViewGeneratorContentFilesPath)VG.cache">
       <Output TaskParameter="Include" ItemName="CacheFile" />
     </CreateItem>
-      
+
     <CreateItem Include="$(ViewGeneratorContentFilesPath)*.json">
       <Output TaskParameter="Include" ItemName="TemplatesToCopy" />
     </CreateItem>
-      
+
     <CreateItem Include="$(ViewGeneratorContentFilesPath)**\*.d.ts">
       <Output TaskParameter="Include" ItemName="FilesToCopy" />
     </CreateItem>
-      
+
     <Message Text="Copying View Generator content files" Importance="Normal" />
-      
+
     <Copy SourceFiles="@(CacheFile)" DestinationFolder="$(ProjectDir)%(CacheFile.RecursiveDir)" />
     <Copy SourceFiles="@(TemplatesToCopy)" DestinationFolder="$(ProjectDir)%(TemplatesToCopy.RecursiveDir)" Condition="!Exists('%(FullPath)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ProjectDir)%(FilesToCopy.RecursiveDir)" SkipUnchangedFiles="true" />
 
     <Delete Condition="Exists('$(ProjectDir)VG_Build.cache')" Files="VG_Build.cache" />
   </Target>
-  
+
   <Target Name="VG_Clean" BeforeTargets="Clean" >
     <Delete Files="VG_Build.cache" />
   </Target>
