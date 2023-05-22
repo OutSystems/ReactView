@@ -8,8 +8,8 @@
     <Configuration></Configuration>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactViewControl-Avalonia</PackageId>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+    <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAvalonia|AnyCPU'">
@@ -38,8 +38,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" Version="2.106.6"/>
-    <PackageReference Include="Avalonia" Version="0.10.17" />
+    <PackageReference Include="WebViewControl-Avalonia" />
+    <PackageReference Include="Avalonia" />
   </ItemGroup>
 
   <ItemGroup>

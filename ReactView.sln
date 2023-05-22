@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Avalonia", "Sample.Avalonia\Sample.Avalonia.csproj", "{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}"
@@ -25,12 +26,15 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Debug|ARM64 = Debug|ARM64
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		Release|ARM64 = Release|ARM64
 		ReleaseAvalonia|Any CPU = ReleaseAvalonia|Any CPU
 		ReleaseAvalonia|x64 = ReleaseAvalonia|x64
 		ReleaseAvalonia|x86 = ReleaseAvalonia|x86
+		ReleaseAvalonia|ARM64 = ReleaseAvalonia|ARM64
 		ReleaseWPF|Any CPU = ReleaseWPF|Any CPU
 		ReleaseWPF|x64 = ReleaseWPF|x64
 		ReleaseWPF|x86 = ReleaseWPF|x86
@@ -59,6 +63,12 @@ Global
 		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseWPF|x64.Build.0 = ReleaseWPF|Any CPU
 		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseWPF|x86.ActiveCfg = ReleaseWPF|Any CPU
 		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseWPF|x86.Build.0 = ReleaseWPF|Any CPU
+		{6A17926A-BD42-4C4D-8255-07C847B23C01}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{6A17926A-BD42-4C4D-8255-07C847B23C01}.Debug|ARM64.Build.0 = Debug|ARM64
+		{6A17926A-BD42-4C4D-8255-07C847B23C01}.Release|ARM64.ActiveCfg = Release|ARM64
+		{6A17926A-BD42-4C4D-8255-07C847B23C01}.Release|ARM64.Build.0 = Release|ARM64
+		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseAvalonia|ARM64.ActiveCfg = ReleaseAvalonia|ARM64
+		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseAvalonia|ARM64.Build.0 = ReleaseAvalonia|ARM64
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -83,6 +93,12 @@ Global
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.ReleaseWPF|x64.Build.0 = ReleaseWPF|Any CPU
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.ReleaseWPF|x86.ActiveCfg = ReleaseWPF|Any CPU
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.ReleaseWPF|x86.Build.0 = ReleaseWPF|Any CPU
+		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Debug|ARM64.Build.0 = Debug|ARM64
+		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Release|ARM64.ActiveCfg = Release|ARM64
+		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Release|ARM64.Build.0 = Release|ARM64
+		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.ReleaseAvalonia|ARM64.ActiveCfg = ReleaseAvalonia|ARM64
+		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.ReleaseAvalonia|ARM64.Build.0 = ReleaseAvalonia|ARM64
 		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -106,6 +122,9 @@ Global
 		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.ReleaseWPF|x64.Build.0 = ReleaseWPF|Any CPU
 		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.ReleaseWPF|x86.ActiveCfg = ReleaseWPF|Any CPU
 		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.ReleaseWPF|x86.Build.0 = ReleaseWPF|Any CPU
+		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.Release|ARM64.ActiveCfg = Release|ARM64
+		{4FE01227-BBE0-4B87-9B11-2418F6F77512}.ReleaseAvalonia|ARM64.ActiveCfg = ReleaseAvalonia|ARM64
 		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -129,6 +148,9 @@ Global
 		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.ReleaseWPF|x64.Build.0 = ReleaseWPF|Any CPU
 		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.ReleaseWPF|x86.ActiveCfg = ReleaseWPF|Any CPU
 		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.ReleaseWPF|x86.Build.0 = ReleaseWPF|Any CPU
+		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.Release|ARM64.ActiveCfg = Release|ARM64
+		{34EDE6B5-1AFA-45E2-BFD2-048D8BD5FA5C}.ReleaseAvalonia|ARM64.ActiveCfg = ReleaseAvalonia|ARM64
 		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -150,6 +172,12 @@ Global
 		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.ReleaseWPF|x64.Build.0 = ReleaseWPF|Any CPU
 		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.ReleaseWPF|x86.ActiveCfg = ReleaseWPF|Any CPU
 		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.ReleaseWPF|x86.Build.0 = ReleaseWPF|Any CPU
+		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.Debug|ARM64.Build.0 = Debug|ARM64
+		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.Release|ARM64.ActiveCfg = Release|ARM64
+		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.Release|ARM64.Build.0 = Release|ARM64
+		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.ReleaseAvalonia|ARM64.ActiveCfg = ReleaseAvalonia|ARM64
+		{DEB52BF8-D2BF-4D8F-9B74-CCFB415C5D67}.ReleaseAvalonia|ARM64.Build.0 = ReleaseAvalonia|ARM64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
