@@ -23,12 +23,12 @@
         <PackageVersion Include="CefGlue.Avalonia" Version="106.5249.7" />
         <PackageVersion Include="CefGlue.Wpf" Version="106.5249.7" />
 
-        <PackageReference Include="WebViewControl-Avalonia" Version="2.106.7" />
+        <PackageVersion Include="WebViewControl-Avalonia" Version="2.106.7" />
 
         <PackageVersion Include="ViewGenerator" Version="1.0.330" />
         <PackageVersion Include="ViewGeneratorCore" Version="1.0.229" />
 
         <PackageVersion Include="NLog" Version="4.6.2" />
-        <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.9.7" />
+        <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="3.9.7" />
     </ItemGroup>
 </Project>
