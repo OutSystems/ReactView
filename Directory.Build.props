@@ -20,6 +20,16 @@
     <CefGlueVersion>106.5249.18</CefGlueVersion>
     <WebViewVersion>2.106.8</WebViewVersion>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
+    <PackageSuffix />
+    <CefGluePackageSuffix />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
+    <PackageSuffix>-ARM64</PackageSuffix>
+    <CefGluePackageSuffix>-ARM64</CefGluePackageSuffix>
+  </PropertyGroup>
   
   <ItemGroup>
     <PackageJsons Include="**/package.json" Exclude="**/node_modules/**/*.*"/>

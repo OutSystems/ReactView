@@ -39,5 +39,9 @@
       <Visible>True</Visible>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WebViewControl-Avalonia$(CefGluePackageSuffix)" />
+  </ItemGroup>
   
 </Project>

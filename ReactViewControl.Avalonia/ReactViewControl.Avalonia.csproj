@@ -7,7 +7,7 @@
     <Description>ReactViewControl for Avalonia powered by CefGlue</Description>
     <Configuration></Configuration>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>ReactViewControl-Avalonia</PackageId>
+    <PackageId>ReactViewControl-Avalonia$(PackageSuffix)</PackageId>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>
 
@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" />
+    <PackageReference Include="WebViewControl-Avalonia$(CefGluePackageSuffix)" />
     <PackageReference Include="Avalonia" />
   </ItemGroup>
 

@@ -7,6 +7,7 @@
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
     <RuntimeIdentifiers>osx-x64;win-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
     <ViewGeneratorNodeJsExe>node</ViewGeneratorNodeJsExe>
+    <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,7 +43,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="WebViewControl-Avalonia" />
+    <PackageReference Include="WebViewControl-Avalonia$(CefGluePackageSuffix)" />
   </ItemGroup>
   
   <ItemGroup>
