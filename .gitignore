@@ -49,9 +49,5 @@ Sample.Avalonia/global.d.ts
 Sample.Avalonia/.wpcache/
 Sample.Avalonia/Generated/
 Sample.Avalonia/node_modules/
-.DS_Store
-.idea/.idea.ReactView/.idea/encodings.xml
-.idea/.idea.ReactView/.idea/indexLayout.xml
-.idea/.idea.ReactView/.idea/vcs.xml
-.idea/.idea.ReactView/.idea/workspace.xml
-.idea/.idea.ReactView/.idea/projectSettingsUpdater.xml
+**/*.DS_Store
+**/*.idea

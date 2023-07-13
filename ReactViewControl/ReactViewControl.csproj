@@ -13,12 +13,12 @@
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWPF|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)' == 'ReleaseWPF'">
     <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-WPF" Version="2.106.6" />
+    <PackageReference Include="WebViewControl-WPF" />
   </ItemGroup>
 
   <ItemGroup>

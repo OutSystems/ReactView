@@ -9,10 +9,9 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactViewControl-Avalonia</PackageId>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
-    <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAvalonia|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAvalonia'">
     <Optimize>true</Optimize>
   </PropertyGroup>
 
