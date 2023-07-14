@@ -1,9 +1,10 @@
 <Project>
   <PropertyGroup>
     <DotnetVersion>net6.0</DotnetVersion>
+    <Platforms>x64;ARM64</Platforms>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.106.6</Version>
+    <Version>2.106.7</Version>
     <Authors>OutSystems</Authors>
     <Product>ReactView</Product>
     <Copyright>Copyright © OutSystems 2021</Copyright>
@@ -13,6 +14,23 @@
     <!-- File with mtime of last successful npm install -->
     <NpmInstallStampFile>.npm-install-stamp</NpmInstallStampFile>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <AvaloniaVersion>0.10.17</AvaloniaVersion>
+    <CefGlueVersion>106.5249.18</CefGlueVersion>
+    <WebViewVersion>2.106.9</WebViewVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
+    <PackageSuffix />
+    <CefGluePackageSuffix />
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
+    <PackageSuffix>-ARM64</PackageSuffix>
+    <CefGluePackageSuffix>-ARM64</CefGluePackageSuffix>
+  </PropertyGroup>
+  
   <ItemGroup>
     <PackageJsons Include="**/package.json" Exclude="**/node_modules/**/*.*"/>
   </ItemGroup>

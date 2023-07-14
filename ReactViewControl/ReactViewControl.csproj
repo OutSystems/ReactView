@@ -7,18 +7,18 @@
     <Description>ReactViewControl for WPF powered by CefGlue</Description>
     <Configuration></Configuration>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>ReactViewControl-WPF</PackageId>
+    <PackageId>ReactViewControl-WPF$(PackageSuffix)</PackageId>
     <UseWpf>true</UseWpf>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWPF|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)' == 'ReleaseWPF'">
     <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-WPF" Version="2.106.6" />
+    <PackageReference Include="WebViewControl-WPF$(CefGluePackageSuffix)" />
   </ItemGroup>
 
   <ItemGroup>

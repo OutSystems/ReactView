@@ -7,12 +7,11 @@
     <Description>ReactViewControl for Avalonia powered by CefGlue</Description>
     <Configuration></Configuration>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>ReactViewControl-Avalonia</PackageId>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+    <PackageId>ReactViewControl-Avalonia$(PackageSuffix)</PackageId>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAvalonia|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAvalonia'">
     <Optimize>true</Optimize>
   </PropertyGroup>
 
@@ -38,8 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia" Version="2.106.6"/>
-    <PackageReference Include="Avalonia" Version="0.10.17" />
+    <PackageReference Include="WebViewControl-Avalonia$(CefGluePackageSuffix)" />
+    <PackageReference Include="Avalonia" />
   </ItemGroup>
 
   <ItemGroup>

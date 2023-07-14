@@ -49,3 +49,5 @@ Sample.Avalonia/global.d.ts
 Sample.Avalonia/.wpcache/
 Sample.Avalonia/Generated/
 Sample.Avalonia/node_modules/
+**/*.DS_Store
+**/*.idea
