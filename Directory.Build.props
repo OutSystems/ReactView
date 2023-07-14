@@ -18,7 +18,7 @@
   <PropertyGroup>
     <AvaloniaVersion>0.10.17</AvaloniaVersion>
     <CefGlueVersion>106.5249.18</CefGlueVersion>
-    <WebViewVersion>2.106.8</WebViewVersion>
+    <WebViewVersion>2.106.9</WebViewVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
