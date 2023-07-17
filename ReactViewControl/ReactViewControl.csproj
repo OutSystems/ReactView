@@ -5,7 +5,6 @@
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl WPF</AssemblyTitle>
     <Description>ReactViewControl for WPF powered by CefGlue</Description>
-    <Configuration></Configuration>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactViewControl-WPF$(PackageSuffix)</PackageId>
     <UseWpf>true</UseWpf>
@@ -33,12 +32,6 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="ReactViewControl.nuspec">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
 
   <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">

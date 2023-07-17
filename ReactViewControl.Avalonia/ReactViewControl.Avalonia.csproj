@@ -5,9 +5,9 @@
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl Avalonia</AssemblyTitle>
     <Description>ReactViewControl for Avalonia powered by CefGlue</Description>
-    <Configuration></Configuration>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactViewControl-Avalonia$(PackageSuffix)</PackageId>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
   </PropertyGroup>
 
@@ -46,12 +46,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeInNugetPackage>true</IncludeInNugetPackage>
     </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="ReactViewControl.nuspec">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
 
   <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
