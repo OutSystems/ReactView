@@ -20,9 +20,6 @@
         <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
         <PackageVersion Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
 
-        <PackageVersion Include="CefGlue.Avalonia" Version="$(CefGlueVersion)" />
-        <PackageVersion Include="CefGlue.Wpf" Version="$(CefGlueVersion)" />
-
         <PackageVersion Include="WebViewControl-Avalonia" Version="$(WebViewVersion)" />
         <PackageVersion Include="WebViewControl-Avalonia-ARM64" Version="$(WebViewVersion)" />
         

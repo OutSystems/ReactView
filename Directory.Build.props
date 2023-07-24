@@ -17,18 +17,17 @@
   
   <PropertyGroup>
     <AvaloniaVersion>0.10.17</AvaloniaVersion>
-    <CefGlueVersion>106.5249.19</CefGlueVersion>
     <WebViewVersion>2.106.10</WebViewVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
     <PackageSuffix />
-    <CefGluePackageSuffix />
+    <WebViewPackageSuffix />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
     <PackageSuffix>-ARM64</PackageSuffix>
-    <CefGluePackageSuffix>-ARM64</CefGluePackageSuffix>
+    <WebViewPackageSuffix>-ARM64</WebViewPackageSuffix>
   </PropertyGroup>
   
   <ItemGroup>
