@@ -9,7 +9,8 @@ import { getCurrentDirectory } from "../Plugins/Utils";
 const getTypeScriptRuleSet = (useCache: boolean): RuleSetRule => {
 
     const TypeScriptRule: RuleSetRule = {
-        test: /\.tsx?$/
+        test: /\.tsx?$/,
+        exclude: /tests/
     };
 
     let ruleSet: RuleSetUseItem[] = [];
