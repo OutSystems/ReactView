@@ -4,7 +4,7 @@
     <Platforms>x64;ARM64</Platforms>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.106.11</Version>
+    <Version>2.106.12</Version>
     <Authors>OutSystems</Authors>
     <Product>ReactView</Product>
     <Copyright>Copyright © OutSystems 2021</Copyright>
@@ -17,7 +17,7 @@
   
   <PropertyGroup>
     <AvaloniaVersion>0.10.17</AvaloniaVersion>
-    <WebViewVersion>2.106.12</WebViewVersion>
+    <WebViewVersion>2.106.13</WebViewVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
