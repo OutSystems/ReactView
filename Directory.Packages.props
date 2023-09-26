@@ -30,7 +30,7 @@
         <PackageVersion Include="ViewGeneratorCore" Version="1.0.229" />
 
         <PackageVersion Include="NLog" Version="4.6.2" />
-        <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="3.9.7" />
+        <PackageVersion Include="Microsoft.TypeScript.MSBuild" Version="5.2.2" />
 
         <PackageVersion Include="nunit" Version="3.12.0" />
         <PackageVersion Include="NUnit3TestAdapter" Version="3.17.0" />
