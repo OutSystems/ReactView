@@ -5,7 +5,6 @@ import { Configuration } from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
 // Plugins / Resources
-import RenameChunksPlugin from "./RenameChunksPlugin";
 import ForkTsCheckerWebpackFormatterPlugin from "./ForkTsCheckerWebpackFormatterPlugin";
 import { CssPlaceholder, CssChunkPlaceholder, DtsExtension, OutputDirectoryDefault, JsChunkPlaceholder, NamePlaceholder } from "./Resources";
 import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "./Utils";
@@ -105,9 +104,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
                     diagnosticOptions: { syntactic: true, semantic: true, declaration: false, global: false },
                 }
             }),
-
-            new RenameChunksPlugin(),
-
+            
             new MiniCssExtractPlugin({
                 filename: OutputDirectoryDefault + CssPlaceholder,
                 chunkFilename: OutputDirectoryDefault + CssChunkPlaceholder
@@ -116,7 +113,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             new WebpackManifestPlugin({
                 fileName: "manifest.json",
                 generate: (seed, files) => generateManifest(seed, files, outputMap, namespaceMap)
-            })
+            }),
         ]
     };
 

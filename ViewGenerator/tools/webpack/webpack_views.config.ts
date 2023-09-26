@@ -52,13 +52,7 @@ const config = (env) => {
             }
         }
     };
-
-    // SplitChunksOptions.automaticNameMaxLength
-    //
-    // Current webpack typings do not recognize automaticNameMaxLength option.
-    // Default is 30 characters, so we need to increase this value.
-    (standardConfig.optimization.splitChunks as any).automaticNameMaxLength = 250;
-
+    
     generateExtendedConfig(env.pluginsRelativePath || ".", !!env.pluginsRelativePath);
 
     // resolve.alias

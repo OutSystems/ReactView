@@ -2,7 +2,7 @@
 import { outputFileSync } from "fs-extra";
 import { resolve } from "path";
 import { Issue } from "fork-ts-checker-webpack-plugin/lib/issue";
-import { FileDescriptor } from "webpack-manifest-plugin";
+import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
 
 import { CssExtension, EntryExtension, JsExtension, JsPlaceholder, OutputDirectoryDefault } from "./Resources";
 
@@ -87,7 +87,7 @@ export function generateManifest(
  * Custom typescript error formater for Visual Studio.
  * */
 export function customErrorFormatter(issue: Issue, enableColors: boolean, namespace: string) {
-    const colors = Chalk.constructor({ enabled: enableColors });
+    const colors = new Chalk.Instance();
     const defaultSeverity = "error";
     const defaultColor = colors.bold.red;
     const locationColor = colors.bold.cyan;
