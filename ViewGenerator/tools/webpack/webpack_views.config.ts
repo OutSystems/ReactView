@@ -70,7 +70,7 @@ const config = (_, argv) => {
     if (Object.keys(externalsMap).length > 0) {
         standardConfig.externals = [
             standardConfig.externals as Dictionary<string>,
-            function (_, request: string, callback: any) {
+            function ({ context, request}, callback: any) {
                 let match = Object.keys(externalsMap).find(key => new RegExp(key).test(request));
                 if (match) {
                     return callback(null, externalsMap[match]);
@@ -81,6 +81,7 @@ const config = (_, argv) => {
     }
 
     if (argv.useCache) {
+        // @ts-ignore
         standardConfig.devServer = {
             disableHostCheck: true
         } 

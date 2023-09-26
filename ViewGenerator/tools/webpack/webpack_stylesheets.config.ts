@@ -1,6 +1,6 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import { join, resolve } from "path";
-import { Configuration, WatchIgnorePlugin } from "webpack";
+import { join } from "path";
+import { Configuration } from "webpack";
 
 import MiniCssExtractPluginCleanup from "./Plugins/MiniCssExtractPluginCleanup";
 import { CssPlaceholder, JsMapPlaceholder, OutputDirectoryDefault } from "./Plugins/Resources";
@@ -38,11 +38,14 @@ const config = (_, argv) => {
                 getResourcesRuleSet(argv.assemblyName)
             ]
         },
+        
+        watchOptions: {
+            ignored: /\\.(sa|sc|c)ss\\.d\\.ts$/
+        },
 
         plugins: [
             new MiniCssExtractPlugin({ filename: OutputDirectoryDefault + CssPlaceholder }),
             new MiniCssExtractPluginCleanup([/\.js.map$/]),
-            new WatchIgnorePlugin([/\.(sa|sc|c)ss\.d\.ts$/]),
         ]
     }
 

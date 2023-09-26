@@ -1,9 +1,8 @@
-﻿import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
+﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
 import { Configuration } from "webpack";
-import ManifestPlugin from "webpack-manifest-plugin";
+import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
 // Plugins / Resources
 import RenameChunksPlugin from "./RenameChunksPlugin";
@@ -114,7 +113,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
                 chunkFilename: OutputDirectoryDefault + CssChunkPlaceholder
             }),
 
-            new ManifestPlugin({
+            new WebpackManifestPlugin({
                 fileName: "manifest.json",
                 generate: (seed, files) => generateManifest(seed, files, outputMap, namespaceMap)
             })

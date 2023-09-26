@@ -15,18 +15,6 @@ const getTypeScriptRuleSet = (useCache: boolean): RuleSetRule => {
 
     let ruleSet: RuleSetUseItem[] = [];
 
-    // cache-loader
-    if (useCache) {
-        let cacheLoaderRule: RuleSetUseItem = {
-            loader: "cache-loader",
-            options: {
-                cacheDirectory: join(getCurrentDirectory(), CacheDirectoryDefault)
-            }
-        };
-
-        ruleSet = ruleSet.concat(cacheLoaderRule);
-    }
-
     let threadLoaderRule: RuleSetUseItem = {
         loader: "thread-loader",
         options: {
