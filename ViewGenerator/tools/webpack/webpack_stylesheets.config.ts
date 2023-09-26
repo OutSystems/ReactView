@@ -9,14 +9,14 @@ import { Dictionary, getCurrentDirectory } from "./Plugins/Utils"
 import getResourcesRuleSet from "./Rules/Files";
 import SassRuleSet from "./Rules/Sass";
 
-const config = (_, argv) => {
+const config = (env) => {
 
     const getEntryName = (entryPath: string): string => {
         let fileExtensionLen: number = entryPath.length - entryPath.lastIndexOf(".");
         return entryPath.slice(entryPath.replace(/\//g, '\\').lastIndexOf("\\") + 1, -fileExtensionLen);
     };
 
-    let entries: string = argv.entryPath;
+    let entries: string = env.entryPath;
     let entryMap: Dictionary<string> = {};
     entries.split(";").map(entryPath => entryMap[getEntryName(entryPath)] = './' + entryPath)
     
@@ -35,7 +35,7 @@ const config = (_, argv) => {
         module: {
             rules: [
                 SassRuleSet,
-                getResourcesRuleSet(argv.assemblyName)
+                getResourcesRuleSet(env.assemblyName)
             ]
         },
         

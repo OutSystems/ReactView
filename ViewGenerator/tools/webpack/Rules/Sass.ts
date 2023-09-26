@@ -6,10 +6,7 @@ const SassRuleSet: RuleSetRule = {
     test: /\.(sa|sc|c)ss$/,
     use: [
         {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-                hmr: false
-            }
+            loader: MiniCssExtractPlugin.loader
         },
         "@teamsupercell/typings-for-css-modules-loader",
         "css-loader",
@@ -22,8 +19,7 @@ const SassRuleSet: RuleSetRule = {
         {
             loader: "sass-loader",
             options: {
-                sourceMap: true,
-                sourceMapContents: false
+                sourceMap: true
             }
         }
     ]
