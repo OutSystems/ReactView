@@ -21,15 +21,15 @@ const SassRuleSet: RuleSetRule = {
 
         },
         {
-            loader: "resolve-url-loader",
-            options: {
-                keepQuery: true
-            }
+            loader: "resolve-url-loader"
         },
         {
             loader: "sass-loader",
             options: {
-                sourceMap: true
+                sassOptions: {
+                    sourceMap: true,
+                    sourceMapContents: false
+                }
             }
         }
     ]

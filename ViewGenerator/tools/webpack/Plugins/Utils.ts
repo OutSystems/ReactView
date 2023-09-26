@@ -50,13 +50,13 @@ export function generateManifest(
         if (entry.chunks) {
             entry.chunks.forEach(c => {
                 if (c.files) {
-                    files = files.concat(c.files);
+                    files = files.concat(Array.from(c.files));
                 }
             });
         }
         if (name) {
-            var relativePath = relativePaths[name];
-            var namespace = namespaces[name];
+            const relativePath = relativePaths[name];
+            const namespace = namespaces[name];
 
             // CSS
             generateEntryFile(files,
