@@ -14,6 +14,7 @@
         "css-loader": "^6.8.1",
         "dts-generator": "^3.0.0",
         "fork-ts-checker-webpack-plugin": "^8.0.0",
+        "file-loader": "^6.2.0",
         "fs-extra": "^11.1.1",
         "glob": "^10.3.4",
         "mini-css-extract-plugin": "^2.7.6",

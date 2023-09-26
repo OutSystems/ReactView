@@ -62,6 +62,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
 
     private get fullName() {
         const parentName = this.parentView.name;
+        // @ts-ignore
         return (parentName ? (parentName + ".") : "") + this.props.name;
     }
 

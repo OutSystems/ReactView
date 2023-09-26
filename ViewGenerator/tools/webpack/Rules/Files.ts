@@ -78,7 +78,8 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                     }
                 },
             },
-        ]
+        ],
+        type: 'javascript/auto'
     };
     return ResourcesRule;
 };
