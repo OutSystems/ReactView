@@ -10,6 +10,8 @@ const config = (_, argv) => {
 
     let standardConfig: Configuration = getCommonConfiguration("Plugins", argv.useCache, argv.assemblyName);
 
+    (standardConfig.cache as any).name = "pluginsCache";
+    
     standardConfig.optimization = {
         runtimeChunk: {
             name: "PluginsRuntime"

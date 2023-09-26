@@ -28,6 +28,12 @@ const config = (env) => {
             filename: JsMapPlaceholder
         },
 
+        cache: {
+            type: 'filesystem',
+            allowCollectingMemory: true,
+            name: "stylesheetsCache"
+        },
+
         resolveLoader: {
             modules: [ join(__dirname, "/node_modules") ],
         },

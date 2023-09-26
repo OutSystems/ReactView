@@ -116,6 +116,13 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             }),
         ]
     };
+    
+    if (useCache) {
+        Configuration.cache ={
+            type: 'filesystem',
+            allowCollectingMemory: true,
+        };
+    }
 
     return Configuration;
 };

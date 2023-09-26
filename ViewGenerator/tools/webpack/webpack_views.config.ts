@@ -37,6 +37,8 @@ const config = (env) => {
 
     let standardConfig: Configuration = getCommonConfiguration("Views", env.useCache, env.assemblyName, env.pluginsRelativePath);
 
+    (standardConfig.cache as any).name = "viewsCache";
+    
     standardConfig.optimization = {
         runtimeChunk: {
             name: "ViewsRuntime"
@@ -78,7 +80,7 @@ const config = (env) => {
         // @ts-ignore
         standardConfig.devServer = {
             disableHostCheck: true
-        } 
+        };
     }
 
     return standardConfig;
