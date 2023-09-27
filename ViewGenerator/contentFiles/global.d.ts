@@ -40,6 +40,8 @@ declare module "*.html" {
     export = value;
 }
 
+declare module '*.scss';
+
 declare module "PluginsProvider" {
     export interface Type<T> extends Function { new(...args: any[]): T; }
 

@@ -6,7 +6,7 @@ import { Configuration } from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
 // Plugins / Resources
-import ForkTsCheckerWebpackFormatterPlugin from "./ForkTsCheckerWebpackFormatterPlugin";
+//import ForkTsCheckerWebpackFormatterPlugin from "./ForkTsCheckerWebpackFormatterPlugin";
 import { CssPlaceholder, CssChunkPlaceholder, DtsExtension, OutputDirectoryDefault, JsChunkPlaceholder, NamePlaceholder } from "./Resources";
 import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "./Utils";
 
@@ -14,7 +14,7 @@ import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "
 import getResourcesRuleSet from "../Rules/Files";
 import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
-import DelayPlugin from "./DelayPlugin";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
 let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyName?: string, pluginsRelativePath?: string): Configuration => {
 
@@ -105,7 +105,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
                 paths: [ /scss\.d\.ts$/]
             }),
             
-            new ForkTsCheckerWebpackFormatterPlugin({
+            new ForkTsCheckerWebpackPlugin({
                 typescript: {
                     diagnosticOptions: { syntactic: true, semantic: true, declaration: false, global: false },
                 }
