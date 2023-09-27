@@ -1,6 +1,7 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
+import Webpack from "webpack";
 import { Configuration } from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
@@ -13,6 +14,7 @@ import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "
 import getResourcesRuleSet from "../Rules/Files";
 import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
+import DelayPlugin from "./DelayPlugin";
 
 let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyName?: string, pluginsRelativePath?: string): Configuration => {
 
@@ -99,6 +101,10 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
         },
 
         plugins: [
+            new Webpack.WatchIgnorePlugin({
+                paths: [ /scss\.d\.ts$/]
+            }),
+            
             new ForkTsCheckerWebpackFormatterPlugin({
                 typescript: {
                     diagnosticOptions: { syntactic: true, semantic: true, declaration: false, global: false },
