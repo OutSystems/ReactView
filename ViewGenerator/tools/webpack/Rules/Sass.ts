@@ -12,9 +12,8 @@ const SassRuleSet: RuleSetRule = {
         {
             loader: "css-loader",
             options:  {
-                modules: true
+                modules: false
             }
-
         },
         {
             loader: "resolve-url-loader"
