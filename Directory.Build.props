@@ -4,20 +4,20 @@
     <Platforms>x64;ARM64</Platforms>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.106.12</Version>
+    <Version>2.116.1</Version>
     <Authors>OutSystems</Authors>
     <Product>ReactView</Product>
-    <Copyright>Copyright © OutSystems 2021</Copyright>
+    <Copyright>Copyright © OutSystems 2023</Copyright>
     <PackageProjectUrl>https://github.com/OutSystems/ReactView</PackageProjectUrl>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\nuget</PackageOutputPath>
 
     <!-- File with mtime of last successful npm install -->
     <NpmInstallStampFile>.npm-install-stamp</NpmInstallStampFile>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <AvaloniaVersion>0.10.17</AvaloniaVersion>
-    <WebViewVersion>2.106.13</WebViewVersion>
+    <WebViewVersion>2.116.1</WebViewVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
@@ -29,7 +29,7 @@
     <PackageSuffix>-ARM64</PackageSuffix>
     <WebViewPackageSuffix>-ARM64</WebViewPackageSuffix>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageJsons Include="**/package.json" Exclude="**/node_modules/**/*.*"/>
   </ItemGroup>
