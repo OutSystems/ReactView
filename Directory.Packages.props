@@ -22,9 +22,10 @@
 
         <PackageVersion Include="WebViewControl-Avalonia" Version="$(WebViewVersion)" />
         <PackageVersion Include="WebViewControl-Avalonia-ARM64" Version="$(WebViewVersion)" />
-        
-        <PackageVersion Include="WebViewControl-WPF" Version="$(WebViewVersion)" />
-        <PackageVersion Include="WebViewControl-WPF-ARM64" Version="$(WebViewVersion)" />
+
+        <!-- TODO - Change WebViewControl-WPF Version to $(WebViewVersion) once the new version is released on Nuget.org -->
+        <PackageVersion Include="WebViewControl-WPF" Version="2.106.13" />
+        <PackageVersion Include="WebViewControl-WPF-ARM64" Version="2.106.13" />
 
         <PackageVersion Include="ViewGenerator" Version="1.0.330" />
         <PackageVersion Include="ViewGeneratorCore" Version="1.0.229" />
@@ -35,6 +36,6 @@
         <PackageVersion Include="nunit" Version="3.12.0" />
         <PackageVersion Include="NUnit3TestAdapter" Version="3.17.0" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
-        
+
     </ItemGroup>
 </Project>
