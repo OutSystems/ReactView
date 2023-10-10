@@ -23,7 +23,6 @@
         <PackageVersion Include="WebViewControl-Avalonia" Version="$(WebViewVersion)" />
         <PackageVersion Include="WebViewControl-Avalonia-ARM64" Version="$(WebViewVersion)" />
 
-        <!-- TODO - Change WebViewControl-WPF Version to $(WebViewVersion) once the new version is released on Nuget.org -->
         <PackageVersion Include="WebViewControl-WPF" Version="2.106.13" />
         <PackageVersion Include="WebViewControl-WPF-ARM64" Version="2.106.13" />
 
