@@ -1,11 +1,61 @@
-﻿import { basename } from "path";
-import { RuleSetRule } from "webpack";
+﻿import { AssetInfo, NormalModule, PathData, RuleSetRule } from "webpack";
 
 // Resource files
 const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): RuleSetRule => {
 
     const ResourcesRule: RuleSetRule = {
-        test: /\.(ttf|png|jpg|jpeg|bmp|gif|woff|woff2|ico|svg|html)$/,
+        test: /\.(ttf|png|jpg|jpeg|bmp|gif|woff|woff2|ico|svg|html)$/i,
+        type: 'asset/resource',
+        generator: {
+            emit: false,
+            publicPath: (pathData: PathData, assetInfo?: AssetInfo): string => {
+                const fileName: string = pathData.filename;
+                if (fileName.indexOf(`/.pnpm/`) > 0) {
+                    if (pluginsBase){
+                        return `/${pluginsBase}/`;
+                    } else {
+                        return `/${assemblyName}/`;
+                    }
+                }
+                
+                if (pathData.module) {
+                    let module: NormalModule = pathData.module as NormalModule;
+                    if (module.resourceResolveData) {
+                        let resourceResolveData = module.resourceResolveData;
+                        let fileData = resourceResolveData.descriptionFileData;
+                        if (fileData.name.toUpperCase() === assemblyName.toUpperCase()) {
+                            return `/${assemblyName}/`;
+                        }
+                        return `/${fileData.name}/`;
+                    }
+                }
+                throw new Error("ViewGenerator: Resource not found.");
+            },
+            filename: (pathData: PathData, assetInfo?: AssetInfo): string => {
+                const fileName: string = pathData.filename;
+                if (fileName.indexOf(`/.pnpm/`) > 0) {
+                    return fileName.substring(fileName.lastIndexOf("node_modules"));
+                }
+                
+                if (pathData.module) {
+                    let module: NormalModule = pathData.module as NormalModule;
+                    if (module.resourceResolveData) {
+                        let resourceResolveData = module.resourceResolveData;
+                        let fileData = resourceResolveData.descriptionFileData;
+                        if (fileData.name.toUpperCase() === assemblyName.toUpperCase()) {
+                            return pathData.filename;
+                        }
+
+                        const relativePath = resourceResolveData.relativePath;
+                        if (relativePath.startsWith(`./`)) {
+                            return relativePath.substring(2);
+                        }
+                        return relativePath;
+                    }
+                }
+                throw new Error("ViewGenerator: Resource not found.");
+            }
+        }/*,
         use: [
             {
                 loader: 'file-loader',
@@ -78,8 +128,8 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                     }
                 },
             },
-        ],
-        type: 'javascript/auto'
+        ]*/
+        
     };
     return ResourcesRule;
 };

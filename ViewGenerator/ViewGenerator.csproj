@@ -7,7 +7,7 @@
     <AssemblyTitle>ViewGenerator</AssemblyTitle>
     <Product>ViewGenerator</Product>
     <Description>Generates .NET View bindings from typescript</Description>
-    <Version>1.0.352</Version>
+    <Version>1.0.361</Version>
     <PackageId>ViewGenerator</PackageId>
     <PackageTags>Library</PackageTags>
 

@@ -1,7 +1,7 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
-import Webpack from "webpack";
+import Webpack, { AssetInfo, PathData } from "webpack";
 import { Configuration } from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
@@ -57,6 +57,12 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
         pluginsAssembly = pathParts.pop() || pathParts.pop(); 
     }
 
+    /*let getAssetModuleFilename: any = (pathData: PathData, assetInfo?: AssetInfo): string => {
+        debugger;
+        // relative path to resource
+        return `/${assemblyName}/${pathData.filename}`;
+    };*/
+
     const Configuration: Configuration = {
         stats: "minimal",
 
@@ -79,7 +85,8 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             libraryTarget: "window",
             globalObject: "window",
             devtoolNamespace: libraryName,
-            publicPath: "/" + assemblyName + "/"
+            publicPath: "/" + assemblyName + "/",
+            //assetModuleFilename: getAssetModuleFilename
         },
 
         node: false,
