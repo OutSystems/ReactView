@@ -7,7 +7,15 @@ import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
 // Plugins / Resources
 //import ForkTsCheckerWebpackFormatterPlugin from "./ForkTsCheckerWebpackFormatterPlugin";
-import { CssPlaceholder, CssChunkPlaceholder, DtsExtension, OutputDirectoryDefault, JsChunkPlaceholder, NamePlaceholder } from "./Resources";
+import {
+    CssPlaceholder,
+    CssChunkPlaceholder,
+    DtsExtension,
+    OutputDirectoryDefault,
+    JsChunkPlaceholder,
+    NamePlaceholder,
+    JsPlaceholder
+} from "./Resources";
 import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "./Utils";
 
 // Rules
@@ -119,7 +127,13 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             }),
             
             new MiniCssExtractPlugin({
-                filename: OutputDirectoryDefault + CssPlaceholder,
+                filename: (chunkData) => {
+                    const Directory: string = outputMap[chunkData.chunk.name];
+                    if (Directory) {
+                        return Directory + CssPlaceholder;
+                    }
+                    return OutputDirectoryDefault + CssChunkPlaceholder;
+                },
                 chunkFilename: OutputDirectoryDefault + CssChunkPlaceholder
             }),
 

@@ -13,9 +13,9 @@ export const DtsFileName: string = "@types/Plugins.d.ts";
 
 // Placeholders
 export const CssPlaceholder: string = "[name].css";
-export const CssChunkPlaceholder: string = "chunk_[chunkhash:8].css";
+export const CssChunkPlaceholder: string = "chunk_[contenthash].css";
 export const NamePlaceholder: string = "[name]";
-export const JsChunkPlaceholder: string = "chunk_[chunkhash:8].js";
+export const JsChunkPlaceholder: string = "chunk_[contenthash].js";
 export const JsPlaceholder: string = "[name].js";
 export const JsMapPlaceholder: string = "[name].js.map";
 

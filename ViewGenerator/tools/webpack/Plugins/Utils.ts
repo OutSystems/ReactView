@@ -4,7 +4,14 @@ import { resolve } from "path";
 import { Issue } from "fork-ts-checker-webpack-plugin/lib/issue";
 import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
 
-import { CssExtension, EntryExtension, JsExtension, JsPlaceholder, OutputDirectoryDefault } from "./Resources";
+import {
+    CssExtension,
+    EntryExtension,
+    JsChunkPlaceholder,
+    JsExtension,
+    JsPlaceholder,
+    OutputDirectoryDefault
+} from "./Resources";
 
 export type Dictionary<T> = { [key: string]: T };
 
@@ -126,5 +133,9 @@ export function getCurrentDirectory() {
  * Gets the filename from an array.
  * */
 export function getFileName(relativePaths: Dictionary<string>, chunkData: any) {
-    return (relativePaths[chunkData.chunk.name] || OutputDirectoryDefault) + JsPlaceholder;
+    const Directory: string = relativePaths[chunkData.chunk.name];
+    if (Directory) {
+        return Directory + JsPlaceholder;
+    }
+    return OutputDirectoryDefault + JsChunkPlaceholder;
 }
