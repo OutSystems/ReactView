@@ -25,7 +25,8 @@ const config = (env) => {
 
         output: {
             path: getCurrentDirectory(),
-            filename: JsMapPlaceholder
+            filename: JsMapPlaceholder,
+            publicPath: "/"
         },
 
         cache: {

@@ -48,10 +48,6 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
     // Gets input and output entries from ts2lang file
     require(resolve("./ts2lang.json")).tasks.forEach(t => getConfiguration(t.input, t.output, t.parameters.namespace));
 
-    // 🔨 Webpack allows strings and functions as its output configurations,
-    // however, webpack typings only allow strings at the moment. 🔨
-    let getOutputFileName: any = (chunkData) => getFileName(outputMap, chunkData);
-
     let currentDirectory: string = getCurrentDirectory();
 
     let pluginsAssembly: string;
@@ -64,12 +60,6 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
         // and therefore we perform a pop twice, as the last portion will be an empty string.
         pluginsAssembly = pathParts.pop() || pathParts.pop(); 
     }
-
-    /*let getAssetModuleFilename: any = (pathData: PathData, assetInfo?: AssetInfo): string => {
-        debugger;
-        // relative path to resource
-        return `/${assemblyName}/${pathData.filename}`;
-    };*/
 
     const Configuration: Configuration = {
         stats: "minimal",
@@ -87,14 +77,13 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
 
         output: {
             path: currentDirectory,
-            filename: getOutputFileName,
+            filename: (chunkData) => getFileName(outputMap, chunkData),
             chunkFilename: OutputDirectoryDefault + JsChunkPlaceholder,
             library: [libraryName, NamePlaceholder],
             libraryTarget: "window",
             globalObject: "window",
             devtoolNamespace: libraryName,
-            publicPath: "/" + assemblyName + "/",
-            //assetModuleFilename: getAssetModuleFilename
+            publicPath: "/"
         },
 
         node: false,

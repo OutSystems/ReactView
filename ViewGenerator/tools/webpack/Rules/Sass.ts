@@ -3,7 +3,7 @@ import { RuleSetRule } from "webpack";
 
 // .sass / .scss / .css files
 const SassRuleSet: RuleSetRule = {
-    test: /\.(sa|sc|c)ss$/,
+    test: /\.(sa|sc|c)ss$/i,
     use: [
         {
             loader: MiniCssExtractPlugin.loader,
