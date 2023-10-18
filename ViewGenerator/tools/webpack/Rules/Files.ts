@@ -29,11 +29,11 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                             return assemblyName + '/' + pathData.filename;
                         }
 
-                        const relativePath = resourceResolveData.relativePath;
-                        if (relativePath.startsWith(`./`)) {
-                            return assemblyFileName + '/' + relativePath.substring(2);
+                        if (!!pluginsBase && assemblyFileName.toUpperCase() === pluginsBase.toUpperCase()) {
+                            return pluginsBase + '/' + pathData.filename;
                         }
-                        return assemblyFileName + '/' + relativePath;
+
+                        throw new Error("ViewGenerator: Using a resource from an unsupported assembly.");
                     }
                 }
                 throw new Error("ViewGenerator: Resource not found.");
