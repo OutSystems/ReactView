@@ -1,20 +1,18 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
-import Webpack, { AssetInfo, PathData } from "webpack";
+import Webpack from "webpack";
 import { Configuration } from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
 // Plugins / Resources
-//import ForkTsCheckerWebpackFormatterPlugin from "./ForkTsCheckerWebpackFormatterPlugin";
 import {
     CssPlaceholder,
     CssChunkPlaceholder,
     DtsExtension,
     OutputDirectoryDefault,
     JsChunkPlaceholder,
-    NamePlaceholder,
-    JsPlaceholder
+    NamePlaceholder
 } from "./Resources";
 import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "./Utils";
 
