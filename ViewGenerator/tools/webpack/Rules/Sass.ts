@@ -11,7 +11,6 @@ const SassRuleSet: RuleSetRule = {
                 esModule: false,
             }
         },
-        "@teamsupercell/typings-for-css-modules-loader",
         {
             loader: "css-loader",
             options: {
