@@ -7,12 +7,18 @@ const SassRuleSet: RuleSetRule = {
     use: [
         {
             loader: MiniCssExtractPlugin.loader,
+            options: {
+                esModule: false,
+            }
         },
         "@teamsupercell/typings-for-css-modules-loader",
         {
             loader: "css-loader",
-            options:  {
-                modules: false
+            options: {
+                esModule: false,
+                modules: {
+                    mode: "icss"
+                }
             }
         },
         {
