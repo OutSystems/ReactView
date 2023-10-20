@@ -16,7 +16,8 @@
         "removeComments": true,
         "allowSyntheticDefaultImports": true,
         "outFile": "_Loader.js",
-        "allowUmdGlobalAccess": true
+        "allowUmdGlobalAccess": true,
+        "ignoreDeprecations": "5.0"
     },
     "compileOnSave": false,
     "exclude": [

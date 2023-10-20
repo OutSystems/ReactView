@@ -1,31 +1,15 @@
 ﻿import { cpus } from "os";
-import { join } from "path";
 import { RuleSetRule, RuleSetUseItem } from "webpack";
 
-import { CacheDirectoryDefault } from "../Plugins/Resources";
-import { getCurrentDirectory } from "../Plugins/Utils";
-
 // .ts / .tsx  files
-const getTypeScriptRuleSet = (useCache: boolean): RuleSetRule => {
+const getTypeScriptRuleSet = (): RuleSetRule => {
 
     const TypeScriptRule: RuleSetRule = {
-        test: /\.tsx?$/,
+        test: /\.tsx?$/i,
         exclude: /tests/
     };
 
     let ruleSet: RuleSetUseItem[] = [];
-
-    // cache-loader
-    if (useCache) {
-        let cacheLoaderRule: RuleSetUseItem = {
-            loader: "cache-loader",
-            options: {
-                cacheDirectory: join(getCurrentDirectory(), CacheDirectoryDefault)
-            }
-        };
-
-        ruleSet = ruleSet.concat(cacheLoaderRule);
-    }
 
     let threadLoaderRule: RuleSetUseItem = {
         loader: "thread-loader",

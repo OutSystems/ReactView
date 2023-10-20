@@ -3,27 +3,33 @@ import { RuleSetRule } from "webpack";
 
 // .sass / .scss / .css files
 const SassRuleSet: RuleSetRule = {
-    test: /\.(sa|sc|c)ss$/,
+    test: /\.(sa|sc|c)ss$/i,
     use: [
         {
             loader: MiniCssExtractPlugin.loader,
             options: {
-                hmr: false
+                esModule: false
             }
         },
-        "@teamsupercell/typings-for-css-modules-loader",
-        "css-loader",
         {
-            loader: "resolve-url-loader",
+            loader: "css-loader",
             options: {
-                keepQuery: true
+                esModule: false,
+                modules: {
+                    mode: "icss"
+                }
             }
+        },
+        {
+            loader: "resolve-url-loader"
         },
         {
             loader: "sass-loader",
             options: {
-                sourceMap: true,
-                sourceMapContents: false
+                sassOptions: {
+                    sourceMap: true,
+                    sourceMapContents: false
+                }
             }
         }
     ]

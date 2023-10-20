@@ -16,6 +16,11 @@ const config = (_, __) => {
         optimization: {
             minimize: true
         },
+        cache: {
+            type: 'filesystem',
+            allowCollectingMemory: true,
+            name: "workersCache"
+        },
         output: {
             globalObject: 'self',
             path: resolve(getCurrentDirectory(), "Generated")

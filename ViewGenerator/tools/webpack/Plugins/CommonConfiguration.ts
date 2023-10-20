@@ -1,20 +1,26 @@
-﻿import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
+﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
+import Webpack from "webpack";
 import { Configuration } from "webpack";
-import ManifestPlugin from "webpack-manifest-plugin";
+import { WebpackManifestPlugin } from "webpack-manifest-plugin";
 
 // Plugins / Resources
-import RenameChunksPlugin from "./RenameChunksPlugin";
-import ForkTsCheckerWebpackFormatterPlugin from "./ForkTsCheckerWebpackFormatterPlugin";
-import { CssPlaceholder, CssChunkPlaceholder, DtsExtension, OutputDirectoryDefault, JsChunkPlaceholder, NamePlaceholder } from "./Resources";
+import {
+    CssPlaceholder,
+    CssChunkPlaceholder,
+    DtsExtension,
+    OutputDirectoryDefault,
+    JsChunkPlaceholder,
+    NamePlaceholder
+} from "./Resources";
 import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "./Utils";
 
 // Rules
 import getResourcesRuleSet from "../Rules/Files";
 import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
 let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyName?: string, pluginsRelativePath?: string): Configuration => {
 
@@ -39,10 +45,6 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
 
     // Gets input and output entries from ts2lang file
     require(resolve("./ts2lang.json")).tasks.forEach(t => getConfiguration(t.input, t.output, t.parameters.namespace));
-
-    // 🔨 Webpack allows strings and functions as its output configurations,
-    // however, webpack typings only allow strings at the moment. 🔨
-    let getOutputFileName: any = (chunkData) => getFileName(outputMap, chunkData);
 
     let currentDirectory: string = getCurrentDirectory();
 
@@ -73,13 +75,13 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
 
         output: {
             path: currentDirectory,
-            filename: getOutputFileName,
+            filename: (chunkData) => getFileName(outputMap, chunkData),
             chunkFilename: OutputDirectoryDefault + JsChunkPlaceholder,
             library: [libraryName, NamePlaceholder],
             libraryTarget: "window",
             globalObject: "window",
             devtoolNamespace: libraryName,
-            publicPath: "/" + assemblyName + "/"
+            publicPath: "/"
         },
 
         node: false,
@@ -96,30 +98,45 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             rules: [
                 SassRuleSet,
                 getResourcesRuleSet(assemblyName, pluginsAssembly),
-                getTypeScriptRuleSet(useCache)
+                getTypeScriptRuleSet()
             ]
         },
 
         plugins: [
-            new ForkTsCheckerWebpackFormatterPlugin({
+            new Webpack.WatchIgnorePlugin({
+                paths: [ /scss\.d\.ts$/]
+            }),
+            
+            new ForkTsCheckerWebpackPlugin({
                 typescript: {
                     diagnosticOptions: { syntactic: true, semantic: true, declaration: false, global: false },
                 }
             }),
-
-            new RenameChunksPlugin(),
-
+            
             new MiniCssExtractPlugin({
-                filename: OutputDirectoryDefault + CssPlaceholder,
+                filename: (chunkData) => {
+                    const Directory: string = outputMap[chunkData.chunk.name];
+                    if (Directory) {
+                        return Directory + CssPlaceholder;
+                    }
+                    return OutputDirectoryDefault + CssChunkPlaceholder;
+                },
                 chunkFilename: OutputDirectoryDefault + CssChunkPlaceholder
             }),
 
-            new ManifestPlugin({
+            new WebpackManifestPlugin({
                 fileName: "manifest.json",
                 generate: (seed, files) => generateManifest(seed, files, outputMap, namespaceMap)
-            })
+            }),
         ]
     };
+    
+    if (useCache) {
+        Configuration.cache ={
+            type: 'filesystem',
+            allowCollectingMemory: true,
+        };
+    }
 
     return Configuration;
 };

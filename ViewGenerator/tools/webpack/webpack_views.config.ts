@@ -5,7 +5,7 @@ import { Configuration } from "webpack";
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary } from "./Plugins/Utils";
 
-const config = (_, argv) => {
+const config = (env) => {
 
     let aliasMap: Dictionary<string> = {};
     let externalsMap: Dictionary<string> = {};
@@ -35,8 +35,10 @@ const config = (_, argv) => {
         }
     };
 
-    let standardConfig: Configuration = getCommonConfiguration("Views", argv.useCache, argv.assemblyName, argv.pluginsRelativePath);
+    let standardConfig: Configuration = getCommonConfiguration("Views", env.useCache, env.assemblyName, env.pluginsRelativePath);
 
+    (standardConfig.cache as any).name = "viewsCache";
+    
     standardConfig.optimization = {
         runtimeChunk: {
             name: "ViewsRuntime"
@@ -52,14 +54,8 @@ const config = (_, argv) => {
             }
         }
     };
-
-    // SplitChunksOptions.automaticNameMaxLength
-    //
-    // Current webpack typings do not recognize automaticNameMaxLength option.
-    // Default is 30 characters, so we need to increase this value.
-    (standardConfig.optimization.splitChunks as any).automaticNameMaxLength = 250;
-
-    generateExtendedConfig(argv.pluginsRelativePath || ".", !!argv.pluginsRelativePath);
+    
+    generateExtendedConfig(env.pluginsRelativePath || ".", !!env.pluginsRelativePath);
 
     // resolve.alias
     if (Object.keys(aliasMap).length > 0) {
@@ -70,7 +66,7 @@ const config = (_, argv) => {
     if (Object.keys(externalsMap).length > 0) {
         standardConfig.externals = [
             standardConfig.externals as Dictionary<string>,
-            function (_, request: string, callback: any) {
+            function ({ context, request}, callback: any) {
                 let match = Object.keys(externalsMap).find(key => new RegExp(key).test(request));
                 if (match) {
                     return callback(null, externalsMap[match]);
@@ -80,10 +76,11 @@ const config = (_, argv) => {
         ];
     }
 
-    if (argv.useCache) {
+    if (env.useCache) {
+        // @ts-ignore
         standardConfig.devServer = {
             disableHostCheck: true
-        } 
+        };
     }
 
     return standardConfig;

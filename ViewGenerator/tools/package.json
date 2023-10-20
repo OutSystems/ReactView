@@ -10,14 +10,14 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@types/dts-generator": "^2.1.4",
-        "@types/fs-extra": "^8.0.0",
-        "@types/glob": "^7.1.1",
-        "@types/mini-css-extract-plugin": "^0.8.0",
-        "@types/webpack": "^4.32.1",
-        "@types/webpack-dev-server": "^3.10.1",
-        "@types/webpack-manifest-plugin": "^2.0.0",
-        "fork-ts-checker-webpack-plugin": "^6.1.0"
+        "@types/dts-generator": "2.1.10",
+        "@types/fs-extra": "11.0.3",
+        "@types/glob": "8.1.0",
+        "@types/webpack": "5.28.4",
+        "fork-ts-checker-webpack-plugin": "9.0.0",
+        "mini-css-extract-plugin": "2.7.6",
+        "webpack-dev-server": "4.15.1",
+        "webpack-manifest-plugin": "5.0.0"
     },
     "dependencies": {}
 }

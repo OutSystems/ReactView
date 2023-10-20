@@ -6,10 +6,12 @@ import DtsGeneratorPlugin from "./Plugins/DtsGeneratorPlugin";
 import { DtsFileName } from "./Plugins/Resources";
 import { getCurrentDirectory } from "./Plugins/Utils";
 
-const config = (_, argv) => {
+const config = (env) => {
 
-    let standardConfig: Configuration = getCommonConfiguration("Plugins", argv.useCache, argv.assemblyName);
+    let standardConfig: Configuration = getCommonConfiguration("Plugins", env.useCache, env.assemblyName);
 
+    (standardConfig.cache as any).name = "pluginsCache";
+    
     standardConfig.optimization = {
         runtimeChunk: {
             name: "PluginsRuntime"

@@ -3,7 +3,7 @@ import { Compiler } from "webpack";
 
 export default class DtsGeneratorPlugin {
 
-    private options: DtsGeneratorOptions;
+    private readonly options: DtsGeneratorOptions;
 
     constructor(options: DtsGeneratorOptions) {
         this.options = options;

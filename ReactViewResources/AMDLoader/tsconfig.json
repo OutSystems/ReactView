@@ -14,7 +14,8 @@
         "noImplicitAny": false,
         "suppressImplicitAnyIndexErrors": true,
         "removeComments": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "ignoreDeprecations": "5.0"
     },
     "compileOnSave": false,
     "exclude": [

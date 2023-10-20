@@ -1,6 +1,6 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import { join, resolve } from "path";
-import { Configuration, WatchIgnorePlugin } from "webpack";
+import { join } from "path";
+import { Configuration } from "webpack";
 
 import MiniCssExtractPluginCleanup from "./Plugins/MiniCssExtractPluginCleanup";
 import { CssPlaceholder, JsMapPlaceholder, OutputDirectoryDefault } from "./Plugins/Resources";
@@ -9,14 +9,14 @@ import { Dictionary, getCurrentDirectory } from "./Plugins/Utils"
 import getResourcesRuleSet from "./Rules/Files";
 import SassRuleSet from "./Rules/Sass";
 
-const config = (_, argv) => {
+const config = (env) => {
 
     const getEntryName = (entryPath: string): string => {
         let fileExtensionLen: number = entryPath.length - entryPath.lastIndexOf(".");
         return entryPath.slice(entryPath.replace(/\//g, '\\').lastIndexOf("\\") + 1, -fileExtensionLen);
     };
 
-    let entries: string = argv.entryPath;
+    let entries: string = env.entryPath;
     let entryMap: Dictionary<string> = {};
     entries.split(";").map(entryPath => entryMap[getEntryName(entryPath)] = './' + entryPath)
     
@@ -25,7 +25,14 @@ const config = (_, argv) => {
 
         output: {
             path: getCurrentDirectory(),
-            filename: JsMapPlaceholder
+            filename: JsMapPlaceholder,
+            publicPath: "/"
+        },
+
+        cache: {
+            type: 'filesystem',
+            allowCollectingMemory: true,
+            name: "stylesheetsCache"
         },
 
         resolveLoader: {
@@ -35,14 +42,17 @@ const config = (_, argv) => {
         module: {
             rules: [
                 SassRuleSet,
-                getResourcesRuleSet(argv.assemblyName)
+                getResourcesRuleSet(env.assemblyName)
             ]
+        },
+        
+        watchOptions: {
+            ignored: /\\.(sa|sc|c)ss\\.d\\.ts$/
         },
 
         plugins: [
             new MiniCssExtractPlugin({ filename: OutputDirectoryDefault + CssPlaceholder }),
             new MiniCssExtractPluginCleanup([/\.js.map$/]),
-            new WatchIgnorePlugin([/\.(sa|sc|c)ss\.d\.ts$/]),
         ]
     }
 

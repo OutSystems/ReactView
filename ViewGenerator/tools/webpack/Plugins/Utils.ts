@@ -1,10 +1,15 @@
-﻿import Chalk from "chalk";
-import { outputFileSync } from "fs-extra";
+﻿import { outputFileSync } from "fs-extra";
 import { resolve } from "path";
-import { Issue } from "fork-ts-checker-webpack-plugin/lib/issue";
-import { FileDescriptor } from "webpack-manifest-plugin";
+import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
 
-import { CssExtension, EntryExtension, JsExtension, JsPlaceholder, OutputDirectoryDefault } from "./Resources";
+import {
+    CssExtension,
+    EntryExtension,
+    JsChunkPlaceholder,
+    JsExtension,
+    JsPlaceholder,
+    OutputDirectoryDefault
+} from "./Resources";
 
 export type Dictionary<T> = { [key: string]: T };
 
@@ -50,13 +55,13 @@ export function generateManifest(
         if (entry.chunks) {
             entry.chunks.forEach(c => {
                 if (c.files) {
-                    files = files.concat(c.files);
+                    files = files.concat(Array.from(c.files));
                 }
             });
         }
         if (name) {
-            var relativePath = relativePaths[name];
-            var namespace = namespaces[name];
+            const relativePath = relativePaths[name];
+            const namespace = namespaces[name];
 
             // CSS
             generateEntryFile(files,
@@ -84,39 +89,6 @@ export function generateManifest(
 }
 
 /*
- * Custom typescript error formater for Visual Studio.
- * */
-export function customErrorFormatter(issue: Issue, enableColors: boolean, namespace: string) {
-    const colors = Chalk.constructor({ enabled: enableColors });
-    const defaultSeverity = "error";
-    const defaultColor = colors.bold.red;
-    const locationColor = colors.bold.cyan;
-    const codeColor = colors.grey;
-
-    if (issue.file && issue.location.start.line && issue.location.start.column) {
-
-        // e.g. file.ts(17,20): error TS0168: The variable 'foo' is declared but never used.
-        return locationColor(issue.file + "(" + issue.location.start.line + "," + issue.location.start.column + ")") +
-            defaultColor(":") + " " +
-            defaultColor(defaultSeverity.toUpperCase()) + " " +
-            codeColor("TS" + issue.code) +
-            defaultColor(":") + " " +
-            defaultColor(issue.message);
-    }
-
-    if (!issue.file) {
-        // some messages do not have file specified, although logger needs it
-        (issue as any).file = namespace;
-    }
-
-    // e.g. error TS6053: File 'file.ts' not found.
-    return defaultColor(defaultSeverity.toUpperCase()) + " " +
-        codeColor("TS" + issue.code) +
-        defaultColor(":") + " " +
-        defaultColor(issue.message);
-}
-
-/*
  * Gets the current directory.
  * */
 export function getCurrentDirectory() {
@@ -126,5 +98,9 @@ export function getCurrentDirectory() {
  * Gets the filename from an array.
  * */
 export function getFileName(relativePaths: Dictionary<string>, chunkData: any) {
-    return (relativePaths[chunkData.chunk.name] || OutputDirectoryDefault) + JsPlaceholder;
+    const Directory: string = relativePaths[chunkData.chunk.name];
+    if (Directory) {
+        return Directory + JsPlaceholder;
+    }
+    return OutputDirectoryDefault + JsChunkPlaceholder;
 }
