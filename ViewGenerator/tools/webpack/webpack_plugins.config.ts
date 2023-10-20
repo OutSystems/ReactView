@@ -6,14 +6,17 @@ import DtsGeneratorPlugin from "./Plugins/DtsGeneratorPlugin";
 import { DtsFileName } from "./Plugins/Resources";
 import { getCurrentDirectory, sanitizeCommandLineParam } from "./Plugins/Utils";
 
-const config = (env) => {
+const config = (env, argv) => {
 
-    const standardConfig: Configuration = getCommonConfiguration(env.useCache === "true" ? "pluginsCache" : "", "Plugins", sanitizeCommandLineParam(env.assemblyName));
+    const standardConfig: Configuration =  getCommonConfiguration(
+        argv.mode === "production",
+        env.useCache === "true" ? "pluginsCache" : "",
+        "Plugins",
+        sanitizeCommandLineParam(env.assemblyName),
+        env.pluginsRelativePath);
 
-    standardConfig.optimization = {
-        runtimeChunk: {
-            name: "PluginsRuntime"
-        }
+    standardConfig.optimization.runtimeChunk = {
+        name: "PluginsRuntime"
     };
 
     // Plugins

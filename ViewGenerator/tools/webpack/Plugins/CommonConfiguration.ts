@@ -1,7 +1,7 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
-import TerserPlugin, { DefinedDefaultMinimizerAndOptions } from "terser-webpack-plugin";
+import TerserPlugin from "terser-webpack-plugin";
 import Webpack from "webpack";
 import { Configuration } from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
@@ -25,7 +25,7 @@ import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-let getCommonConfiguration = (cacheName: string, libraryName: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
+let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, libraryName: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
 
     const entryMap: Dictionary<string> = {}
     const outputMap: Dictionary<string> = {};
@@ -87,18 +87,6 @@ let getCommonConfiguration = (cacheName: string, libraryName: string, assemblyNa
             publicPath: "/" + assemblyName + "/"
         },
 
-        optimization: {
-            minimize: true,
-            minimizer: [new TerserPlugin({
-                terserOptions: {
-                    keep_classnames: true,
-                    keep_fnames: true,
-                    topLevel: true,
-                    module: true
-                }
-            })]
-        },
-
         node: false,
 
         resolveLoader: {
@@ -145,9 +133,22 @@ let getCommonConfiguration = (cacheName: string, libraryName: string, assemblyNa
             }),
         ]
     };
-
-    if (cacheName) {
-        Configuration.cache ={
+    
+    if (isProductionBuild) {
+        Configuration.optimization.minimize = true;
+        
+        let terserPluginOptions: any = {
+            terserOptions: {
+                keep_classnames: true,
+                keep_fnames: true,
+                topLevel: true,
+                module: true
+            }
+        }
+        Configuration.optimization.minimizer = [new TerserPlugin(terserPluginOptions)];
+        
+    } else if (cacheName) {
+        Configuration.cache = {
             type: 'filesystem',
             allowCollectingMemory: true,
             name: cacheName

@@ -6,7 +6,7 @@ import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary, sanitizeCommandLineParam } from "./Plugins/Utils";
 import { FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder } from "./Plugins/Resources";
 
-const config = (env) => {
+const config = (env, argv) => {
 
     let aliasMap: Dictionary<string> = {};
     let externalsMap: Dictionary<string> = {};
@@ -39,18 +39,30 @@ const config = (env) => {
     const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
 
     const standardConfig: Configuration = getCommonConfiguration(
-        env.useCache === "true" ? "viewsCache" : "",
+        argv.mode === "production", 
+        env.useCache === "true" ? "viewsCache" : "", 
         "Views",
-        sanitizeCommandLineParam(env.assemblyName),
-        sanitizedPluginsRelativePath, 
+        sanitizedPluginsRelativePath,
+        env.pluginsRelativePath,
         env.forHotReload === "true");
 
     if (!standardConfig.optimization) {
         standardConfig.optimization = {};
     }
-
+    
     standardConfig.optimization.runtimeChunk = {
-            name: "ViewsRuntime"
+        name: "ViewsRuntime"
+    };
+    
+    standardConfig.optimization.splitChunks = {
+        // SplitChunksOptions
+        chunks: "all",
+        minSize: 1,
+        cacheGroups: {
+            vendors: {
+                test: /[\\/](node_modules)[\\/]/
+            }
+        }
     };
     
     if (env.optimizeBundle === "true") {
