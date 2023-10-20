@@ -1,7 +1,5 @@
-﻿import Chalk from "chalk";
-import { outputFileSync } from "fs-extra";
+﻿import { outputFileSync } from "fs-extra";
 import { resolve } from "path";
-import { Issue } from "fork-ts-checker-webpack-plugin/lib/issue";
 import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
 
 import {
@@ -88,39 +86,6 @@ export function generateManifest(
     }, seed);
 
     return entryArrayManifest;
-}
-
-/*
- * Custom typescript error formater for Visual Studio.
- * */
-export function customErrorFormatter(issue: Issue, enableColors: boolean, namespace: string) {
-    const colors = new Chalk.Instance();
-    const defaultSeverity = "error";
-    const defaultColor = colors.bold.red;
-    const locationColor = colors.bold.cyan;
-    const codeColor = colors.grey;
-
-    if (issue.file && issue.location.start.line && issue.location.start.column) {
-
-        // e.g. file.ts(17,20): error TS0168: The variable 'foo' is declared but never used.
-        return locationColor(issue.file + "(" + issue.location.start.line + "," + issue.location.start.column + ")") +
-            defaultColor(":") + " " +
-            defaultColor(defaultSeverity.toUpperCase()) + " " +
-            codeColor("TS" + issue.code) +
-            defaultColor(":") + " " +
-            defaultColor(issue.message);
-    }
-
-    if (!issue.file) {
-        // some messages do not have file specified, although logger needs it
-        (issue as any).file = namespace;
-    }
-
-    // e.g. error TS6053: File 'file.ts' not found.
-    return defaultColor(defaultSeverity.toUpperCase()) + " " +
-        codeColor("TS" + issue.code) +
-        defaultColor(":") + " " +
-        defaultColor(issue.message);
 }
 
 /*

@@ -1,9 +1,5 @@
 ﻿import { cpus } from "os";
-import { join } from "path";
 import { RuleSetRule, RuleSetUseItem } from "webpack";
-
-import { CacheDirectoryDefault } from "../Plugins/Resources";
-import { getCurrentDirectory } from "../Plugins/Utils";
 
 // .ts / .tsx  files
 const getTypeScriptRuleSet = (useCache: boolean): RuleSetRule => {

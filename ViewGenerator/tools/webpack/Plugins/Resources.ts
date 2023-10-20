@@ -5,7 +5,6 @@ export const EntryExtension: string = ".entry";
 export const JsExtension: string = ".js";
 
 // Directories
-export const CacheDirectoryDefault: string = ".wpcache";
 export const OutputDirectoryDefault: string = "Generated/";
 
 // Filenames
@@ -18,6 +17,3 @@ export const NamePlaceholder: string = "[name]";
 export const JsChunkPlaceholder: string = "chunk_[contenthash].js";
 export const JsPlaceholder: string = "[name].js";
 export const JsMapPlaceholder: string = "[name].js.map";
-
-// Names
-export const MiniCssExtractPluginName = "mini-css-extract-plugin";
