@@ -8,7 +8,7 @@ const SassRuleSet: RuleSetRule = {
         {
             loader: MiniCssExtractPlugin.loader,
             options: {
-                esModule: false,
+                esModule: false
             }
         },
         {

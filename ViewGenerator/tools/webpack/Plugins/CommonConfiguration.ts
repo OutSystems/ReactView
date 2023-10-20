@@ -98,7 +98,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             rules: [
                 SassRuleSet,
                 getResourcesRuleSet(assemblyName, pluginsAssembly),
-                getTypeScriptRuleSet(useCache)
+                getTypeScriptRuleSet()
             ]
         },
 

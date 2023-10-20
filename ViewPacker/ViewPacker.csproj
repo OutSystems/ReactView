@@ -7,7 +7,7 @@
     <AssemblyTitle>ViewPacker</AssemblyTitle>
     <Product>ViewPacker</Product>
     <Description>Creates bundles for view files using webpack</Description>
-    <Version>1.1.3</Version>
+    <Version>1.1.5</Version>
     <PackageId>ViewPacker</PackageId>
     <PackageTags>Library</PackageTags>
 

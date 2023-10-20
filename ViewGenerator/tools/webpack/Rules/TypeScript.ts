@@ -2,7 +2,7 @@
 import { RuleSetRule, RuleSetUseItem } from "webpack";
 
 // .ts / .tsx  files
-const getTypeScriptRuleSet = (useCache: boolean): RuleSetRule => {
+const getTypeScriptRuleSet = (): RuleSetRule => {
 
     const TypeScriptRule: RuleSetRule = {
         test: /\.tsx?$/i,
