@@ -62,7 +62,7 @@
   <!-- /// -->
 
   <PropertyGroup>
-    <WP_Mode>development</WP_Mode>
+    
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(WP_OptimizeBundle)' == ''">
@@ -74,12 +74,14 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$(Configuration.Split(&quot;_&quot;)[0].StartsWith('Debug'))">
+    <WP_Mode>development</WP_Mode>
     <WP_DevTool>inline-source-map</WP_DevTool>
     <WP_UseCache>true</WP_UseCache>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(Configuration.Split(&quot;_&quot;)[0].StartsWith('Release'))">
-    <WP_DevTool>false</WP_DevTool>
+    <WP_Mode>production</WP_Mode>
+    <WP_DevTool>source-map</WP_DevTool>
     <WP_UseCache>false</WP_UseCache>
   </PropertyGroup>
 

@@ -1,6 +1,7 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
 import { join, parse, resolve } from "path";
+import TerserPlugin, { DefinedDefaultMinimizerAndOptions } from "terser-webpack-plugin";
 import Webpack from "webpack";
 import { Configuration } from "webpack";
 import { WebpackManifestPlugin } from "webpack-manifest-plugin";
@@ -84,6 +85,18 @@ let getCommonConfiguration = (cacheName: string, libraryName: string, assemblyNa
             globalObject: "window",
             devtoolNamespace: libraryName,
             publicPath: "/" + assemblyName + "/"
+        },
+
+        optimization: {
+            minimize: true,
+            minimizer: [new TerserPlugin({
+                terserOptions: {
+                    keep_classnames: true,
+                    keep_fnames: true,
+                    topLevel: true,
+                    module: true
+                }
+            })]
         },
 
         node: false,
