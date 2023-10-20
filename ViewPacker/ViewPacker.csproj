@@ -7,7 +7,7 @@
     <AssemblyTitle>ViewPacker</AssemblyTitle>
     <Product>ViewPacker</Product>
     <Description>Creates bundles for view files using webpack</Description>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <PackageId>ViewPacker</PackageId>
     <PackageTags>Library</PackageTags>
 
@@ -33,12 +33,6 @@
   <Target Name="InstallDependencies" BeforeTargets="PrepareForBuild" Inputs="$(NpmInstallStampFile)" Outputs="$(NpmInstallStampFile)">
     <Exec Command="npm install --no-bin-links --prefix &quot;$(ProjectDir)tools&quot; &quot;$(ProjectDir)tools&quot;" />
     <Touch Files="$(NpmInstallStampFile)" AlwaysCreate="true" />
-  </Target>
-  <Target Name="CopySassVendors" AfterTargets="AfterBuild">
-    <CreateItem Include="$(ProjectDir)build\node-sass-vendors\**\*.*">
-      <Output TaskParameter="Include" ItemName="FilesToCopy" />
-    </CreateItem>
-    <Copy SourceFiles="@(FilesToCopy)" DestinationFiles="@(FilesToCopy->'$(ProjectDir)tools\node_modules\node-sass\vendor\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
   <ItemGroup>
     <None Include="build\ViewPacker.props" />
