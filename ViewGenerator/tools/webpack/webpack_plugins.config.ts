@@ -4,11 +4,11 @@ import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import DtsCleanupPlugin from "./Plugins/DtsCleanupPlugin";
 import DtsGeneratorPlugin from "./Plugins/DtsGeneratorPlugin";
 import { DtsFileName } from "./Plugins/Resources";
-import { getCurrentDirectory } from "./Plugins/Utils";
+import { getCurrentDirectory, sanitizeCommandLineParam } from "./Plugins/Utils";
 
 const config = (env) => {
 
-    let standardConfig: Configuration = getCommonConfiguration("Plugins", env.useCache, env.assemblyName);
+    const standardConfig: Configuration = getCommonConfiguration("Plugins", env.useCache, sanitizeCommandLineParam(env.assemblyName));
 
     (standardConfig.cache as any).name = "pluginsCache";
     

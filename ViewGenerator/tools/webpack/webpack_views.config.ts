@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { Configuration } from "webpack";
 
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
-import { Dictionary } from "./Plugins/Utils";
+import { Dictionary, sanitizeCommandLineParam } from "./Plugins/Utils";
 
 const config = (env) => {
 
@@ -34,8 +34,10 @@ const config = (env) => {
             throw new Error("Extended configuration file not found.");
         }
     };
+    
+    const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
 
-    let standardConfig: Configuration = getCommonConfiguration("Views", env.useCache, env.assemblyName, env.pluginsRelativePath);
+    const standardConfig: Configuration = getCommonConfiguration("Views", env.useCache, sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath);
 
     (standardConfig.cache as any).name = "viewsCache";
     
@@ -55,7 +57,7 @@ const config = (env) => {
         }
     };
     
-    generateExtendedConfig(env.pluginsRelativePath || ".", !!env.pluginsRelativePath);
+    generateExtendedConfig(sanitizedPluginsRelativePath || ".", !!sanitizedPluginsRelativePath);
 
     // resolve.alias
     if (Object.keys(aliasMap).length > 0) {

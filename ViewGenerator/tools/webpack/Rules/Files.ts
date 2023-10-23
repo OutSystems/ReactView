@@ -21,15 +21,15 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
                 }
                 
                 if (pathData.module) {
-                    let module: NormalModule = pathData.module as NormalModule;
+                    const module: NormalModule = pathData.module as NormalModule;
                     if (module.resourceResolveData) {
-                        let resourceResolveData = module.resourceResolveData;
-                        let assemblyFileName = resourceResolveData.descriptionFileData.name;
+                        const resourceResolveData = module.resourceResolveData;
+                        const assemblyFileName = resourceResolveData.descriptionFileData.name;
                         if (assemblyFileName.toUpperCase() === assemblyName.toUpperCase()) {
                             return assemblyName + '/' + pathData.filename;
                         }
 
-                        if (!!pluginsBase && assemblyFileName.toUpperCase() === pluginsBase.toUpperCase()) {
+                        if (pluginsBase && assemblyFileName.toUpperCase() === pluginsBase.toUpperCase()) {
                             return pluginsBase + '/' + pathData.filename;
                         }
 
