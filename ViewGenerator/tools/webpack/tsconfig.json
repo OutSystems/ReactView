@@ -3,7 +3,10 @@
     "module": "commonjs",
     "target": "es6",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "lib": [
+      "ES2021.String"
+    ]
   },
   "compileOnSave": true,
   "exclude": [
