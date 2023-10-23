@@ -139,19 +139,19 @@
     <CallTarget Condition="'@(VG_Workers_Inputs)' != ''" Targets="VG_GenerateWorkersBundle" />
 
     <!-- Main bundle generation -->
-    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env pluginsRelativePath=&quot;$(PluginsRelativePath)&quot; --env assemblyName=&quot;$(AssemblyName)&quot;" />
+    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config='$(ViewGeneratorToolsPath)/webpack/$(WP_ConfigFileName).config.js' --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)'" />
 
     <Touch Files="VG_Build.cache" AlwaysCreate="true" />
   </Target>
 
   <!-- Default stylesheet related target -->
   <Target Name="VG_GenerateDefaultStyleSheet" >
-    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env entryPath=&quot;@(DefaultStyleSheet)&quot; --env assemblyName=&quot;$(AssemblyName)&quot;" />
+    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config='$(ViewGeneratorToolsPath)/webpack/webpack_stylesheets.config.js' --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
   </Target>
 
   <!-- Workers related target -->
   <Target Name="VG_GenerateWorkersBundle" >
-    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache)" />
+    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config='$(ViewGeneratorToolsPath)/webpack/webpack_workers.config.js' --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache)" />
   </Target>
 
   <!-- /// -->
