@@ -1,15 +1,12 @@
 ﻿<Project>
   <PropertyGroup>
-
     <CleanDependsOn>
-      VG_UnlinkNodeModules;
       VG_CleanEntryFiles;
       VG_CleanJSFiles;
       VG_CleanCSSFiles;
       VG_Clean;
       $(CleanDependsOn);
     </CleanDependsOn>
-    <NodeVersion>12.18.4</NodeVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,34 +14,11 @@
   </ItemGroup>
 
   <Target Name="VG_SetVariables">
-      <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\$(NodeVersion)\tools\win-x64\node.exe"/>
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist.$(NodeVersion)\tools\win-x64\node.exe"/>
-      </ItemGroup>
-      <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\..\Node.js.redist\$(NodeVersion)\tools\osx-x64\node"/>
-          <_ViewGeneratorNodeJsExe Include="$(MSBuildThisFileDirectory)..\..\Node.js.redist.$(NodeVersion)\tools\osx-x64\node"/>
-      </ItemGroup>
-      <ItemGroup>
-          <_ViewGeneratorCoreNodeJsExeAfterCheckedPaths Include="@(_ViewGeneratorCoreNodeJsExe)" Condition="Exists('%(FullPath)')"  />
-      </ItemGroup>
     <PropertyGroup>
       <ViewGeneratorPath>$([System.IO.Path]::GetFullPath(&quot;$(MSBuildThisFileDirectory)..\&quot;))</ViewGeneratorPath>
       <ViewGeneratorToolsPath>$(ViewGeneratorPath)tools</ViewGeneratorToolsPath>
       <ViewGeneratorContentFilesPath>$(ViewGeneratorPath)contentFiles\</ViewGeneratorContentFilesPath>
-      <__ViewGeneratorNodeJsExe>@(_ViewGeneratorCoreNodeJsExeAfterCheckedPaths);</__ViewGeneratorNodeJsExe>
-      <ViewGeneratorNodeJsExe>$(__ViewGeneratorNodeJsExe.Substring(0, $(__ViewGeneratorNodeJsExe.IndexOf(';'))))</ViewGeneratorNodeJsExe>
     </PropertyGroup>
-  </Target>
-
-  <Target Name="VG_LinkNodeModules" Condition="'$(PluginsRelativePath)' != '' and !Exists('$(ProjectDir)node_modules\webview.plugins')" >
-      <Exec Condition="'$(OS)' == 'Windows_NT'" Command="mklink /J &quot;$(ProjectDir)node_modules\webview.plugins&quot; &quot;$(ProjectDir)$(PluginsRelativePath)node_modules&quot;" />
-      <!-- Take into account that ln -s takes the arguments in a different order from mklink e.g. first is destination and second is source -->
-      <Exec Condition="'$(OS)' != 'Windows_NT'" Command="ln -s &quot;$(ProjectDir)$(PluginsRelativePath)node_modules&quot; &quot;$(ProjectDir)node_modules/webview.plugins&quot;" />
-  </Target>
-
-  <Target Name="VG_UnlinkNodeModules">
-    <RemoveDir Condition="Exists('$(ProjectDir)node_modules\webview.plugins')" Directories="$(ProjectDir)node_modules\webview.plugins" />
   </Target>
 
   <Target Name="VG_CleanEntryFiles" >
@@ -125,7 +99,7 @@
   </ItemGroup>
 
   <!-- Webpack bundle generation targets-->
-  <Target Name="VG_GenerateBundle" Inputs="@(VG_Inputs);@(VG_Workers_Inputs)" Outputs="VG_Build.cache" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" AfterTargets="AfterResolveReferences" DependsOnTargets="VG_SetVariables;VG_SetupViewPacker;VG_LinkNodeModules;VG_Setup">
+  <Target Name="VG_GenerateBundle" Inputs="@(VG_Inputs);@(VG_Workers_Inputs)" Outputs="VG_Build.cache" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" AfterTargets="AfterResolveReferences" DependsOnTargets="VG_SetVariables;VG_SetupViewPacker;VG_Setup">
     <CallTarget Targets="VG_GenerateBundleInner" />
   </Target>
 
