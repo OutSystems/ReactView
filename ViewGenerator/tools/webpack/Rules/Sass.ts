@@ -26,6 +26,7 @@ const SassRuleSet: RuleSetRule = {
         {
             loader: "sass-loader",
             options: {
+                sourceMap: true,
                 sassOptions: {
                     sourceMap: true,
                     sourceMapContents: false
