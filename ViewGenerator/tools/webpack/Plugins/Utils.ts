@@ -94,13 +94,21 @@ export function generateManifest(
 export function getCurrentDirectory() {
     return resolve(".");
 }
+
 /*
  * Gets the filename from an array.
  * */
-export function getFileName(relativePaths: Dictionary<string>, chunkData: any) {
-    const Directory: string = relativePaths[chunkData.chunk.name];
-    if (Directory) {
-        return Directory + JsPlaceholder;
+export function getFileName(relativePaths: Dictionary<string>, chunkData: any): string {
+    const directory: string = relativePaths[chunkData.chunk.name];
+    if (directory) {
+        return directory + JsPlaceholder;
     }
     return OutputDirectoryDefault + JsChunkPlaceholder;
+}
+
+/*
+ * Sanitizes a command-line parameter
+ * */
+export function sanitizeCommandLineParam(parameter: string): string {
+    return parameter.replace("'", "");
 }
