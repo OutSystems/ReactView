@@ -8,6 +8,7 @@ const getResourcesRuleSet = (assemblyName?: string, pluginsBase? : string): Rule
         type: 'asset/resource',
         generator: {
             emit: false,
+            publicPath: "/",
             filename: (pathData: PathData, _assetInfo?: AssetInfo): string => {
                 const fileName: string = pathData.filename;
                 if (fileName.indexOf(`/.pnpm/`) > 0) {

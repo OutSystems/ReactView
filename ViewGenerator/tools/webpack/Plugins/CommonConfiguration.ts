@@ -81,7 +81,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             libraryTarget: "window",
             globalObject: "window",
             devtoolNamespace: libraryName,
-            publicPath: "/"
+            publicPath: "/" + assemblyName + "/"
         },
 
         node: false,
