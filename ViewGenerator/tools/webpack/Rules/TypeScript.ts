@@ -2,7 +2,7 @@
 import { RuleSetRule, RuleSetUseItem } from "webpack";
 
 // .ts / .tsx  files
-const getTypeScriptRuleSet = (): RuleSetRule => {
+const getTypeScriptRuleSet = (forHotReload: boolean): RuleSetRule => {
 
     const TypeScriptRule: RuleSetRule = {
         test: /\.tsx?$/i,
@@ -27,7 +27,7 @@ const getTypeScriptRuleSet = (): RuleSetRule => {
     };
 
     // thread-loader, ts-loader
-    TypeScriptRule.use = ruleSet.concat(threadLoaderRule, tsLoaderRule);
+    TypeScriptRule.use = forHotReload ? ruleSet.concat(tsLoaderRule) : ruleSet.concat(threadLoaderRule, tsLoaderRule);
     return TypeScriptRule;
 }
 
