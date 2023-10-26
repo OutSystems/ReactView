@@ -135,17 +135,19 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
     };
     
     if (isProductionBuild) {
-        Configuration.optimization.minimize = true;
-        
         let terserPluginOptions: any = {
             terserOptions: {
                 keep_classnames: true,
-                keep_fnames: true,
+                keep_fnames: false,
                 topLevel: true,
                 module: true
             }
         }
-        Configuration.optimization.minimizer = [new TerserPlugin(terserPluginOptions)];
+        
+        Configuration.optimization = {
+            minimize: true,
+            minimizer: [new TerserPlugin(terserPluginOptions)]
+        }
         
     } else if (cacheName) {
         Configuration.cache = {
