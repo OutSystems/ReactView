@@ -17,3 +17,6 @@ export const NamePlaceholder: string = "[name]";
 export const JsChunkPlaceholder: string = "chunk_[contenthash].js";
 export const JsPlaceholder: string = "[name].js";
 export const JsMapPlaceholder: string = "[name].js.map";
+export const IdPlaceholder: string = "[id]";
+export const RuntimePlaceholder: string = "[runtime]";
+export const FullHashPlaceholder: string = "[fullhash]";

@@ -4,6 +4,7 @@ import { Configuration } from "webpack";
 
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary, sanitizeCommandLineParam } from "./Plugins/Utils";
+import {FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder} from "./Plugins/Resources";
 
 const config = (env) => {
 
@@ -79,6 +80,9 @@ const config = (env) => {
     }
 
     if (env.forHotReload) {
+        standardConfig.output.hotUpdateChunkFilename = OutputDirectoryDefault + IdPlaceholder + "." + FullHashPlaceholder + ".hot-update.js";
+        standardConfig.output.hotUpdateMainFilename = OutputDirectoryDefault + RuntimePlaceholder + "." + FullHashPlaceholder + ".hot-update.json";
+        
         // @ts-ignore
         standardConfig.devServer = {
             client: {
