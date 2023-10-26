@@ -22,7 +22,7 @@ import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyName?: string, pluginsRelativePath?: string): Configuration => {
+let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
 
     const entryMap: Dictionary<string> = {}
     const outputMap: Dictionary<string> = {};
@@ -98,7 +98,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             rules: [
                 SassRuleSet,
                 getResourcesRuleSet(assemblyName, pluginsAssembly),
-                getTypeScriptRuleSet()
+                getTypeScriptRuleSet(forHotReload)
             ]
         },
 

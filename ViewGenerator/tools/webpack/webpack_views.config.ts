@@ -37,7 +37,7 @@ const config = (env) => {
     
     const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
 
-    const standardConfig: Configuration = getCommonConfiguration("Views", env.useCache, sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath);
+    const standardConfig: Configuration = getCommonConfiguration("Views", env.useCache, sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath, env.forHotReload);
 
     (standardConfig.cache as any).name = "viewsCache";
     
@@ -78,10 +78,13 @@ const config = (env) => {
         ];
     }
 
-    if (env.useCache) {
+    if (env.forHotReload) {
         // @ts-ignore
         standardConfig.devServer = {
-            disableHostCheck: true
+            client: {
+                overlay: false
+            },
+            allowedHosts: "all"
         };
     }
 
