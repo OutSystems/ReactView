@@ -16,8 +16,9 @@ namespace ReactViewControl {
             frame = new FrameInfo("dummy");
         }
 
-        protected virtual IModuleDependenciesProvider DependenciesProvider {
+        public virtual IModuleDependenciesProvider DependenciesProvider {
             get { return dependenciesProvider ??= new FileDependenciesProvider(MainJsSource); }
+            set { dependenciesProvider = value; }
         }
 
         protected virtual string MainJsSource => null;

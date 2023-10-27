@@ -22,7 +22,7 @@ namespace Sample.Avalonia {
 #if DEBUG
         public override bool EnableDebugMode => true;
 
-        public override Uri DevServerURI => null;
+        public override Uri DevServerURI => new Uri("http://localhost:8080/");
 #endif
     }
 }
