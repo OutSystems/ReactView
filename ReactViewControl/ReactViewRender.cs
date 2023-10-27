@@ -108,8 +108,8 @@ namespace ReactViewControl {
         public bool IsMainComponentLoaded => Frames.TryGetValue(FrameInfo.MainViewFrameName, out var frame) && frame.LoadStatus >= LoadStatus.ComponentLoading;
 
         /// <summary>
-        /// Enables or disables debug mode. 
-        /// In debug mode the webview developer tools becomes available pressing F12 and the webview shows an error message at the top with the error details 
+        /// Enables or disables debug mode.
+        /// In debug mode the webview developer tools becomes available pressing F12 and the webview shows an error message at the top with the error details
         /// when a resource fails to load.
         /// </summary>
         public bool EnableDebugMode {
@@ -165,7 +165,7 @@ namespace ReactViewControl {
         public event ResourceRequestedEventHandler EmbeddedResourceRequested;
 
         /// <summary>
-        /// Handle external resource requests. 
+        /// Handle external resource requests.
         /// Call <see cref="ResourceHandler.BeginAsyncResponse"/> to handle the request in an async way.
         /// </summary>
         public event ResourceRequestedEventHandler ExternalResourceRequested;
@@ -370,7 +370,7 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Gets the view loaded on the specified frame. If none it will create a view of the specified 
+        /// Gets the view loaded on the specified frame. If none it will create a view of the specified
         /// instance and bind it to the frame.
         /// </summary>
         /// <param name="frameName"></param>
@@ -407,7 +407,7 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Binds the coponent to the specified frame.
+        /// Binds the component to the specified frame.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="frame"></param>

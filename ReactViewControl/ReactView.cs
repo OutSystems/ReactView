@@ -118,8 +118,8 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Enables or disables debug mode. 
-        /// In debug mode the webview developer tools becomes available pressing F12 and the webview shows an error message at the top with the error details 
+        /// Enables or disables debug mode.
+        /// In debug mode the webview developer tools becomes available pressing F12 and the webview shows an error message at the top with the error details
         /// when a resource fails to load.
         /// </summary>
         public bool EnableDebugMode { get => View.EnableDebugMode; set => View.EnableDebugMode = value; }
@@ -176,7 +176,7 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Handle external resource requests. 
+        /// Handle external resource requests.
         /// Call <see cref="ResourceHandler.BeginAsyncResponse"/> to handle the request in an async way.
         /// </summary>
         public event ResourceRequestedEventHandler ExternalResourceRequested {
@@ -222,7 +222,7 @@ namespace ReactViewControl {
         /// <summary>
         /// Number of preloaded views that are mantained in cache for each view.
         /// Components with different property values are stored in different cache entries.
-        /// Defaults to 6. 
+        /// Defaults to 6.
         /// </summary>
         public static int PreloadedCacheEntriesSize { get; set; } = 6;
 
