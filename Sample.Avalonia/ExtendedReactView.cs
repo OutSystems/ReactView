@@ -10,7 +10,7 @@ namespace Sample.Avalonia {
         public ExtendedReactView(IViewModule mainModule) : base(mainModule) {
             Settings.ThemeChanged += OnStylePreferenceChanged;
             EmbeddedResourceRequested += OnEmbeddedResourceRequested;
-            mainModule.DependenciesProvider = new WebPackDependenciesProvider(Factory.DevServerURI);
+            mainModule.DependenciesProvider = Factory.ModuleDependenciesProvider;
         }
 
         protected override void InnerDispose() {

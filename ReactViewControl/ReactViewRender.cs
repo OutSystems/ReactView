@@ -36,7 +36,7 @@ namespace ReactViewControl {
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, Uri devServerUri = null) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, Uri devServerUri = null, IModuleDependenciesProvider moduleDependenciesProvider = null) {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -54,6 +54,7 @@ namespace ReactViewControl {
             PluginsFactory = initializePlugins;
             EnableDebugMode = enableDebugMode;
             DevServerUri = devServerUri;
+            ModuleDependenciesProvider = moduleDependenciesProvider;
 
             GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 
@@ -129,6 +130,9 @@ namespace ReactViewControl {
         /// Gets webpack dev server url.
         /// </summary>
         public Uri DevServerUri { get; }
+
+        public IModuleDependenciesProvider ModuleDependenciesProvider { get; }
+
 
         /// <summary>
         /// Gets or sets the webview zoom percentage (1 = 100%)
@@ -279,11 +283,15 @@ namespace ReactViewControl {
 
             RegisterNativeObject(frame.Component, frame);
 
+            if (ModuleDependenciesProvider != null) {
+                frame.Component.DependenciesProvider = ModuleDependenciesProvider;
+            }
+
             Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0);
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
             }
-        }
+         }
 
         /// <summary>
         /// Gets or sets the url of the default stylesheet.
@@ -551,11 +559,12 @@ namespace ReactViewControl {
         /// <param name="url"></param>
         /// <returns></returns>
         private string ToFullUrl(string url) {
+            // TODO: BUG AQUI
             if (url.OrdinalContains(Uri.SchemeDelimiter)) {
                 return url;
             } else if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
                 if (IsHotReloadEnabled) {
-                    return new Uri(DevServerUri, url).ToString();
+                        return new Uri(DevServerUri, url).ToString();
                 } else {
                     return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
                 }

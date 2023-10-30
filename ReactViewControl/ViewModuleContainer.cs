@@ -44,9 +44,9 @@ namespace ReactViewControl {
 
         string[] IViewModule.Events => Events;
 
-        string[] IViewModule.DependencyJsSources => DependenciesProvider.GetJsDependencies(JsEntryFileExtension);
+        string[] IViewModule.DependencyJsSources => DependenciesProvider.GetJsDependencies(MainJsSource);
 
-        string[] IViewModule.CssSources => DependenciesProvider.GetCssDependencies(CssEntryFileExtension);
+        string[] IViewModule.CssSources => DependenciesProvider.GetCssDependencies(MainJsSource);
 
         KeyValuePair<string, object>[] IViewModule.PropertiesValues => PropertiesValues;
 

@@ -1,3 +1,6 @@
+using System.Net.Http;
+using System.Reflection;
+using System.Text.Json;
 using ReactViewControl;
 
 namespace Sample.Avalonia;
@@ -25,7 +28,9 @@ public class WebPackDependenciesProvider : IModuleDependenciesProvider {
     }
 
     public string GetBaseSegmentFromUri() {
-        return "/" + uri.Segments.Last();
+        // TODO: fixme
+        return uri.ToString();
+        //return "/" + uri.Segments.Last();
     }
 
     string[] IModuleDependenciesProvider.GetCssDependencies(string filename) {
@@ -35,6 +40,7 @@ public class WebPackDependenciesProvider : IModuleDependenciesProvider {
             return new string[0];
         }
 
+        RefreshDependencies();
         return dependencies[entriesFilePath]
             .Where(dependency => dependency.Contains(".css"))
             .Select(dependency => basePath + dependency)
@@ -48,8 +54,9 @@ public class WebPackDependenciesProvider : IModuleDependenciesProvider {
             return new string[0];
         }
 
+        RefreshDependencies();
         return dependencies[entriesFilePath]
-            .FindAll(dependency => dependency.Contains(".js"))
+            .Where(dependency => dependency.Contains(".js") && !dependency.Contains("ViewsRuntime"))
             .Select(dependency => basePath + dependency)
             .Reverse().Skip(1).Reverse().ToArray() // remove self reference
             .ToArray();
@@ -58,19 +65,20 @@ public class WebPackDependenciesProvider : IModuleDependenciesProvider {
     public void RefreshDependencies() {
         var shouldRefresh = true;
 
-        if (lastRefresh != null) {
-            var timeSpan = DateTime.Now.Subtract(lastRefresh);
-            if (timeSpan.TotalSeconds < 10) {
-                shouldRefresh = false;
-            }
+        var timeSpan = DateTime.Now.Subtract(lastRefresh);
+        if (timeSpan.TotalSeconds < 5) {
+            shouldRefresh = false;
         }
 
         if (shouldRefresh) {
+            using var httpClient = new HttpClient();
+            var assembly = typeof(Program).Assembly.GetName().Name;
+          //  var json = httpClient.GetStringAsync(new Uri(uri, $"{assembly}/{ManifestPath}"));
+            var json = httpClient.GetStringAsync(new Uri(uri, ManifestPath));
+            json.Wait();
+
+            dependencies = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json.Result);
             lastRefresh = DateTime.Now;
-            using (var wc = new WebClient()) {
-                var json = wc.DownloadString(new Uri(uri, ManifestPath));
-               // dependencies = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(json);
-            }
         }
     }
 }
