@@ -60,11 +60,6 @@
   <!-- /// -->
   <!-- Webpack related targets, property and item groups -->
   <!-- /// -->
-
-  <PropertyGroup>
-    
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(WP_OptimizeBundle)' == ''">
     <WP_OptimizeBundle>false</WP_OptimizeBundle>
   </PropertyGroup>
