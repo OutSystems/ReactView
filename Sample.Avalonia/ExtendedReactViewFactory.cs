@@ -13,8 +13,8 @@ namespace Sample.Avalonia {
         public override IViewModule[] InitializePlugins() {
             var viewPlugin = new ViewPlugin();
 #if DEBUG
-            if (DevServerURI != null) {
-                viewPlugin.DependenciesProvider = ModuleDependenciesProvider;
+            if (provider != null) {
+                viewPlugin.DependenciesProvider = provider;
             }
 #endif
             return new[]{
@@ -28,8 +28,6 @@ namespace Sample.Avalonia {
 
 #if DEBUG
         public override bool EnableDebugMode => true;
-
-        public override Uri DevServerURI => new Uri("http://localhost:8080/Sample.Avalonia/");
 
         public override IModuleDependenciesProvider ModuleDependenciesProvider =>
             provider;

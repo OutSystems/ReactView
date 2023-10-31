@@ -4,21 +4,21 @@ using System.Collections.Generic;
 namespace ReactViewControl {
 
     public abstract class ViewModuleContainer : IViewModule {
-
-        private const string JsEntryFileExtension = ".js.entry";
-        private const string CssEntryFileExtension = ".css.entry";
-
         private IFrame frame;
         private IChildViewHost childViewHost;
         private IModuleDependenciesProvider dependenciesProvider;
 
         public ViewModuleContainer() {
             frame = new FrameInfo("dummy");
+            dependenciesProvider = new FileDependenciesProvider(MainJsSource);
         }
 
         public virtual IModuleDependenciesProvider DependenciesProvider {
             get { return dependenciesProvider ??= new FileDependenciesProvider(MainJsSource); }
-            set { dependenciesProvider = value; }
+            set { if(value != null) {
+                    dependenciesProvider = value;
+                }
+            }
         }
 
         protected virtual string MainJsSource => null;

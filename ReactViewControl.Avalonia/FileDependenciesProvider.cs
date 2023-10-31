@@ -17,9 +17,9 @@ namespace ReactViewControl {
             this.sourcePath = sourcePath;
         }
 
-        public string[] GetCssDependencies(string filename) => DependencyJsSourcesCache.Value;
+        public string[] GetCssDependencies(string filename) => CssSourcesCache.Value;
 
-        public string[] GetJsDependencies(string filename) => CssSourcesCache.Value;
+        public string[] GetJsDependencies(string filename) => DependencyJsSourcesCache.Value;
 
         private Lazy<string[]> DependencyJsSourcesCache { get; }
         private Lazy<string[]> CssSourcesCache { get; }

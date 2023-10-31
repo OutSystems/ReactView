@@ -1,5 +1,4 @@
 using System.Net.Http;
-using System.Reflection;
 using System.Text.Json;
 using ReactViewControl;
 
@@ -9,8 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-//using Newtonsoft.Json;
 
 public class WebPackDependenciesProvider : IModuleDependenciesProvider {
 
@@ -73,7 +70,7 @@ public class WebPackDependenciesProvider : IModuleDependenciesProvider {
         if (shouldRefresh) {
             using var httpClient = new HttpClient();
             var assembly = typeof(Program).Assembly.GetName().Name;
-          //  var json = httpClient.GetStringAsync(new Uri(uri, $"{assembly}/{ManifestPath}"));
+            //  var json = httpClient.GetStringAsync(new Uri(uri, $"{assembly}/{ManifestPath}"));
             var json = httpClient.GetStringAsync(new Uri(uri, ManifestPath));
             json.Wait();
 

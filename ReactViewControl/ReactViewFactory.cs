@@ -32,11 +32,6 @@ namespace ReactViewControl {
         public virtual bool EnableViewPreload => true;
 
         /// <summary>
-        /// Webpack dev server url. Setting this value will enable hot reload. eg: new Uri("http://localhost:8080")
-        /// </summary>
-        public virtual Uri DevServerURI => null;
-
-        /// <summary>
         /// Module dependencies provider.
         /// </summary>
         public virtual IModuleDependenciesProvider ModuleDependenciesProvider => null;

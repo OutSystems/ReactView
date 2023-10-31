@@ -36,7 +36,7 @@ namespace ReactViewControl {
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, Uri devServerUri = null, IModuleDependenciesProvider moduleDependenciesProvider = null) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, IModuleDependenciesProvider moduleDependenciesProvider = null) {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -53,8 +53,10 @@ namespace ReactViewControl {
             DefaultStyleSheet = defaultStyleSheet;
             PluginsFactory = initializePlugins;
             EnableDebugMode = enableDebugMode;
-            DevServerUri = devServerUri;
-            ModuleDependenciesProvider = moduleDependenciesProvider;
+
+            if (moduleDependenciesProvider != null) {
+                ModuleDependenciesProvider = moduleDependenciesProvider;
+            }
 
             GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 
@@ -91,11 +93,6 @@ namespace ReactViewControl {
 
         public ReactView Host { get; set; }
 
-        /// <summary>
-        /// True when hot reload is enabled.
-        /// </summary>
-        public bool IsHotReloadEnabled => DevServerUri != null;
-
         public bool IsDisposing => WebView.IsDisposing;
 
         /// <summary>
@@ -126,13 +123,7 @@ namespace ReactViewControl {
             }
         }
 
-        /// <summary>
-        /// Gets webpack dev server url.
-        /// </summary>
-        public Uri DevServerUri { get; }
-
         public IModuleDependenciesProvider ModuleDependenciesProvider { get; }
-
 
         /// <summary>
         /// Gets or sets the webview zoom percentage (1 = 100%)
@@ -563,11 +554,11 @@ namespace ReactViewControl {
             if (url.OrdinalContains(Uri.SchemeDelimiter)) {
                 return url;
             } else if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
-                if (IsHotReloadEnabled) {
-                        return new Uri(DevServerUri, url).ToString();
-                } else {
+              //  if (IsHotReloadEnabled) {
+                //        return new Uri(DevServerUri, url).ToString();
+               // } else {
                     return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
-                }
+               // }
             } else {
                 return new ResourceUrl(UserCallingAssembly, url).ToString();
             }

@@ -9,8 +9,11 @@ namespace Sample.Avalonia {
 
         public ExtendedReactView(IViewModule mainModule) : base(mainModule) {
             Settings.ThemeChanged += OnStylePreferenceChanged;
-            EmbeddedResourceRequested += OnEmbeddedResourceRequested;
-            mainModule.DependenciesProvider = Factory.ModuleDependenciesProvider;
+
+            if (Factory.ModuleDependenciesProvider != null) {
+                mainModule.DependenciesProvider = Factory.ModuleDependenciesProvider;
+                EmbeddedResourceRequested += OnEmbeddedResourceRequested;
+            }
         }
 
         protected override void InnerDispose() {
@@ -30,7 +33,7 @@ namespace Sample.Avalonia {
             }
 
             resourceUrl = new Uri(resourceUrl).PathAndQuery;
-            var devServerHost = new Uri(Factory.DevServerURI.GetLeftPart(UriPartial.Authority));
+            var devServerHost = new Uri("http://localhost:8080/"); //new Uri(Factory.DevServerURI.GetLeftPart(UriPartial.Authority));
             resourceHandler.Redirect(new Uri(devServerHost, resourceUrl).ToString());
         }
     }
