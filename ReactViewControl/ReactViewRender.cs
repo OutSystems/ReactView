@@ -550,18 +550,15 @@ namespace ReactViewControl {
         /// <param name="url"></param>
         /// <returns></returns>
         private string ToFullUrl(string url) {
-            // TODO: BUG AQUI
             if (url.OrdinalContains(Uri.SchemeDelimiter)) {
                 return url;
-            } else if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
-              //  if (IsHotReloadEnabled) {
-                //        return new Uri(DevServerUri, url).ToString();
-               // } else {
-                    return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
-               // }
-            } else {
-                return new ResourceUrl(UserCallingAssembly, url).ToString();
             }
+
+            if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
+                return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
+            }
+
+            return new ResourceUrl(UserCallingAssembly, url).ToString();
         }
 
         /// <summary>

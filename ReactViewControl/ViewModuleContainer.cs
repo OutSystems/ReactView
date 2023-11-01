@@ -8,14 +8,15 @@ namespace ReactViewControl {
         private IChildViewHost childViewHost;
         private IModuleDependenciesProvider dependenciesProvider;
 
-        public ViewModuleContainer() {
+        protected ViewModuleContainer() {
             frame = new FrameInfo("dummy");
             dependenciesProvider = new FileDependenciesProvider(MainJsSource);
         }
 
         public virtual IModuleDependenciesProvider DependenciesProvider {
             get { return dependenciesProvider ??= new FileDependenciesProvider(MainJsSource); }
-            set { if(value != null) {
+            set {
+                if(value != null) {
                     dependenciesProvider = value;
                 }
             }

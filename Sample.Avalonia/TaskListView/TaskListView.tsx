@@ -41,7 +41,6 @@ class TaskListItem extends React.Component<{ task: ITask }, {}, IPluginsContext>
                 <input className="check" type="checkbox" defaultChecked={this.props.task.isCompleted} />
                 <div className="content">
                     <div className="text">{this.props.task.text}</div>
-
                     <div className="user">
                         Added by:
                         <ResourceLoader.Consumer>
@@ -99,7 +98,7 @@ export default class TaskListView extends React.Component<ITaskListViewPropertie
 
     public render(): JSX.Element {
         return (
-            <div className="wrapper"> xau
+            <div className="wrapper">
                 {this.renderItems()}
             </div>
         );
