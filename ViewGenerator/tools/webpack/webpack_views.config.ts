@@ -35,7 +35,7 @@ const config = (env) => {
             throw new Error("Extended configuration file not found.");
         }
     };
-    
+
     const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
 
     const standardConfig: Configuration = getCommonConfiguration(env.useCache ? "viewsCache" : "", "Views", sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath, env.forHotReload);
@@ -88,7 +88,7 @@ const config = (env) => {
     if (env.forHotReload) {
         standardConfig.output.hotUpdateChunkFilename = OutputDirectoryDefault + IdPlaceholder + "." + FullHashPlaceholder + ".hot-update.js";
         standardConfig.output.hotUpdateMainFilename = OutputDirectoryDefault + RuntimePlaceholder + "." + FullHashPlaceholder + ".hot-update.json";
-        
+
         // @ts-ignore
         standardConfig.devServer = {
             client: {
