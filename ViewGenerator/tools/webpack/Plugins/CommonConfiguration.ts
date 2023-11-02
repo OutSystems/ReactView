@@ -12,7 +12,9 @@ import {
     DtsExtension,
     OutputDirectoryDefault,
     JsChunkPlaceholder,
-    NamePlaceholder
+    NamePlaceholder,
+    IdPlaceholder,
+    CssExtension
 } from "./Resources";
 import { Dictionary, generateManifest, getCurrentDirectory, getFileName } from "./Utils";
 
@@ -22,7 +24,7 @@ import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
+let getCommonConfiguration = (cacheName: string, libraryName: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
 
     const entryMap: Dictionary<string> = {}
     const outputMap: Dictionary<string> = {};
@@ -56,7 +58,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
         //
         // E.g. if pluginsRelativePath is "../path/to/plugin/", we want to get the "plugin" part,
         // and therefore we perform a pop twice, as the last portion will be an empty string.
-        pluginsAssembly = pathParts.pop() || pathParts.pop(); 
+        pluginsAssembly = pathParts.pop() || pathParts.pop();
     }
 
     const Configuration: Configuration = {
@@ -106,13 +108,13 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             new Webpack.WatchIgnorePlugin({
                 paths: [ /scss\.d\.ts$/]
             }),
-            
+
             new ForkTsCheckerWebpackPlugin({
                 typescript: {
                     diagnosticOptions: { syntactic: true, semantic: true, declaration: false, global: false },
                 }
             }),
-            
+
             new MiniCssExtractPlugin({
                 filename: (chunkData) => {
                     const Directory: string = outputMap[chunkData.chunk.name];
@@ -121,7 +123,7 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
                     }
                     return OutputDirectoryDefault + CssChunkPlaceholder;
                 },
-                chunkFilename: OutputDirectoryDefault + CssChunkPlaceholder
+                chunkFilename: OutputDirectoryDefault + (forHotReload ? IdPlaceholder + CssExtension : CssChunkPlaceholder)
             }),
 
             new WebpackManifestPlugin({
@@ -130,11 +132,12 @@ let getCommonConfiguration = (libraryName: string, useCache: boolean, assemblyNa
             }),
         ]
     };
-    
-    if (useCache) {
+
+    if (cacheName) {
         Configuration.cache ={
             type: 'filesystem',
             allowCollectingMemory: true,
+            name: cacheName
         };
     }
 
