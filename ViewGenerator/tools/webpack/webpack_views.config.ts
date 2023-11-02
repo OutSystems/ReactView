@@ -4,7 +4,7 @@ import { Configuration } from "webpack";
 
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary, sanitizeCommandLineParam } from "./Plugins/Utils";
-import {FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder} from "./Plugins/Resources";
+import { FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder } from "./Plugins/Resources";
 
 const config = (env) => {
 
@@ -38,10 +38,8 @@ const config = (env) => {
     
     const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
 
-    const standardConfig: Configuration = getCommonConfiguration("Views", env.useCache, sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath, env.forHotReload);
+    const standardConfig: Configuration = getCommonConfiguration(env.useCache ? "viewsCache" : "", "Views", sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath, env.forHotReload);
 
-    (standardConfig.cache as any).name = "viewsCache";
-    
     standardConfig.optimization = {
         runtimeChunk: {
             name: "ViewsRuntime"
@@ -88,7 +86,11 @@ const config = (env) => {
             client: {
                 overlay: false
             },
-            allowedHosts: "all"
+            allowedHosts: "all",
+            headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Cache-Control": "no-store"
+            }
         };
     }
 
