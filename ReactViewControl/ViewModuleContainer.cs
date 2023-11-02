@@ -10,13 +10,12 @@ namespace ReactViewControl {
 
         protected ViewModuleContainer() {
             frame = new FrameInfo("dummy");
-            dependenciesProvider = new FileDependenciesProvider(MainJsSource);
         }
 
         public virtual IModuleDependenciesProvider DependenciesProvider {
             get { return dependenciesProvider ??= new FileDependenciesProvider(MainJsSource); }
             set {
-                if(value != null) {
+                if (value != null) {
                     dependenciesProvider = value;
                 }
             }

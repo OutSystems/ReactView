@@ -6,7 +6,7 @@ namespace ReactViewControl {
 
         string MainJsSource { get; }
 
-        IModuleDependenciesProvider DependenciesProvider{ get; set; }
+        IModuleDependenciesProvider DependenciesProvider { get; set; }
 
         string[] DependencyJsSources { get; }
 

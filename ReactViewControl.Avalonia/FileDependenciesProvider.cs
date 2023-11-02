@@ -4,7 +4,7 @@ using System.Linq;
 using WebViewControl;
 
 namespace ReactViewControl {
-    class FileDependenciesProvider : IModuleDependenciesProvider {
+    internal class FileDependenciesProvider : IModuleDependenciesProvider {
 
         private const string JsEntryFileExtension = ".js.entry";
         private const string CssEntryFileExtension = ".css.entry";
@@ -33,7 +33,7 @@ namespace ReactViewControl {
                     using (var reader = new StreamReader(stream)) {
                         var allEntries = reader.ReadToEnd();
                         if (allEntries != null && allEntries != string.Empty) {
-                            return allEntries.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                            return allEntries.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
                         }
                     }
                 }

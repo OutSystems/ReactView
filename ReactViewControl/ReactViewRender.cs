@@ -53,10 +53,7 @@ namespace ReactViewControl {
             DefaultStyleSheet = defaultStyleSheet;
             PluginsFactory = initializePlugins;
             EnableDebugMode = enableDebugMode;
-
-            if (moduleDependenciesProvider != null) {
-                ModuleDependenciesProvider = moduleDependenciesProvider;
-            }
+            ModuleDependenciesProvider = moduleDependenciesProvider;
 
             GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 
