@@ -65,6 +65,10 @@
     <WP_Mode>development</WP_Mode>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(WP_OptimizeBundle)' == ''">
+    <WP_OptimizeBundle>true</WP_OptimizeBundle>
+  </PropertyGroup>
+  
   <PropertyGroup Condition="'$(WP_ConfigFileName)' == ''">
     <WP_ConfigFileName>webpack_views</WP_ConfigFileName>
   </PropertyGroup>
@@ -113,7 +117,7 @@
     <CallTarget Condition="'@(VG_Workers_Inputs)' != ''" Targets="VG_GenerateWorkersBundle" />
 
     <!-- Main bundle generation -->
-    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)'" />
+    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=$(WP_OptimizeBundle)" />
 
     <Touch Files="VG_Build.cache" AlwaysCreate="true" />
   </Target>
