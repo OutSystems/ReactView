@@ -50,6 +50,7 @@ const config = (env) => {
             minSize: 1,
             cacheGroups: {
                 vendors: {
+                    name: "vendors",
                     test: /[\\/](node_modules)[\\/]/
                 }
             }
