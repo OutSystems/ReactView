@@ -40,21 +40,29 @@ const config = (env) => {
 
     const standardConfig: Configuration = getCommonConfiguration(env.useCache ? "viewsCache" : "", "Views", sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath, env.forHotReload);
 
-    standardConfig.optimization = {
-        runtimeChunk: {
+    if (!standardConfig.optimization) {
+        standardConfig.optimization = {};
+    }
+
+    standardConfig.optimization.runtimeChunk = {
             name: "ViewsRuntime"
-        },
+    };
+    
+    if (env.optimizebundle) {
         // SplitChunksOptions
-        splitChunks: {
+        standardConfig.optimization.splitChunks = {
             chunks: "all",
             minSize: 1,
             cacheGroups: {
                 vendors: {
+                    name: "vendors",
                     test: /[\\/](node_modules)[\\/]/
                 }
             }
-        }
-    };
+        };
+    } else {
+        standardConfig.optimization.splitChunks = false;
+    }
     
     generateExtendedConfig(sanitizedPluginsRelativePath || ".", !!sanitizedPluginsRelativePath);
 
