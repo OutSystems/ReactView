@@ -14,6 +14,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAvalonia' Or '$(Configuration)' == 'ReleaseWPF'">
     <WP_DevTool>false</WP_DevTool>
     <WP_UseCache>false</WP_UseCache>
+    <WP_OptimizeBundle>false</WP_OptimizeBundle>
   </PropertyGroup>
 
   <ItemGroup>
