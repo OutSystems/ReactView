@@ -68,7 +68,7 @@ class App extends React.Component<IAppProperties> {
         function getText(stylesheet: CSSStyleSheet): string {
             return Array.from(stylesheet.rules).map(rule => {
                 if (rule instanceof CSSImportRule) {
-                    return getText(rule.styleSheet);
+                    return getText(rule.styleSheet as CSSStyleSheet);
                 } else {
                     return rule.cssText;
                 }

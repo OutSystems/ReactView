@@ -4,6 +4,7 @@ import ViewPlugin from "./../ViewPlugin/ViewPlugin";
 import { IPluginsContext } from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
+import * as BackgroundImage from "./Tasks.png"; // import images
 
 export interface ITaskCreationDetails {
     text: string;
@@ -73,6 +74,11 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
 
     public componentDidMount(): void {
         this.viewplugin.notifyViewLoaded("Main View");
+        
+        if (this.props.backgroundKind === BackgroundKind.Image) {
+            // example on how to use an image resource in codee
+            document.body.style.backgroundImage = `url(${BackgroundImage})`;
+        }
     }
 
     private toggleShowTasks = () => {
