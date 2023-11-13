@@ -3,16 +3,40 @@ using ReactViewControl;
 
 namespace Sample.Avalonia {
 
-    public abstract class ExtendedReactView : ReactView {
+    public partial class ExtendedReactView : ReactView {
 
+#if DEBUG
+        private static readonly Uri DevServerUri;
+        
+        static ExtendedReactView() {
+            var uri = Environment.GetEnvironmentVariable("DEV_SERVER_URI");
+            if (uri != null) {
+                DevServerUri = new Uri(uri);
+            }
+        }
+        
+        private static void OnEmbeddedResourceRequested(WebViewControl.ResourceHandler resourceHandler) {
+            var resourceUrl = resourceHandler.Url;
+
+            if (resourceUrl.Contains("ReactViewResources")) {
+                return;
+            }
+
+            resourceUrl = new Uri(resourceUrl).PathAndQuery;
+            resourceHandler.Redirect(new Uri(DevServerUri, resourceUrl).ToString());
+        }
+#endif
+        
         protected override ReactViewFactory Factory => new ExtendedReactViewFactory();
 
         public ExtendedReactView(IViewModule mainModule) : base(mainModule) {
             Settings.ThemeChanged += OnStylePreferenceChanged;
 
-            if (Factory.ModuleDependenciesProvider != null) {
+#if DEBUG
+            if (DevServerUri != null) {
                 EmbeddedResourceRequested += OnEmbeddedResourceRequested;
             }
+#endif
         }
 
         protected override void InnerDispose() {
@@ -22,18 +46,6 @@ namespace Sample.Avalonia {
 
         private void OnStylePreferenceChanged() {
             RefreshDefaultStyleSheet();
-        }
-
-        private void OnEmbeddedResourceRequested(WebViewControl.ResourceHandler resourceHandler) {
-            var resourceUrl = resourceHandler.Url;
-
-            if (resourceUrl.Contains("ReactViewResources")) {
-                return;
-            }
-
-            resourceUrl = new Uri(resourceUrl).PathAndQuery;
-            var devServerHost = new Uri("http://localhost:8080/"); //new Uri(Factory.DevServerURI.GetLeftPart(UriPartial.Authority));
-            resourceHandler.Redirect(new Uri(devServerHost, resourceUrl).ToString());
         }
     }
 }

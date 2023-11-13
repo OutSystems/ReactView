@@ -4,28 +4,39 @@ using WebViewControl;
 
 namespace Sample.Avalonia {
 
-    internal class ExtendedReactViewFactory : ReactViewFactory {
-        private static WebPackDependenciesProvider provider = new WebPackDependenciesProvider(new Uri("http://localhost:8080/Sample.Avalonia/"));
+    partial class ExtendedReactView {
+        
+        protected class ExtendedReactViewFactory : ReactViewFactory {
 
-        public override ResourceUrl DefaultStyleSheet =>
-            new ResourceUrl(typeof(ExtendedReactViewFactory).Assembly, "Generated", Settings.IsLightTheme ? "LightTheme.css" : "DarkTheme.css");
+            public override ResourceUrl DefaultStyleSheet =>
+                new(typeof(ExtendedReactViewFactory).Assembly, "Generated",
+                    Settings.IsLightTheme ? "LightTheme.css" : "DarkTheme.css");
 
-        public override IViewModule[] InitializePlugins() {
-            var viewPlugin = new ViewPlugin();
-            return new[]{
-                viewPlugin
-            };
-        }
+            public override IViewModule[] InitializePlugins() {
+                var viewPlugin = new ViewPlugin();
+                return new IViewModule[] { viewPlugin };
+            }
 
-        public override bool ShowDeveloperTools => false;
+            public override bool ShowDeveloperTools => false;
 
-        public override bool EnableViewPreload => true;
+            public override bool EnableViewPreload => true;
 
 #if DEBUG
-        public override bool EnableDebugMode => true;
+            public override bool EnableDebugMode => true;
 
-        public override IModuleDependenciesProvider ModuleDependenciesProvider =>
-            provider;
+            private static HotReloadDependenciesProvider hotReloadDependenciesProvider;
+
+            public override IModuleDependenciesProvider ModuleDependenciesProvider {
+                get {
+                    if (DevServerUri != null) {
+                        return hotReloadDependenciesProvider ??= new HotReloadDependenciesProvider(
+                            new Uri($"{DevServerUri}{typeof(ExtendedReactViewFactory).Assembly.GetName().Name}/"));
+                    }
+
+                    return base.ModuleDependenciesProvider;
+                }
+            }
 #endif
+        }
     }
 }
