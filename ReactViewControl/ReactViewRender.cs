@@ -271,10 +271,6 @@ namespace ReactViewControl {
 
             RegisterNativeObject(frame.Component, frame);
 
-            if (ModuleDependenciesProvider != null) {
-                frame.Component.DependenciesProvider = ModuleDependenciesProvider;
-            }
-
             Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0);
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
@@ -308,7 +304,7 @@ namespace ReactViewControl {
             frame.Plugins = frame.Plugins.Concat(plugins).ToArray();
 
             foreach (var plugin in plugins) {
-                plugin.Bind(frame);
+                plugin.Bind(frame, moduleDependenciesProvider: ModuleDependenciesProvider);
             }
         }
 
@@ -409,7 +405,7 @@ namespace ReactViewControl {
         /// <param name="frame"></param>
         private void BindComponentToFrame(IViewModule component, FrameInfo frame) {
             frame.Component = component;
-            component.Bind(frame, this);
+            component.Bind(frame, this, ModuleDependenciesProvider);
         }
 
         /// <summary>

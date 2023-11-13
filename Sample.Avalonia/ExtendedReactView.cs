@@ -11,7 +11,6 @@ namespace Sample.Avalonia {
             Settings.ThemeChanged += OnStylePreferenceChanged;
 
             if (Factory.ModuleDependenciesProvider != null) {
-                mainModule.DependenciesProvider = Factory.ModuleDependenciesProvider;
                 EmbeddedResourceRequested += OnEmbeddedResourceRequested;
             }
         }

@@ -12,11 +12,6 @@ namespace Sample.Avalonia {
 
         public override IViewModule[] InitializePlugins() {
             var viewPlugin = new ViewPlugin();
-#if DEBUG
-            if (provider != null) {
-                viewPlugin.DependenciesProvider = provider;
-            }
-#endif
             return new[]{
                 viewPlugin
             };

@@ -14,11 +14,6 @@ namespace ReactViewControl {
 
         public virtual IModuleDependenciesProvider DependenciesProvider {
             get { return dependenciesProvider ??= new FileDependenciesProvider(MainJsSource); }
-            set {
-                if (value != null) {
-                    dependenciesProvider = value;
-                }
-            }
         }
 
         protected virtual string MainJsSource => null;
@@ -50,11 +45,12 @@ namespace ReactViewControl {
 
         KeyValuePair<string, object>[] IViewModule.PropertiesValues => PropertiesValues;
 
-        void IViewModule.Bind(IFrame frame, IChildViewHost childViewHost) {
+        void IViewModule.Bind(IFrame frame, IChildViewHost childViewHost, IModuleDependenciesProvider moduleDependenciesProvider) {
             frame.CustomResourceRequestedHandler += this.frame.CustomResourceRequestedHandler;
             frame.ExecutionEngine.MergeWorkload(this.frame.ExecutionEngine);
             this.frame = frame;
             this.childViewHost = childViewHost;
+            this.dependenciesProvider = moduleDependenciesProvider;
         }
 
         // ease access in generated code

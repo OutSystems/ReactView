@@ -6,7 +6,7 @@ namespace ReactViewControl {
 
         string MainJsSource { get; }
 
-        IModuleDependenciesProvider DependenciesProvider { get; set; }
+        IModuleDependenciesProvider DependenciesProvider { get; }
 
         string[] DependencyJsSources { get; }
 
@@ -24,7 +24,7 @@ namespace ReactViewControl {
 
         KeyValuePair<string, object>[] PropertiesValues { get; }
 
-        void Bind(IFrame frame, IChildViewHost host = null);
+        void Bind(IFrame frame, IChildViewHost host = null, IModuleDependenciesProvider moduleDependenciesProvider = null);
 
         event CustomResourceRequestedEventHandler CustomResourceRequested;
 
