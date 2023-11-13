@@ -50,7 +50,9 @@ namespace ReactViewControl {
             frame.ExecutionEngine.MergeWorkload(this.frame.ExecutionEngine);
             this.frame = frame;
             this.childViewHost = childViewHost;
-            this.dependenciesProvider = moduleDependenciesProvider;
+            if (moduleDependenciesProvider != null) {
+                this.dependenciesProvider = moduleDependenciesProvider;
+            }
         }
 
         // ease access in generated code
