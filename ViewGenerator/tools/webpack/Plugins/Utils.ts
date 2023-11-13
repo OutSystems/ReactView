@@ -110,5 +110,8 @@ export function getFileName(relativePaths: Dictionary<string>, chunkData: any): 
  * Sanitizes a command-line parameter
  * */
 export function sanitizeCommandLineParam(parameter: string): string {
+    if (!parameter) {
+        return "";
+    }
     return parameter.replaceAll("'", "");
 }
