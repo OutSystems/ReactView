@@ -51,3 +51,4 @@ Sample.Avalonia/Generated/
 Sample.Avalonia/node_modules/
 **/*.DS_Store
 **/*.idea
+**/RunWebpackDevServer.sh

@@ -8,6 +8,11 @@
     <RuntimeIdentifiers>osx-x64;win-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAvalonia' Or '$(Configuration)' == 'ReleaseWPF'">
+    <WP_DevTool>false</WP_DevTool>
+    <WP_UseCache>false</WP_UseCache>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="App.xaml" />
     <None Remove="MainView\Tasks.png" />
@@ -59,5 +64,33 @@
       <Visible>True</Visible>
     </None>
   </ItemGroup>
-    
+
+  <Target Name="GenerateWebpackDevServerScript" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <BatchScript>
+@echo off
+set VIEW_GENERATOR_PATH=$(PkgViewGenerator)
+set VIEW_PACKER_PATH=$(PkgViewPacker)
+
+node "%VIEW_PACKER_PATH%\tools\node_modules\webpack-dev-server\bin\webpack-dev-server.js" --config="%VIEW_GENERATOR_PATH%\tools\webpack\webpack_views.config.js" --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env assemblyName="Sample.Avalonia" --env optimizeBundle=true --static "$(ProjectDir)"
+      </BatchScript>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(ProjectDir)RunWebpackDevServer.bat" Overwrite="true" Lines="$(BatchScript)" />
+  </Target>
+  
+  <Target Name="GenerateWebpackDevServerShellScript" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' And '$(OS)' != 'Windows_NT'">
+    <PropertyGroup>
+      <WebpackDevServerScriptName>RunWebpackDevServer.sh</WebpackDevServerScriptName>
+      <WebpackDevServerScriptPath>$(ProjectDir)$(WebpackDevServerScriptName)</WebpackDevServerScriptPath>
+      <ShellScript>
+#! /bin/bash
+VIEW_GENERATOR_PATH=$(PkgViewGenerator)
+VIEW_PACKER_PATH=$(PkgViewPacker)
+
+node "$VIEW_PACKER_PATH/tools/node_modules/webpack-dev-server/bin/webpack-dev-server.js" --config="$VIEW_GENERATOR_PATH/tools/webpack/webpack_views.config.js" --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env assemblyName="Sample.Avalonia" --env optimizeBundle=true --static "$(ProjectDir)"
+      </ShellScript>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(WebpackDevServerScriptPath)" Overwrite="true" Lines="$(ShellScript)" />
+    <Exec Condition="Exists('$(WebpackDevServerScriptPath)')" Command="chmod 755 $(WebpackDevServerScriptPath)" />
+  </Target>
 </Project>
