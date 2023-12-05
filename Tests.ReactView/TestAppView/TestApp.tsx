@@ -1,5 +1,4 @@
-﻿import dummy from "ModuleWithAlias";
-import { IPluginsContext } from 'PluginsProvider';
+﻿import { IPluginsContext } from 'PluginsProvider';
 import * as React from 'react';
 import { ViewFrame, ViewSharedContext } from "ViewFrame";
 import * as Image from "./imgs/image.png";
@@ -7,6 +6,7 @@ import InnerView from "./InnerView";
 import Plugin from './PluginModule';
 import "./Styles.scss";
 import { Task } from "./Task";
+import * as ModuleWithAlias from "ModuleWithAlias";
 
 interface IAppProperties {
     event: (args: string) => void;
@@ -92,7 +92,7 @@ class App extends React.Component<IAppProperties> {
     }
 
     checkAliasedModuleLoaded() {
-        if (dummy()) {
+        if (ModuleWithAlias.default()) {
             this.props.event("AliasedModuleLoaded");
         }
     }
