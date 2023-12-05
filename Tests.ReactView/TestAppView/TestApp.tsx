@@ -6,7 +6,6 @@ import InnerView from "./InnerView";
 import Plugin from './PluginModule';
 import "./Styles.scss";
 import { Task } from "./Task";
-import * as ModuleWithAlias from "ModuleWithAlias";
 
 interface IAppProperties {
     event: (args: string) => void;
@@ -92,7 +91,8 @@ class App extends React.Component<IAppProperties> {
     }
 
     checkAliasedModuleLoaded() {
-        if (ModuleWithAlias.default()) {
+        // Access plugin via window object so that we are not forced to load plugins for all tests - otherwise it will be required from webpack to load AliasedModule
+        if ((window as any).Views.AliasedModule.default()) {
             this.props.event("AliasedModuleLoaded");
         }
     }
