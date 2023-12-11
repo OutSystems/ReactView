@@ -31,7 +31,7 @@
 
   <Target Name="VG_CleanJSFiles" >
     <ItemGroup>
-      <JSFilesToDelete Include="**\*.js" Exclude="node_modules\**\*.js"/>
+      <JSFilesToDelete Include="**\*.js" Exclude="node_modules\**\*.js;**\*.eslintrc.js"/>
       <JSFilesToDelete Condition="$(CleanFilesExcludePath) != ''" Remove="$(CleanFilesExcludePath)\**\*.js"/>
     </ItemGroup>
     <Message Condition="'@(JSFilesToDelete)' != ''" Text="Deleting old files: @(JSFilesToDelete)" Importance="high" />
@@ -68,7 +68,7 @@
   <PropertyGroup Condition="'$(WP_OptimizeBundle)' == ''">
     <WP_OptimizeBundle>true</WP_OptimizeBundle>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(WP_ConfigFileName)' == ''">
     <WP_ConfigFileName>webpack_views</WP_ConfigFileName>
   </PropertyGroup>
