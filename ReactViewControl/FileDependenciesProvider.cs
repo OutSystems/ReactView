@@ -33,7 +33,7 @@ namespace ReactViewControl {
                 if (stream != null) {
                     using (var reader = new StreamReader(stream)) {
                         var allEntries = reader.ReadToEnd();
-                        if (string.IsNullOrEmpty(allEntries)) {
+                        if (!string.IsNullOrEmpty(allEntries)) {
                             return allEntries.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
                         }
                     }
