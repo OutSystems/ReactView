@@ -26,7 +26,7 @@
         <PackageVersion Include="WebViewControl-WPF" Version="$(WebViewVersion)" />
         <PackageVersion Include="WebViewControl-WPF-ARM64" Version="$(WebViewVersion)" />
 
-        <PackageVersion Include="ViewGenerator" Version="1.1.19" />
+        <PackageVersion Include="ViewGenerator" Version="1.1.22" />
         <PackageVersion Include="ViewGeneratorCore" Version="1.0.229" />
 
         <PackageVersion Include="NLog" Version="4.6.2" />

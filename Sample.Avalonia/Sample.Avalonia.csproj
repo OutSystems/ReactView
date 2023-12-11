@@ -8,11 +8,6 @@
     <RuntimeIdentifiers>osx-x64;win-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAvalonia' Or '$(Configuration)' == 'ReleaseWPF'">
-    <WP_DevTool>false</WP_DevTool>
-    <WP_UseCache>false</WP_UseCache>
-  </PropertyGroup>
-
   <ItemGroup>
     <None Remove="App.xaml" />
     <None Remove="MainView\Tasks.png" />
