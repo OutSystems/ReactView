@@ -10,9 +10,12 @@ namespace Sample.Avalonia {
         
         static ExtendedReactView() {
             var uri = Environment.GetEnvironmentVariable("DEV_SERVER_URI");
-            if (uri != null) {
-                DevServerUri = new Uri(uri);
+            if (uri == null) {
+                return;
             }
+
+            DevServerUri = new Uri(uri);
+            ModuleDependenciesProviderFactory.SetInstance(new HotReloadDependenciesProviderFactory(uri));
         }
         
         private static void OnEmbeddedResourceRequested(WebViewControl.ResourceHandler resourceHandler) {

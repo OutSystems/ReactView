@@ -6,14 +6,12 @@ namespace ReactViewControl {
     public abstract class ViewModuleContainer : IViewModule {
         private IFrame frame;
         private IChildViewHost childViewHost;
-        private IModuleDependenciesProvider dependenciesProvider;
+
+        private Lazy<IModuleDependenciesProvider> DependenciesProvider => new(() =>
+            ModuleDependenciesProviderFactory.Instance.CreateModuleDependenciesProvider(MainJsSource));
 
         protected ViewModuleContainer() {
             frame = new FrameInfo("dummy");
-        }
-
-        public virtual IModuleDependenciesProvider DependenciesProvider {
-            get { return dependenciesProvider ??= new FileDependenciesProvider(MainJsSource); }
         }
 
         protected virtual string MainJsSource => null;
@@ -39,20 +37,17 @@ namespace ReactViewControl {
 
         string[] IViewModule.Events => Events;
 
-        string[] IViewModule.DependencyJsSources => DependenciesProvider.GetJsDependencies(MainJsSource);
+        string[] IViewModule.DependencyJsSources => DependenciesProvider.Value.GetJsDependencies();
 
-        string[] IViewModule.CssSources => DependenciesProvider.GetCssDependencies(MainJsSource);
+        string[] IViewModule.CssSources => DependenciesProvider.Value.GetCssDependencies();
 
         KeyValuePair<string, object>[] IViewModule.PropertiesValues => PropertiesValues;
 
-        void IViewModule.Bind(IFrame frame, IChildViewHost childViewHost, IModuleDependenciesProvider moduleDependenciesProvider) {
+        void IViewModule.Bind(IFrame frame, IChildViewHost childViewHost) {
             frame.CustomResourceRequestedHandler += this.frame.CustomResourceRequestedHandler;
             frame.ExecutionEngine.MergeWorkload(this.frame.ExecutionEngine);
             this.frame = frame;
             this.childViewHost = childViewHost;
-            if (moduleDependenciesProvider != null) {
-                this.dependenciesProvider = moduleDependenciesProvider;
-            }
         }
 
         // ease access in generated code

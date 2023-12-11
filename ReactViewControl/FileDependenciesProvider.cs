@@ -12,14 +12,15 @@ namespace ReactViewControl {
         private readonly string sourcePath;
 
         public FileDependenciesProvider(string sourcePath) {
+            this.sourcePath = sourcePath;
+            
             DependencyJsSourcesCache = new Lazy<string[]>(() => GetDependenciesFromEntriesFile(JsEntryFileExtension));
             CssSourcesCache = new Lazy<string[]>(() => GetDependenciesFromEntriesFile(CssEntryFileExtension));
-            this.sourcePath = sourcePath;
         }
 
-        public string[] GetCssDependencies(string filename) => CssSourcesCache.Value;
+        public string[] GetCssDependencies() => CssSourcesCache.Value;
 
-        public string[] GetJsDependencies(string filename) => DependencyJsSourcesCache.Value;
+        public string[] GetJsDependencies() => DependencyJsSourcesCache.Value;
 
         private Lazy<string[]> DependencyJsSourcesCache { get; }
         private Lazy<string[]> CssSourcesCache { get; }
@@ -32,13 +33,13 @@ namespace ReactViewControl {
                 if (stream != null) {
                     using (var reader = new StreamReader(stream)) {
                         var allEntries = reader.ReadToEnd();
-                        if (allEntries != null && allEntries != string.Empty) {
+                        if (string.IsNullOrEmpty(allEntries)) {
                             return allEntries.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
                         }
                     }
                 }
             }
-            return new string[0];
+            return Array.Empty<string>();
         }
 
         private Stream GetResourceStream(string[] resource) => ResourcesManager.TryGetResourceWithFullPath(resource.First(), resource);

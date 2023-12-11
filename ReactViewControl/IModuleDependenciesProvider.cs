@@ -1,7 +1,7 @@
 namespace ReactViewControl {
     public interface IModuleDependenciesProvider {
-        string[] GetCssDependencies(string filename);
+        string[] GetCssDependencies();
 
-        string[] GetJsDependencies(string filename);
+        string[] GetJsDependencies();
     }
 }

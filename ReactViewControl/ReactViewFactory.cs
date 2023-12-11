@@ -30,10 +30,5 @@ namespace ReactViewControl {
         /// The view is cached and preloaded. First render occurs earlier.
         /// </summary>
         public virtual bool EnableViewPreload => true;
-
-        /// <summary>
-        /// Module dependencies provider.
-        /// </summary>
-        public virtual IModuleDependenciesProvider ModuleDependenciesProvider => null;
     }
 }

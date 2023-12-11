@@ -36,7 +36,7 @@ namespace ReactViewControl {
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, IModuleDependenciesProvider moduleDependenciesProvider = null) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode) {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -53,7 +53,6 @@ namespace ReactViewControl {
             DefaultStyleSheet = defaultStyleSheet;
             PluginsFactory = initializePlugins;
             EnableDebugMode = enableDebugMode;
-            ModuleDependenciesProvider = moduleDependenciesProvider;
 
             GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 
@@ -119,8 +118,6 @@ namespace ReactViewControl {
                 }
             }
         }
-
-        public IModuleDependenciesProvider ModuleDependenciesProvider { get; }
 
         /// <summary>
         /// Gets or sets the webview zoom percentage (1 = 100%)
@@ -275,7 +272,7 @@ namespace ReactViewControl {
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
             }
-         }
+        }
 
         /// <summary>
         /// Gets or sets the url of the default stylesheet.
@@ -304,7 +301,7 @@ namespace ReactViewControl {
             frame.Plugins = frame.Plugins.Concat(plugins).ToArray();
 
             foreach (var plugin in plugins) {
-                plugin.Bind(frame, moduleDependenciesProvider: ModuleDependenciesProvider);
+                plugin.Bind(frame);
             }
         }
 
@@ -405,7 +402,7 @@ namespace ReactViewControl {
         /// <param name="frame"></param>
         private void BindComponentToFrame(IViewModule component, FrameInfo frame) {
             frame.Component = component;
-            component.Bind(frame, this, ModuleDependenciesProvider);
+            component.Bind(frame, this);
         }
 
         /// <summary>

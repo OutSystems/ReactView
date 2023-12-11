@@ -13,39 +13,37 @@ public class HotReloadDependenciesProvider : IModuleDependenciesProvider {
     private Dictionary<string, List<string>> dependencies;
     private readonly Uri uri;
     private readonly string basePath;
+    private readonly string entryName;
     private const string ManifestPath = "manifest.json";
 
     private DateTime lastRefresh;
 
-    public HotReloadDependenciesProvider(Uri uri) {
+    public HotReloadDependenciesProvider(Uri uri, string sourcePath) {
         this.uri = uri;
         basePath = GetBaseSegmentFromUri();
+        entryName = Path.GetFileNameWithoutExtension(sourcePath);;
         RefreshDependencies();
     }
 
-    string[] IModuleDependenciesProvider.GetCssDependencies(string filename) {
-        var entriesFilePath = Path.GetFileNameWithoutExtension(filename);
-
-        if (!dependencies.ContainsKey(entriesFilePath)) {
+    string[] IModuleDependenciesProvider.GetCssDependencies() {
+        if (!dependencies.ContainsKey(entryName)) {
             return Array.Empty<string>();
         }
 
         RefreshDependencies();
-        return dependencies[entriesFilePath]
+        return dependencies[entryName]
             .Where(dependency => dependency.Contains(".css"))
             .Select(dependency => basePath + dependency)
             .ToArray();
     }
 
-    string[] IModuleDependenciesProvider.GetJsDependencies(string filename) {
-        var entriesFilePath = Path.GetFileNameWithoutExtension(filename);
-
-        if (!dependencies.ContainsKey(entriesFilePath)) {
+    string[] IModuleDependenciesProvider.GetJsDependencies() {
+        if (!dependencies.ContainsKey(entryName)) {
             return Array.Empty<string>();
         }
 
         RefreshDependencies();
-        return dependencies[entriesFilePath]
+        return dependencies[entryName]
             .Where(dependency => dependency.Contains(".js") && !dependency.Contains("ViewsRuntime"))
             .Select(dependency => basePath + dependency)
             .Reverse().Skip(1).Reverse().ToArray() // remove self reference

@@ -1,5 +1,4 @@
-﻿using System;
-using ReactViewControl;
+﻿using ReactViewControl;
 using WebViewControl;
 
 namespace Sample.Avalonia {
@@ -23,19 +22,6 @@ namespace Sample.Avalonia {
 
 #if DEBUG
             public override bool EnableDebugMode => true;
-
-            private static HotReloadDependenciesProvider hotReloadDependenciesProvider;
-
-            public override IModuleDependenciesProvider ModuleDependenciesProvider {
-                get {
-                    if (DevServerUri != null) {
-                        return hotReloadDependenciesProvider ??= new HotReloadDependenciesProvider(
-                            new Uri($"{DevServerUri}{typeof(ExtendedReactViewFactory).Assembly.GetName().Name}/"));
-                    }
-
-                    return base.ModuleDependenciesProvider;
-                }
-            }
 #endif
         }
     }
