@@ -4,7 +4,6 @@ import ViewPlugin from "./../ViewPlugin/ViewPlugin";
 import { IPluginsContext } from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
-import * as Styles from "./MainView.scss"; // import variables from SASS
 import * as BackgroundImage from "./Tasks.png"; // import images
 
 export interface ITaskCreationDetails {
@@ -75,14 +74,11 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
 
     public componentDidMount(): void {
         this.viewplugin.notifyViewLoaded("Main View");
-
+        
         if (this.props.backgroundKind === BackgroundKind.Image) {
             // example on how to use an image resource in codee
             document.body.style.backgroundImage = `url(${BackgroundImage})`;
         }
-
-        // example on how to reference exported sass variables
-        console.log(Styles.exportedVariable);
     }
 
     private toggleShowTasks = () => {

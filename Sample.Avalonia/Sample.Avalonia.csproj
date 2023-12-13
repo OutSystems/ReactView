@@ -59,5 +59,6 @@
       <Visible>True</Visible>
     </None>
   </ItemGroup>
-    
+
+  <Import Project="Build\GenerateWebpackDevServerScript.targets" />
 </Project>

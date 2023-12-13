@@ -8,7 +8,5 @@
         bool AddChildView(IViewModule childView, string frameName);
 
         ReactView Host { get; }
-
-        bool IsHotReloadEnabled { get; }
     }
 }

@@ -30,10 +30,5 @@ namespace ReactViewControl {
         /// The view is cached and preloaded. First render occurs earlier.
         /// </summary>
         public virtual bool EnableViewPreload => true;
-
-        /// <summary>
-        /// Webpack dev server url. Setting this value will enable hot reload. eg: new Uri("http://localhost:8080")
-        /// </summary>
-        public virtual Uri DevServerURI => null;
     }
 }

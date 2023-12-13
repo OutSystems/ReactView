@@ -1,5 +1,4 @@
-﻿import dummy from "ModuleWithAlias";
-import { IPluginsContext } from 'PluginsProvider';
+﻿import { IPluginsContext } from 'PluginsProvider';
 import * as React from 'react';
 import { ViewFrame, ViewSharedContext } from "ViewFrame";
 import * as Image from "./imgs/image.png";
@@ -68,7 +67,7 @@ class App extends React.Component<IAppProperties> {
         function getText(stylesheet: CSSStyleSheet): string {
             return Array.from(stylesheet.rules).map(rule => {
                 if (rule instanceof CSSImportRule) {
-                    return getText(rule.styleSheet);
+                    return getText(rule.styleSheet as CSSStyleSheet);
                 } else {
                     return rule.cssText;
                 }
@@ -92,7 +91,8 @@ class App extends React.Component<IAppProperties> {
     }
 
     checkAliasedModuleLoaded() {
-        if (dummy()) {
+        // Access plugin via window object so that we are not forced to load plugins for all tests - otherwise it will be required from webpack to load AliasedModule
+        if ((window as any).Views.AliasedModule.default()) {
             this.props.event("AliasedModuleLoaded");
         }
     }

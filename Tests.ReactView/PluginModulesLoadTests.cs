@@ -24,46 +24,6 @@ namespace Tests.ReactView {
             return new ReactViewWithPlugin();
         }
 
-        class PluginModule : ViewModuleContainer {
-
-            internal interface IProperties {
-            }
-
-            private class Properties : IProperties {
-                protected PluginModule Owner { get; }
-                public Properties(PluginModule owner) {
-                    Owner = owner;
-                }
-            }
-
-            protected override string MainJsSource => "/Tests.ReactView/Generated/PluginModule.js";
-            protected override string NativeObjectName => nameof(PluginModule);
-            protected override string ModuleName => "PluginModule";
-            protected override object CreateNativeObject() {
-                return new Properties(this);
-            }
-        }
-
-        class AliasedModule : ViewModuleContainer {
-
-            internal interface IProperties {
-            }
-
-            private class Properties : IProperties {
-                protected AliasedModule Owner { get; }
-                public Properties(AliasedModule owner) {
-                    Owner = owner;
-                }
-            }
-
-            protected override string MainJsSource => "/Tests.ReactView/Generated/AliasedModule.js";
-            protected override string NativeObjectName => nameof(AliasedModule);
-            protected override string ModuleName => "AliasedModule";
-            protected override object CreateNativeObject() {
-                return new Properties(this);
-            }
-        }
-
         [Test(Description = "Tests plugin module is loaded")]
         public async Task PluginModuleIsLoaded() {
             await Run(async () => {

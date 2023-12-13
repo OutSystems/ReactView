@@ -36,7 +36,7 @@ namespace ReactViewControl {
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, Uri devServerUri = null) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode) {
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -53,7 +53,6 @@ namespace ReactViewControl {
             DefaultStyleSheet = defaultStyleSheet;
             PluginsFactory = initializePlugins;
             EnableDebugMode = enableDebugMode;
-            DevServerUri = devServerUri;
 
             GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 
@@ -90,11 +89,6 @@ namespace ReactViewControl {
 
         public ReactView Host { get; set; }
 
-        /// <summary>
-        /// True when hot reload is enabled.
-        /// </summary>
-        public bool IsHotReloadEnabled => DevServerUri != null;
-
         public bool IsDisposing => WebView.IsDisposing;
 
         /// <summary>
@@ -108,8 +102,8 @@ namespace ReactViewControl {
         public bool IsMainComponentLoaded => Frames.TryGetValue(FrameInfo.MainViewFrameName, out var frame) && frame.LoadStatus >= LoadStatus.ComponentLoading;
 
         /// <summary>
-        /// Enables or disables debug mode. 
-        /// In debug mode the webview developer tools becomes available pressing F12 and the webview shows an error message at the top with the error details 
+        /// Enables or disables debug mode.
+        /// In debug mode the webview developer tools becomes available pressing F12 and the webview shows an error message at the top with the error details
         /// when a resource fails to load.
         /// </summary>
         public bool EnableDebugMode {
@@ -124,11 +118,6 @@ namespace ReactViewControl {
                 }
             }
         }
-
-        /// <summary>
-        /// Gets webpack dev server url.
-        /// </summary>
-        public Uri DevServerUri { get; }
 
         /// <summary>
         /// Gets or sets the webview zoom percentage (1 = 100%)
@@ -165,7 +154,7 @@ namespace ReactViewControl {
         public event ResourceRequestedEventHandler EmbeddedResourceRequested;
 
         /// <summary>
-        /// Handle external resource requests. 
+        /// Handle external resource requests.
         /// Call <see cref="ResourceHandler.BeginAsyncResponse"/> to handle the request in an async way.
         /// </summary>
         public event ResourceRequestedEventHandler ExternalResourceRequested;
@@ -370,7 +359,7 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Gets the view loaded on the specified frame. If none it will create a view of the specified 
+        /// Gets the view loaded on the specified frame. If none it will create a view of the specified
         /// instance and bind it to the frame.
         /// </summary>
         /// <param name="frameName"></param>
@@ -407,7 +396,7 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Binds the coponent to the specified frame.
+        /// Binds the component to the specified frame.
         /// </summary>
         /// <param name="component"></param>
         /// <param name="frame"></param>
@@ -553,15 +542,13 @@ namespace ReactViewControl {
         private string ToFullUrl(string url) {
             if (url.OrdinalContains(Uri.SchemeDelimiter)) {
                 return url;
-            } else if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
-                if (IsHotReloadEnabled) {
-                    return new Uri(DevServerUri, url).ToString();
-                } else {
-                    return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
-                }
-            } else {
-                return new ResourceUrl(UserCallingAssembly, url).ToString();
             }
+
+            if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
+                return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
+            }
+
+            return new ResourceUrl(UserCallingAssembly, url).ToString();
         }
 
         /// <summary>
