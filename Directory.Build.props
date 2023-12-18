@@ -17,8 +17,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AvaloniaVersion>0.10.17</AvaloniaVersion>
-    <WebViewVersion>3.120.0</WebViewVersion>
+    <AvaloniaVersion>11.0.11</AvaloniaVersion>
+    <WebViewVersion>3.120.1</WebViewVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
