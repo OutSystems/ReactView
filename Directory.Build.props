@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <DotnetVersion>net6.0</DotnetVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Platforms>x64;ARM64</Platforms>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
@@ -16,8 +17,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AvaloniaVersion>0.10.17</AvaloniaVersion>
-    <WebViewVersion>2.117.1</WebViewVersion>
+    <AvaloniaVersion>11.0.6</AvaloniaVersion>
+    <WebViewVersion>2.117.3-avalonia11</WebViewVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
