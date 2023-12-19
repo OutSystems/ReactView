@@ -17,7 +17,7 @@ namespace Sample.Avalonia {
         private int taskCounter;
 
         private readonly List<Task> taskList = new() {
-            new(id: 0, text: "Learn react.js", isCompleted: true, user: "User1"),
+            new() { id = 0, text = "Learn react.js", isCompleted = true, user = "User1" },
             new() { id = 1, text = "Explore the ReactView framework", user = "User2" }
         };
 
