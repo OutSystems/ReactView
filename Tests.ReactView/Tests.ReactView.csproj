@@ -31,9 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="App.xaml">
+    <AvaloniaResource Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
+    </AvaloniaResource>
     <EmbeddedResource Include="TestAppView\imgs\image.png" />
     <DefaultStyleSheet Include="TestAppView\Default.scss" />
     <DefaultStyleSheet Include="TestAppView\Default_2.scss" />
