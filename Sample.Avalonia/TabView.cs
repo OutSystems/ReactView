@@ -8,17 +8,17 @@ using WebViewControl;
 
 namespace Sample.Avalonia {
 
-    internal class TabView : ContentControl, IStyleable {
+    internal class TabView : ContentControl {
 
-        Type IStyleable.StyleKey => typeof(ContentControl);
+        protected override Type StyleKeyOverride => typeof(ContentControl);
 
         private MainView mainView;
         private TaskListViewModule taskListView;
         private int taskCounter;
 
-        private readonly List<Task> taskList = new List<Task>() {
-            new Task() { id = 0, text = "Learn react.js", isCompleted = true, user = "User1" },
-            new Task() { id = 1, text = "Explore the ReactView framework", user = "User2" }
+        private readonly List<Task> taskList = new() {
+            new(id: 0, text: "Learn react.js", isCompleted: true, user: "User1"),
+            new() { id = 1, text = "Explore the ReactView framework", user = "User2" }
         };
 
         public TabView(int id) {
