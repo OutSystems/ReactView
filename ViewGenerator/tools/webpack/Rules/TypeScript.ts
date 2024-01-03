@@ -1,5 +1,7 @@
 ﻿import { cpus } from "os";
+import { join, parse, resolve } from "path";
 import { RuleSetRule, RuleSetUseItem } from "webpack";
+import { removeDataTestIdTransformer } from "../Plugins/Utils";
 
 // .ts / .tsx  files
 const getTypeScriptRuleSet = (forHotReload: boolean): RuleSetRule => {
@@ -22,7 +24,8 @@ const getTypeScriptRuleSet = (forHotReload: boolean): RuleSetRule => {
     let tsLoaderRule: RuleSetUseItem = {
         loader: "ts-loader",
         options: {
-            happyPackMode: true
+            happyPackMode: true,
+            getCustomTransformers: join(__dirname, './CustomTransforms.js')
         }
     };
 

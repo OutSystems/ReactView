@@ -1,5 +1,6 @@
 ﻿import { outputFileSync } from "fs-extra";
 import { resolve } from "path";
+import * as TypeScript from 'typescript';
 import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
 
 import {
@@ -111,4 +112,22 @@ export function getFileName(relativePaths: Dictionary<string>, chunkData: any): 
  * */
 export function sanitizeCommandLineParam(parameter: string): string {
     return !parameter ? "" : parameter.replaceAll("'", "");
+}
+
+/*
+ * Removes data-test-id attribute
+ * */
+export function removeDataTestIdTransformer<T extends TypeScript.Node>(): TypeScript.TransformerFactory<T> {
+    return context => {
+        const visit: TypeScript.Visitor = node => {
+            if (TypeScript.isJsxAttribute(node)) {
+                if (node.name.getText() === 'data-test-id' || node.name.getText() === 'data-testid') {
+                    return undefined;
+                }
+            }
+            return TypeScript.visitEachChild(node, visit, context);
+        };
+
+        return node => TypeScript.visitNode(node, visit);
+    };
 }
