@@ -3,7 +3,7 @@ using ReactViewControl;
 
 namespace Sample.Avalonia; 
 
-public class HotReloadDependenciesProviderFactory : ModuleDependenciesProviderFactory {
+public sealed class HotReloadDependenciesProviderFactory : IModuleDependenciesProviderFactory {
 
     private readonly string devServerUri;
 
@@ -11,7 +11,7 @@ public class HotReloadDependenciesProviderFactory : ModuleDependenciesProviderFa
         this.devServerUri = devServerUri;
     }
 
-    public override IModuleDependenciesProvider CreateModuleDependenciesProvider(string sourcePath) {
+    public IModuleDependenciesProvider CreateModuleDependenciesProvider(string sourcePath) {
         return new HotReloadDependenciesProvider(new Uri($"{devServerUri}{typeof(HotReloadDependenciesProviderFactory).Assembly.GetName().Name}/"), sourcePath);
     }
 }
