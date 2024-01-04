@@ -1,10 +1,9 @@
 ﻿import { cpus } from "os";
-import { join, parse, resolve } from "path";
+import { join } from "path";
 import { RuleSetRule, RuleSetUseItem } from "webpack";
-import { removeDataTestIdTransformer } from "../Plugins/Utils";
 
 // .ts / .tsx  files
-const getTypeScriptRuleSet = (forHotReload: boolean): RuleSetRule => {
+const getTypeScriptRuleSet = (forHotReload: boolean, isProductionBuild: boolean): RuleSetRule => {
 
     const TypeScriptRule: RuleSetRule = {
         test: /\.tsx?$/i,
@@ -25,7 +24,7 @@ const getTypeScriptRuleSet = (forHotReload: boolean): RuleSetRule => {
         loader: "ts-loader",
         options: {
             happyPackMode: true,
-            getCustomTransformers: join(__dirname, './CustomTransforms.js')
+            getCustomTransformers: isProductionBuild ? join(__dirname, "../Plugins/DataTestIdTransformerPlugin.js") : null
         }
     };
 

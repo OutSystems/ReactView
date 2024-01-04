@@ -1,8 +1,9 @@
 ﻿import { sync } from "glob";
 import { parse, resolve } from "path";
 import { getCurrentDirectory } from "./Plugins/Utils";
+import {Configuration} from "webpack";
 
-const config = (_, __) => {
+const config = (env) => {
 
     let entryMap = {};
 
@@ -11,21 +12,28 @@ const config = (_, __) => {
         entryMap[entryName] = "./" + f;
     });
 
-    return {
+    const workersConfig: Configuration = {
         entry: entryMap,
+
         optimization: {
             minimize: true
         },
-        cache: {
-            type: 'filesystem',
-            allowCollectingMemory: true,
-            name: "workersCache"
-        },
+
         output: {
             globalObject: 'self',
             path: resolve(getCurrentDirectory(), "Generated")
         },
     };
+    
+    if (env.useCache === "true") {
+        workersConfig.cache = {
+            type: 'filesystem',
+            allowCollectingMemory: true,
+            name: "workersCache" 
+        }
+    }
+    
+    return workersConfig;
 };
 
 export default config;

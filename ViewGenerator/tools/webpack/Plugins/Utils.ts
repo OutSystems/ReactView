@@ -1,10 +1,10 @@
 ﻿import { outputFileSync } from "fs-extra";
 import { resolve } from "path";
-import * as TypeScript from 'typescript';
+import TypeScript from 'typescript';
 import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
-
 import {
     CssExtension,
+    DataTestIdAttributes,
     EntryExtension,
     JsChunkPlaceholder,
     JsExtension,
@@ -121,13 +121,12 @@ export function removeDataTestIdTransformer<T extends TypeScript.Node>(): TypeSc
     return context => {
         const visit: TypeScript.Visitor = node => {
             if (TypeScript.isJsxAttribute(node)) {
-                if (node.name.getText() === 'data-test-id' || node.name.getText() === 'data-testid') {
+                if (DataTestIdAttributes.indexOf(node.name.getText()) > -1) {
                     return undefined;
                 }
             }
             return TypeScript.visitEachChild(node, visit, context);
         };
-
         return node => TypeScript.visitNode(node, visit);
     };
 }
