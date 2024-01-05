@@ -15,7 +15,7 @@ namespace Sample.Avalonia {
             }
 
             DevServerUri = new Uri(uri);
-            ModuleDependenciesProviderFactory.SetInstance(new HotReloadDependenciesProviderFactory(uri));
+            ModuleDependenciesProviderFactory.Instance = new HotReloadDependenciesProviderFactory(uri);
         }
         
         private static void OnEmbeddedResourceRequested(WebViewControl.ResourceHandler resourceHandler) {

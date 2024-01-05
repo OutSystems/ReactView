@@ -1,14 +1,10 @@
 namespace ReactViewControl; 
 
-public class ModuleDependenciesProviderFactory : IModuleDependenciesProviderFactory {
+public sealed class ModuleDependenciesProviderFactory : IModuleDependenciesProviderFactory {
 
-    public static IModuleDependenciesProviderFactory Instance { get; private set; } = new ModuleDependenciesProviderFactory();
-
-    public static void SetInstance(IModuleDependenciesProviderFactory factory) {
-        Instance = factory;
-    }
+    public static IModuleDependenciesProviderFactory Instance { get; set; } = new ModuleDependenciesProviderFactory();
     
-    public virtual IModuleDependenciesProvider CreateModuleDependenciesProvider(string sourcePath) {
+    public IModuleDependenciesProvider CreateModuleDependenciesProvider(string sourcePath) {
         return new FileDependenciesProvider(sourcePath);
     }
 }
