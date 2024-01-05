@@ -124,7 +124,7 @@
 
   <!-- Default stylesheet related target -->
   <Target Name="VG_GenerateDefaultStyleSheet" >
-    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
+    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
   </Target>
 
   <!-- Workers related target -->

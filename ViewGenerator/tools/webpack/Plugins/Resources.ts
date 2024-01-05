@@ -20,3 +20,6 @@ export const JsMapPlaceholder: string = "[name].js.map";
 export const IdPlaceholder: string = "[id]";
 export const RuntimePlaceholder: string = "[runtime]";
 export const FullHashPlaceholder: string = "[fullhash]";
+
+// Attributes
+export const DataTestIdAttributes: string[] = ["data-test-id", "data-testid"];

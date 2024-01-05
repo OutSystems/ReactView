@@ -29,12 +29,6 @@ const config = (env) => {
             publicPath: "/"
         },
 
-        cache: {
-            type: 'filesystem',
-            allowCollectingMemory: true,
-            name: "stylesheetsCache"
-        },
-
         resolveLoader: {
             modules: [ join(__dirname, "/node_modules") ],
         },
@@ -54,6 +48,14 @@ const config = (env) => {
             new MiniCssExtractPlugin({ filename: OutputDirectoryDefault + CssPlaceholder }),
             new MiniCssExtractPluginCleanup([/\.js.map$/]),
         ]
+    }
+    
+    if (env.useCache === "true") {
+        stylesheetsConfig.cache = {
+            type: 'filesystem',
+            allowCollectingMemory: true,
+            name: "stylesheetsCache"
+        };
     }
 
     return stylesheetsConfig;
