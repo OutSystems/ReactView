@@ -57,13 +57,7 @@ const config = (env) => {
         // SplitChunksOptions
         standardConfig.optimization.splitChunks = {
             chunks: "all",
-            minSize: 1,
-            cacheGroups: {
-                vendors: {
-                    name: "vendors",
-                    test: /[\\/](node_modules)[\\/]/
-                }
-            }
+            minSize: 1
         };
     } else {
         standardConfig.optimization.splitChunks = false;
