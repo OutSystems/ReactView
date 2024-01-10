@@ -6,7 +6,7 @@
                 set VIEW_GENERATOR_PATH=$(PkgViewGenerator)
                 set VIEW_PACKER_PATH=$(PkgViewPacker)
 
-                node "%VIEW_PACKER_PATH%\tools\node_modules\webpack-dev-server\bin\webpack-dev-server.js" --config="%VIEW_GENERATOR_PATH%\tools\webpack\webpack_views.config.js" --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env assemblyName="Sample.Avalonia" --env optimizeBundle=true --static-directory "$(ProjectDir)" --static-public-path "/Sample.Avalonia/"
+                node "%VIEW_PACKER_PATH%\tools\node_modules\webpack-dev-server\bin\webpack-dev-server.js" --config="%VIEW_GENERATOR_PATH%\tools\webpack\webpack_views.config.js" --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env assemblyName="Sample.Avalonia" --env optimizeBundle=false --static-directory "$(ProjectDir)" --static-public-path "/Sample.Avalonia/"
             </BatchScript>
         </PropertyGroup>
         <WriteLinesToFile File="$(ProjectDir)RunWebpackDevServer.bat" Overwrite="true" Lines="$(BatchScript)" />
@@ -21,7 +21,7 @@
                 VIEW_GENERATOR_PATH=$(PkgViewGenerator)
                 VIEW_PACKER_PATH=$(PkgViewPacker)
 
-                node "$VIEW_PACKER_PATH/tools/node_modules/webpack-dev-server/bin/webpack-dev-server.js" --config="$VIEW_GENERATOR_PATH/tools/webpack/webpack_views.config.js" --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env assemblyName="Sample.Avalonia" --env optimizeBundle=true --static-directory "$(ProjectDir)" --static-public-path "/Sample.Avalonia/"
+                node "$VIEW_PACKER_PATH/tools/node_modules/webpack-dev-server/bin/webpack-dev-server.js" --config="$VIEW_GENERATOR_PATH/tools/webpack/webpack_views.config.js" --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env assemblyName="Sample.Avalonia" --env optimizeBundle=false --static-directory "$(ProjectDir)" --static-public-path "/Sample.Avalonia/"
             </ShellScript>
         </PropertyGroup>
         <WriteLinesToFile File="$(WebpackDevServerScriptPath)" Overwrite="true" Lines="$(ShellScript)" />
