@@ -1,5 +1,5 @@
 ﻿import * as React from "react";
-import * as ReactDOM from "react-dom";
+import * as ReactDOMClient from "react-dom/client";
 import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
@@ -30,7 +30,11 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
 }
 
 export function renderMainView(children: React.ReactElement, container: Element) {
-    return new Promise<void>(resolve => ReactDOM.hydrate(children, container, resolve));
+    return new Promise<void>(resolve => {
+        const root = ReactDOMClient.hydrateRoot(container, children);
+        root.render(children);
+        resolve();
+    });
 }
 
 function onChildViewAdded(childView: ViewMetadata) {
