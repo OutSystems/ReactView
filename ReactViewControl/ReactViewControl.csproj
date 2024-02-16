@@ -10,6 +10,7 @@
     <UseWpf>true</UseWpf>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'ReleaseWPF'">

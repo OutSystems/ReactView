@@ -5,6 +5,7 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>
@@ -102,10 +103,12 @@
 
   <ItemGroup>
     <EmbeddedResource Include="node_modules\react\umd\react.production.min.js" />
+    <EmbeddedResource Include="node_modules\react\umd\react.development.js" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="node_modules\react-dom\umd\react-dom.production.min.js" />
+    <EmbeddedResource Include="node_modules\react-dom\umd\react-dom.development.js" />
   </ItemGroup>
 
   <ItemGroup>

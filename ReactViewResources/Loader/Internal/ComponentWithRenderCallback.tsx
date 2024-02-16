@@ -9,5 +9,6 @@ export function ComponentWithRenderCallback({ rendered, children }: PropsWithChi
     useEffect(() => {
         rendered();
     });
+    
     return <>{children}</>;
 }

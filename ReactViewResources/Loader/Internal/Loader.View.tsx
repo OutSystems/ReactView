@@ -1,5 +1,5 @@
 ﻿import * as React from "react";
-import * as ReactDOMClient from "react-dom/client";
+import { hydrateRoot, createRoot } from "react-dom/client";
 import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
@@ -8,7 +8,8 @@ import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
 import { ViewMetadata } from "./ViewMetadata";
 import { ViewPortalsCollection } from "./ViewPortalsCollection";
 import { addView, deleteView } from "./ViewsCollection";
-import {ComponentWithRenderCallback} from "./ComponentWithRenderCallback";
+import { ComponentWithRenderCallback } from "./ComponentWithRenderCallback";
+import {hydrate} from "react-dom";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
@@ -39,6 +40,13 @@ export function renderMainView(children: React.ReactElement, container: Element)
             </ComponentWithRenderCallback>
         );
         root.render(childrenWithRenderCallback);
+        
+        // const root = createRoot(container);
+        // root.render(
+        //     <ComponentWithRenderCallback rendered={resolve}>
+        //         {children}
+        //     </ComponentWithRenderCallback>
+        // );
     });
 }
 
