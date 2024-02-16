@@ -28,7 +28,8 @@ export class ViewPortalsCollection extends React.Component<IViewPortalsCollectio
 
     private renderViewPortal(view: ViewMetadata) {
         return (
-            <ViewPortal key={view.name}
+            <ViewPortal
+                key={view.name}
                 view={view}
                 viewMounted={this.props.viewAdded}
                 viewUnmounted={this.props.viewRemoved}

@@ -12,5 +12,5 @@ export function ComponentWithMountCallback({ mounted, children }: PropsWithChild
         mounted?.();
     }, []);
     
-    return isMounted ? <>{children}</> : null;
+    return isMounted ? <React.Fragment key={"asd"}>{children}</React.Fragment> : null;
 }

@@ -1,7 +1,7 @@
 ﻿import * as React from "react";
 import { ViewFrame } from "ViewFrame";
 import ViewPlugin from "./../ViewPlugin/ViewPlugin";
-import {IPluginsContext, PluginsContext} from "PluginsProvider";
+import { PluginsContext } from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
 import * as BackgroundImage from "./Tasks.png"; // import images
@@ -53,26 +53,21 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
     private readonly inputRef = React.createRef<HTMLInputElement>();
 
     constructor(props: IMainViewProperties) {
-        super(props, );
-        this.initialize();
-    }
-
-    private async initialize(): Promise<void> {
+        super(props);
         this.state = {
             tasksCount: 0,
             taskListShowStatus: TaskListShowStatus.Show
         };
+        
         this.refresh();
     }
 
-    public refresh(): void {
-        (async () => {
-            const tasksCount = await this.props.getTasksCount();
-            this.setState({ tasksCount });
-        })();
+    public async refresh(): Promise<void> {
+        const tasksCount = await this.props.getTasksCount();
+        this.setState({ tasksCount });
     }
 
-    public componentDidMount(): void {
+    public async componentDidMount(): Promise<void> {
         this.viewPlugin = this.context.getPluginInstance<ViewPlugin>(ViewPlugin);
         this.viewPlugin.notifyViewLoaded("Main View");
         
@@ -116,9 +111,9 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
 
     public render(): JSX.Element {
         return (
-            <div className="wrapper">
+            <div key={"dsdsfdfs"} className="wrapper">
                 <div className="title">{this.props.titleMessage}</div>
-                <input className="task-input" ref={this.inputRef} onChange={() => this.props.inputChanged()} />
+                <input className="task-input" ref={this.inputRef} onChange={() => this.props.inputChanged()}/>
                 <button className="task-add" onClick={this.onAddTaskButtonClicked}>Add Task</button>
                 <button className="tasks-toggle-show" onClick={this.toggleShowTasks}>Show/Block/Hide Tasks</button>
                 {this.renderListView()}

@@ -79,7 +79,7 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
 
     public render(): React.ReactNode {
         return ReactDOM.createPortal(
-            <div id={webViewRootId} ref={e => this.props.view.root = e!}>
+            <div id={webViewRootId} key={"fdsdfsdf"} ref={e => this.props.view.root = e!}>
                 {this.state.component ? this.state.component : null}
             </div>,
             this.shadowRoot);

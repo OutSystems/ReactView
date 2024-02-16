@@ -1,6 +1,6 @@
 ﻿import * as React from "react";
 import ViewPlugin from "./../ViewPlugin/ViewPlugin";
-import { IPluginsContext } from "PluginsProvider";
+import {IPluginsContext, PluginsContext} from "PluginsProvider";
 import "./TaskListView.scss";
 import { ResourceLoader } from "ResourceLoader";
 
@@ -30,9 +30,8 @@ interface ITaskListItemProperties {
 }
 
 class TaskListItem extends React.Component<{ task: ITask }, {}, IPluginsContext> {
-
-    constructor(props: ITaskListItemProperties, context: IPluginsContext) {
-        super(props, context);
+    constructor(props: ITaskListItemProperties) {
+        super(props);
     }
 
     render(): JSX.Element {
@@ -54,13 +53,18 @@ class TaskListItem extends React.Component<{ task: ITask }, {}, IPluginsContext>
 }
 
 export default class TaskListView extends React.Component<ITaskListViewProperties, ITaskListViewState> implements ITaskListViewBehaviors {
+    declare context: React.ContextType<typeof PluginsContext>;
 
-    private readonly viewplugin: ViewPlugin;
+    private viewPlugin: ViewPlugin;
 
-    constructor(props: ITaskListViewProperties, context: IPluginsContext) {
-        super(props, context);
-        this.initialize();
-        this.viewplugin = context.getPluginInstance<ViewPlugin>(ViewPlugin);
+    constructor(props: ITaskListViewProperties) {
+        super(props);
+        this.state = {
+            tasks: [],
+            hideCompletedTasks: false
+        };
+        
+        this.refresh();
     }
 
     public toggleHideCompletedTasks(): void {
@@ -69,23 +73,14 @@ export default class TaskListView extends React.Component<ITaskListViewPropertie
         }));
     }
 
-    public refresh(): void {
-        (async () => {
-            const tasks = await this.props.getTasks();
-            this.setState({ tasks });
-        })();
+    public async refresh(): Promise<void> {
+        const tasks = await this.props.getTasks();
+        this.setState({ tasks });
     }
 
-    private async initialize(): Promise<void> {
-        this.state = {
-            tasks: [],
-            hideCompletedTasks: false
-        };
-        this.refresh();
-    }
-
-    public componentDidMount(): void {
-        this.viewplugin.notifyViewLoaded("Task List View");
+    public async componentDidMount(): Promise<void> {
+        this.viewPlugin = this.context.getPluginInstance<ViewPlugin>(ViewPlugin);
+        this.viewPlugin.notifyViewLoaded("Task List View");
     }
 
     private renderItems(): JSX.Element {
