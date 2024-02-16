@@ -26,7 +26,6 @@ async function bootstrap() {
 async function loadFramework(view: ViewMetadata): Promise<void> {
     const reactLib: string = "React";
     const reactDOMLib: string = "ReactDOM";
-    const reactDOMClientLib: string = "ReactDOMClient";
     const externalLibsPath = libsPath + "node_modules/";
 
     await loadScript(externalLibsPath + "prop-types/prop-types.min.js", view); /* Prop-Types */
@@ -34,8 +33,8 @@ async function loadFramework(view: ViewMetadata): Promise<void> {
     await loadScript(externalLibsPath + "react-dom/umd/react-dom.development.js", view); /* ReactDOM */
     
     define("react", [], () => window[reactLib]);
-    //define("react-dom", [], () => window[reactDOMLib]);
-    define("react-dom/client", [], () => window[reactDOMClientLib]);
+    define("react-dom", [], () => window[reactDOMLib]);
+    define("react-dom/client", [], () => window[reactDOMLib]);
 }
 
 bootstrap();

@@ -8,7 +8,7 @@ import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
 import { ViewMetadata } from "./ViewMetadata";
 import { ViewPortalsCollection } from "./ViewPortalsCollection";
 import { addView, deleteView } from "./ViewsCollection";
-import { ComponentWithRenderCallback } from "./ComponentWithRenderCallback";
+import { ComponentWithMountCallback } from "./ComponentWithMountCallback";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
@@ -32,23 +32,13 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
 
 export function renderMainView(children: React.ReactElement, container: Element) {
     return new Promise<void>(resolve => {
-        
         const childrenWithRenderCallback = (
-            <ComponentWithRenderCallback rendered={resolve}>
+            <ComponentWithMountCallback mounted={resolve}>
                 {children}
-            </ComponentWithRenderCallback>
+            </ComponentWithMountCallback>
         );
-
+        
         ReactDOMClient.hydrateRoot(container, childrenWithRenderCallback);
-        
-        // root.render(childrenWithRenderCallback);
-        
-        // const root = createRoot(container);
-        // root.render(
-        //     <ComponentWithRenderCallback rendered={resolve}>
-        //         {children}
-        //     </ComponentWithRenderCallback>
-        // );
     });
 }
 

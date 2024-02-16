@@ -1,7 +1,7 @@
 ﻿import * as React from "react";
 import { ViewFrame } from "ViewFrame";
 import ViewPlugin from "./../ViewPlugin/ViewPlugin";
-import { IPluginsContext } from "PluginsProvider";
+import {IPluginsContext, PluginsContext} from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
 import * as BackgroundImage from "./Tasks.png"; // import images
@@ -47,14 +47,14 @@ interface MainViewState {
 }
 
 export default class MainView extends React.Component<IMainViewProperties, MainViewState> implements IMainViewBehaviors {
-
-    private readonly viewplugin: ViewPlugin;
+    declare context: React.ContextType<typeof PluginsContext>;
+    
+    private viewPlugin: ViewPlugin;
     private readonly inputRef = React.createRef<HTMLInputElement>();
 
-    constructor(props: IMainViewProperties, context: IPluginsContext) {
-        super(props, context);
+    constructor(props: IMainViewProperties) {
+        super(props, );
         this.initialize();
-        this.viewplugin = context.getPluginInstance<ViewPlugin>(ViewPlugin);
     }
 
     private async initialize(): Promise<void> {
@@ -73,7 +73,8 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
     }
 
     public componentDidMount(): void {
-        this.viewplugin.notifyViewLoaded("Main View");
+        this.viewPlugin = this.context.getPluginInstance<ViewPlugin>(ViewPlugin);
+        this.viewPlugin.notifyViewLoaded("Main View");
         
         if (this.props.backgroundKind === BackgroundKind.Image) {
             // example on how to use an image resource in codee

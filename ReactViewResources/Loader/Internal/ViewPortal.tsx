@@ -1,4 +1,5 @@
 ﻿import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { webViewRootId } from "../Internal/Environment";
 import { getStylesheets } from "./Common";
 import { ViewMetadata } from "./ViewMetadata";
@@ -31,8 +32,8 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     private head: Element;
     private shadowRoot: HTMLElement;
 
-    constructor(props: IViewPortalProps, context: any) {
-        super(props, context);
+    constructor(props: IViewPortalProps) {
+        super(props);
 
         this.state = { component: null! };
         
