@@ -1,5 +1,5 @@
 ﻿import * as React from "react";
-import { hydrateRoot, createRoot } from "react-dom/client";
+import * as ReactDOMClient from "react-dom/client";
 import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
@@ -9,7 +9,6 @@ import { ViewMetadata } from "./ViewMetadata";
 import { ViewPortalsCollection } from "./ViewPortalsCollection";
 import { addView, deleteView } from "./ViewsCollection";
 import { ComponentWithRenderCallback } from "./ComponentWithRenderCallback";
-import {hydrate} from "react-dom";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
@@ -33,13 +32,16 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
 
 export function renderMainView(children: React.ReactElement, container: Element) {
     return new Promise<void>(resolve => {
-        const root = ReactDOMClient.hydrateRoot(container, children);
+        
         const childrenWithRenderCallback = (
             <ComponentWithRenderCallback rendered={resolve}>
                 {children}
             </ComponentWithRenderCallback>
         );
-        root.render(childrenWithRenderCallback);
+
+        ReactDOMClient.hydrateRoot(container, childrenWithRenderCallback);
+        
+        // root.render(childrenWithRenderCallback);
         
         // const root = createRoot(container);
         // root.render(

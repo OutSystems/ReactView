@@ -34,8 +34,8 @@ async function loadFramework(view: ViewMetadata): Promise<void> {
     await loadScript(externalLibsPath + "react-dom/umd/react-dom.development.js", view); /* ReactDOM */
     
     define("react", [], () => window[reactLib]);
-    define("react-dom", [], () => window[reactDOMLib]);
-    // define("react-dom/client", [], () => window[reactDOMClientLib]);
+    //define("react-dom", [], () => window[reactDOMLib]);
+    define("react-dom/client", [], () => window[reactDOMClientLib]);
 }
 
 bootstrap();
