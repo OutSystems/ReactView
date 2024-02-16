@@ -29,10 +29,10 @@ export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void>
                 resolve();
             });
 
-        if (!view.head) {
+        if (!view.root) {
             throw new Error(`View ${view.name} head is not set`);
         }
-        view.head.appendChild(script);
+        view.root.appendChild(script);
     });
 }
 

@@ -28,8 +28,6 @@ interface IViewPortalState {
  * A view portal is persisted until its View Frame counterpart disappears.
  * */
 export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalState> {
-
-    private head: Element;
     private shadowRoot: HTMLElement;
 
     constructor(props: IViewPortalProps) {
@@ -57,16 +55,14 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     public componentDidMount() {
-        this.props.view.head = this.head;
-        
         const styleResets = document.createElement("style");
         styleResets.innerHTML = ":host { all: initial; display: block; }";
 
-        this.head.appendChild(styleResets);
+        this.shadowRoot.appendChild(styleResets);
 
         // get sticky stylesheets
         const stylesheets = getStylesheets(document.head).filter(s => s.dataset.sticky === "true");
-        stylesheets.forEach(s => this.head.appendChild(document.importNode(s, true)));
+        stylesheets.forEach(s => this.shadowRoot.appendChild(document.importNode(s, true)));
 
         this.props.viewMounted(this.props.view);
     }
@@ -82,15 +78,9 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
 
     public render(): React.ReactNode {
         return ReactDOM.createPortal(
-            <>
-                <head ref={e => this.head = e!}>
-                </head>
-                <body>
-                    <div id={webViewRootId} ref={e => this.props.view.root = e!}>
-                        {this.state.component ? this.state.component : null}
-                    </div>
-                </body>
-            </>,
+            <div id={webViewRootId} ref={e => this.props.view.root = e!}>
+                {this.state.component ? this.state.component : null}
+            </div>,
             this.shadowRoot);
     }
 }

@@ -5,12 +5,12 @@ export interface IComponentWithMountCallbackProps {
     mounted?(): void;
 }
 
-export function ComponentWithMountCallback({ mounted, children }: PropsWithChildren<IComponentWithMountCallbackProps>): JSX.Element {
+export function ComponentWithMountCallback({ mounted, children }: PropsWithChildren<IComponentWithMountCallbackProps>): JSX.Element | null {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
         setIsMounted(true);
         mounted?.();
     }, []);
     
-    return isMounted ? <>{children}</> : <></>;
+    return isMounted ? <>{children}</> : null;
 }

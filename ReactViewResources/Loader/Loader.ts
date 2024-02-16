@@ -141,10 +141,9 @@ export function loadComponent(
                 return; // view was probably unloaded
             }
 
-            const head = view.head;
             const rootElement = view.root;
 
-            if (!rootElement || !head) {
+            if (!rootElement) {
                 throw new Error(`View ${view.name} head or root is not set`);
             }
 
@@ -158,7 +157,7 @@ export function loadComponent(
 
             // load component dependencies js sources and css sources
             const dependencyLoadPromises = dependencySources.map(s => loadScript(s, view) as Promise<any>)
-                .concat(cssSources.map(s => loadStyleSheet(s, head, false)));
+                .concat(cssSources.map(s => loadStyleSheet(s, rootElement, false)));
             await Promise.all(dependencyLoadPromises);
 
             // main component script should be the last to be loaded, otherwise errors might occur
