@@ -9,7 +9,7 @@ export type ViewLifecycleEventHandler = (view: ViewMetadata) => void;
 export type ViewErrorHandler = (view: ViewMetadata, error: Error) => void;
 
 export interface IViewPortalProps {
-    view: ViewMetadata
+    view: ViewMetadata;
     viewMounted: ViewLifecycleEventHandler;
     viewUnmounted: ViewLifecycleEventHandler;
     viewErrorRaised: ViewErrorHandler;
@@ -56,6 +56,7 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
 
     public componentDidMount() {
         const styleResets = document.createElement("style");
+        styleResets.media = "text/css";
         styleResets.innerHTML = ":host { all: initial; display: block; }";
 
         this.shadowRoot.appendChild(styleResets);

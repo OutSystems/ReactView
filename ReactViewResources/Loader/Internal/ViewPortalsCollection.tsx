@@ -36,12 +36,7 @@ export class ViewPortalsCollection extends React.Component<IViewPortalsCollectio
         );
     }
 
-    public render(): JSX.Element | null {
-        return (
-            <>
-                {this.props.views.items.sort((a, b) => a.name.localeCompare(b.name))
-                    .map(view => this.renderViewPortal(view))}
-            </>
-        );
+    public render(): React.ReactNode {
+        return this.props.views.items.sort((a, b) => a.name.localeCompare(b.name)).map(view => this.renderViewPortal(view));
     }
 }

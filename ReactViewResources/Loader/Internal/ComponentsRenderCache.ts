@@ -34,8 +34,9 @@ export function storeViewRenderInCache(view: ViewMetadata, cacheEntry: IRenderCa
     // cache view html for further use
     const elementHtml = view.root!.innerHTML;
     // get all stylesheets except the sticky ones (which will be loaded by the time the html gets rendered) otherwise we could be loading them twice
+    
     const stylesheets = getStylesheets(view.root!).filter(l => l.dataset.sticky !== "true").map(l => l.outerHTML).join("");
-
+    
     // the remaining code can be executed afterwards
     return new Promise<void>(() => {
         // insert rendered html into the cache
