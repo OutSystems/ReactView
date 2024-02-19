@@ -1,5 +1,5 @@
-﻿import {IPluginsContext, PluginsContext} from 'PluginsProvider';
-import * as React from 'react';
+﻿import { PluginsContext } from "PluginsProvider";
+import * as React from "react";
 import { ViewFrame, ViewSharedContext } from "ViewFrame";
 import * as Image from "./imgs/image.png";
 import InnerView from "./InnerView";
