@@ -1,4 +1,4 @@
-﻿import { IPluginsContext } from 'PluginsProvider';
+﻿import {IPluginsContext, PluginsContext} from 'PluginsProvider';
 import * as React from 'react';
 import { ViewFrame, ViewSharedContext } from "ViewFrame";
 import * as Image from "./imgs/image.png";
@@ -18,13 +18,13 @@ interface IChildViews {
 }
 
 class App extends React.Component<IAppProperties> {
-    firstRenderHtml: string;
-    pluginsContext: IPluginsContext;
-    innerViewLoadedTask = new Task<boolean>();
+    declare context: React.ContextType<typeof PluginsContext>;
 
-    constructor(props: IAppProperties, context: IPluginsContext) {
+    private readonly firstRenderHtml: string;
+    private innerViewLoadedTask = new Task<boolean>();
+
+    constructor(props: IAppProperties) {
         super(props);
-        this.pluginsContext = context;
         this.firstRenderHtml = this.getHtml();
     }
 
@@ -98,7 +98,7 @@ class App extends React.Component<IAppProperties> {
     }
 
     checkPluginInContext() {
-        const plugin = this.pluginsContext.getPluginInstance<Plugin>(Plugin);
+        const plugin = this.context.getPluginInstance<Plugin>(Plugin);
         return [!!plugin.nativeObject, !!plugin.root.tagName, plugin.viewLoaded];
     }
 

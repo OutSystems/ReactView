@@ -3,6 +3,7 @@ import { IViewFrameProps } from "ViewFrame";
 import { newView, ViewMetadata } from "../Internal/ViewMetadata";
 import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { ViewSharedContext } from "./ViewSharedContext";
+import {PluginsContext} from "PluginsProvider";
 
 interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
     viewMetadata: ViewMetadata;
@@ -13,9 +14,8 @@ interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
  * Placeholder were a child view is mounted.
  * */
 export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}, ViewMetadata> {
-
-    constructor(props: IViewFrameProps<T>, context: any) {
-        super(props, context);
+    constructor(props: IViewFrameProps<T>) {
+        super(props);
     }
 
     public render(): JSX.Element {
@@ -39,8 +39,8 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     private placeholder: Element;
     private replacement: Element;
 
-    constructor(props: IInternalViewFrameProps<T>, context: any) {
-        super(props, context);
+    constructor(props: IInternalViewFrameProps<T>) {
+        super(props);
         if (props.name === "") {
             throw new Error("View Frame name must be specified (not empty)");
         }

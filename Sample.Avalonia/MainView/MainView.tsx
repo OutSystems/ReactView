@@ -111,7 +111,7 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
 
     public render(): JSX.Element {
         return (
-            <div key={"dsdsfdfs"} className="wrapper">
+            <div className="wrapper">
                 <div className="title">{this.props.titleMessage}</div>
                 <input className="task-input" ref={this.inputRef} onChange={() => this.props.inputChanged()}/>
                 <button className="task-add" onClick={this.onAddTaskButtonClicked}>Add Task</button>
