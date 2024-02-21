@@ -1,11 +1,10 @@
 <Project>
   <PropertyGroup>
     <DotnetVersion>net6.0</DotnetVersion>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Platforms>x64;ARM64</Platforms>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Version>2.117.2-avalonia11</Version>
+    <Version>2.120.2</Version>
     <Authors>OutSystems</Authors>
     <Product>ReactView</Product>
     <Copyright>Copyright © OutSystems 2023</Copyright>
@@ -17,8 +16,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AvaloniaVersion>11.0.6</AvaloniaVersion>
-    <WebViewVersion>2.117.3-avalonia11</WebViewVersion>
+    <AvaloniaVersion>0.10.17</AvaloniaVersion>
+    <WebViewVersion>2.120.1</WebViewVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">

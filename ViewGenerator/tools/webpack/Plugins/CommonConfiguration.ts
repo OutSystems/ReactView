@@ -100,7 +100,7 @@ let getCommonConfiguration = (cacheName: string, libraryName: string, assemblyNa
             rules: [
                 SassRuleSet,
                 getResourcesRuleSet(assemblyName, pluginsAssembly),
-                getTypeScriptRuleSet(forHotReload)
+                getTypeScriptRuleSet(forHotReload, !cacheName)
             ]
         },
 

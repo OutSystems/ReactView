@@ -1,9 +1,10 @@
 ﻿import { outputFileSync } from "fs-extra";
 import { resolve } from "path";
+import TypeScript from 'typescript';
 import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
-
 import {
     CssExtension,
+    DataTestIdAttributes,
     EntryExtension,
     JsChunkPlaceholder,
     JsExtension,
@@ -111,4 +112,21 @@ export function getFileName(relativePaths: Dictionary<string>, chunkData: any): 
  * */
 export function sanitizeCommandLineParam(parameter: string): string {
     return !parameter ? "" : parameter.replaceAll("'", "");
+}
+
+/*
+ * Removes data-test-id attribute
+ * */
+export function removeDataTestIdTransformer<T extends TypeScript.Node>(): TypeScript.TransformerFactory<T> {
+    return context => {
+        const visit: TypeScript.Visitor = node => {
+            if (TypeScript.isJsxAttribute(node)) {
+                if (DataTestIdAttributes.indexOf(node.name.getText()) > -1) {
+                    return undefined;
+                }
+            }
+            return TypeScript.visitEachChild(node, visit, context);
+        };
+        return node => TypeScript.visitNode(node, visit);
+    };
 }

@@ -38,7 +38,12 @@ const config = (env) => {
 
     const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
 
-    const standardConfig: Configuration = getCommonConfiguration(env.useCache ? "viewsCache" : "", "Views", sanitizeCommandLineParam(env.assemblyName), sanitizedPluginsRelativePath, env.forHotReload);
+    const standardConfig: Configuration = getCommonConfiguration(
+        env.useCache === "true" ? "viewsCache" : "",
+        "Views",
+        sanitizeCommandLineParam(env.assemblyName),
+        sanitizedPluginsRelativePath, 
+        env.forHotReload === "true");
 
     if (!standardConfig.optimization) {
         standardConfig.optimization = {};
@@ -48,17 +53,11 @@ const config = (env) => {
             name: "ViewsRuntime"
     };
     
-    if (env.optimizebundle) {
+    if (env.optimizeBundle === "true") {
         // SplitChunksOptions
         standardConfig.optimization.splitChunks = {
             chunks: "all",
-            minSize: 1,
-            cacheGroups: {
-                vendors: {
-                    name: "vendors",
-                    test: /[\\/](node_modules)[\\/]/
-                }
-            }
+            minSize: 1
         };
     } else {
         standardConfig.optimization.splitChunks = false;
@@ -85,7 +84,7 @@ const config = (env) => {
         ];
     }
 
-    if (env.forHotReload) {
+    if (env.forHotReload === "true") {
         standardConfig.output.hotUpdateChunkFilename = OutputDirectoryDefault + IdPlaceholder + "." + FullHashPlaceholder + ".hot-update.js";
         standardConfig.output.hotUpdateMainFilename = OutputDirectoryDefault + RuntimePlaceholder + "." + FullHashPlaceholder + ".hot-update.json";
 

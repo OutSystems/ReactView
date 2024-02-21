@@ -8,7 +8,7 @@ import { getCurrentDirectory, sanitizeCommandLineParam } from "./Plugins/Utils";
 
 const config = (env) => {
 
-    const standardConfig: Configuration = getCommonConfiguration(env.useCache ? "pluginsCache" : "", "Plugins", sanitizeCommandLineParam(env.assemblyName));
+    const standardConfig: Configuration = getCommonConfiguration(env.useCache === "true" ? "pluginsCache" : "", "Plugins", sanitizeCommandLineParam(env.assemblyName));
 
     standardConfig.optimization = {
         runtimeChunk: {
