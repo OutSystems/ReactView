@@ -4,24 +4,15 @@ import { Configuration } from "webpack";
 
 import MiniCssExtractPluginCleanup from "./Plugins/MiniCssExtractPluginCleanup";
 import { CssPlaceholder, JsMapPlaceholder, OutputDirectoryDefault } from "./Plugins/Resources";
-import { Dictionary, getCurrentDirectory, sanitizeCommandLineParam } from "./Plugins/Utils"
+import { getCurrentDirectory, sanitizeCommandLineParam } from "./Plugins/Utils"
 
 import getResourcesRuleSet from "./Rules/Files";
 import SassRuleSet from "./Rules/Sass";
+import { getEntries } from "./Helpers";
 
 const config = (env) => {
-
-    const getEntryName = (entryPath: string): string => {
-        const fileExtensionLen: number = entryPath.length - entryPath.lastIndexOf(".");
-        return entryPath.slice(entryPath.replace(/\//g, '\\').lastIndexOf("\\") + 1, -fileExtensionLen);
-    };
-
-    let entries: string = sanitizeCommandLineParam(env.entryPath);
-    let entryMap: Dictionary<string> = {};
-    entries.split(";").map(entryPath => entryMap[getEntryName(entryPath)] = './' + entryPath)
-
     const stylesheetsConfig: Configuration = {
-        entry: entryMap,
+        entry: getEntries(env.entryPath),
 
         output: {
             path: getCurrentDirectory(),
