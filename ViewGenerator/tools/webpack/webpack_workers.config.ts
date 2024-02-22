@@ -1,19 +1,11 @@
-﻿import { sync } from "glob";
-import { parse, resolve } from "path";
+﻿import { resolve } from "path";
 import { getCurrentDirectory } from "./Plugins/Utils";
-import {Configuration} from "webpack";
+import { Configuration } from "webpack";
+import { getEntries } from "./Helpers";
 
 const config = (env) => {
-
-    let entryMap = {};
-
-    sync("**/*.worker.js", { follow: true }).forEach(f => {
-        let entryName: string = parse(f).name;
-        entryMap[entryName] = "./" + f;
-    });
-
     const workersConfig: Configuration = {
-        entry: entryMap,
+        entry: getEntries(env.entryPath),
 
         optimization: {
             minimize: true
@@ -24,15 +16,15 @@ const config = (env) => {
             path: resolve(getCurrentDirectory(), "Generated")
         },
     };
-    
+
     if (env.useCache === "true") {
         workersConfig.cache = {
             type: 'filesystem',
             allowCollectingMemory: true,
-            name: "workersCache" 
+            name: "workersCache"
         }
     }
-    
+
     return workersConfig;
 };
 

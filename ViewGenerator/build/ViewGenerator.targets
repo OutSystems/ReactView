@@ -129,7 +129,7 @@
 
   <!-- Workers related target -->
   <Target Name="VG_GenerateWorkersBundle" >
-    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache)" />
+    <Exec Command="node &quot;$(ViewPackerToolScript)&quot; --config=&quot;$(ViewGeneratorToolsPath)/webpack/webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache)--env entryPath='@(Workers)'" />
   </Target>
 
   <!-- /// -->
