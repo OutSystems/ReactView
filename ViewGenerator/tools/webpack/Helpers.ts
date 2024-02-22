@@ -10,8 +10,6 @@ export function getEntries(entries: string): Dictionary<string>{
     const sanitizeEntries = sanitizeCommandLineParam(entries);
     
     sanitizeEntries.split(";").map(entryPath => {
-        console.log("EntryPath:", entryPath);
-        console.log("EntryPath Name:", getEntryName(entryPath));
         entryMap[getEntryName(entryPath)] = './' + entryPath;
     });
     
