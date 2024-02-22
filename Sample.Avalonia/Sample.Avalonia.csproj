@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>$(DotnetVersion)</TargetFramework>
-    <RollForward>LatestMajor</RollForward>
+    <RollForward>Major</RollForward>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
     <RuntimeIdentifiers>osx-x64;win-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
   </PropertyGroup>
