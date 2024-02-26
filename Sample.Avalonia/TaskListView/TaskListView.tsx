@@ -1,6 +1,6 @@
 ﻿import * as React from "react";
 import ViewPlugin from "./../ViewPlugin/ViewPlugin";
-import {IPluginsContext, PluginsContext} from "PluginsProvider";
+import { IPluginsContext } from "PluginsProvider";
 import "./TaskListView.scss";
 import { ResourceLoader } from "ResourceLoader";
 
