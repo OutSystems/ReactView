@@ -85,9 +85,9 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
                 <head ref={e => this.head = e!}>
                 </head>
                 <body>
-                <div id={webViewRootId} ref={e => this.props.view.root = e!}>
-                    {this.state.component ? this.state.component : null}
-                </div>
+                    <div id={webViewRootId} ref={e => this.props.view.root = e!}>
+                        {this.state.component ? this.state.component : null}
+                    </div>
                 </body>
             </>,
             this.shadowRoot);
