@@ -2,10 +2,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "@types/react-dom": "18.2.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "prop-types": "15.8.1"
+    "@types/react-dom": "^18.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

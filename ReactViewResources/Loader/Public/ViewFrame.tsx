@@ -3,7 +3,6 @@ import { IViewFrameProps } from "ViewFrame";
 import { newView, ViewMetadata } from "../Internal/ViewMetadata";
 import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { ViewSharedContext } from "./ViewSharedContext";
-import {PluginsContext} from "PluginsProvider";
 
 interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
     viewMetadata: ViewMetadata;

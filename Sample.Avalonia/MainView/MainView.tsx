@@ -1,7 +1,7 @@
 ﻿import * as React from "react";
 import { ViewFrame } from "ViewFrame";
 import ViewPlugin from "./../ViewPlugin/ViewPlugin";
-import { PluginsContext } from "PluginsProvider";
+import { IPluginsContext } from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
 import * as BackgroundImage from "./Tasks.png"; // import images
@@ -47,29 +47,32 @@ interface MainViewState {
 }
 
 export default class MainView extends React.Component<IMainViewProperties, MainViewState> implements IMainViewBehaviors {
-    declare context: React.ContextType<typeof PluginsContext>;
-    
-    private viewPlugin: ViewPlugin;
+    private readonly viewplugin: ViewPlugin;
     private readonly inputRef = React.createRef<HTMLInputElement>();
 
-    constructor(props: IMainViewProperties) {
+    constructor(props: IMainViewProperties, context: IPluginsContext) {
         super(props);
+        this.initialize();
+        this.viewplugin = context.getPluginInstance<ViewPlugin>(ViewPlugin);
+    }
+
+    private async initialize(): Promise<void> {
         this.state = {
             tasksCount: 0,
             taskListShowStatus: TaskListShowStatus.Show
         };
-        
         this.refresh();
     }
 
-    public async refresh(): Promise<void> {
-        const tasksCount = await this.props.getTasksCount();
-        this.setState({ tasksCount });
+    public refresh(): void {
+        (async () => {
+            const tasksCount = await this.props.getTasksCount();
+            this.setState({ tasksCount });
+        })();
     }
 
-    public async componentDidMount(): Promise<void> {
-        this.viewPlugin = this.context.getPluginInstance<ViewPlugin>(ViewPlugin);
-        this.viewPlugin.notifyViewLoaded("Main View");
+    public componentDidMount(): void {
+        this.viewplugin.notifyViewLoaded("Main View");
         
         if (this.props.backgroundKind === BackgroundKind.Image) {
             // example on how to use an image resource in codee
