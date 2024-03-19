@@ -24,6 +24,7 @@ namespace Sample.Avalonia {
             taskCounter = taskList.Count;
 
             mainView = new MainView();
+            mainView.Focusable = true;
             mainView.TitleMessage = "Tasks List (" + id + ")";
             mainView.BackgroundKind = BackgroundKind.Image;
             mainView.AddTaskButtonClicked += OnMainViewAddTaskButtonClicked;

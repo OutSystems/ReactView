@@ -73,6 +73,11 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
     }
 
     public componentDidMount(): void {
+        // test focus
+        if (this.inputRef.current) {
+            this.inputRef.current.focus();
+        }
+
         this.viewplugin.notifyViewLoaded("Main View");
         
         if (this.props.backgroundKind === BackgroundKind.Image) {
