@@ -44,7 +44,8 @@ namespace ReactViewControl {
                 DisableBuiltinContextMenus = true,
                 IsSecurityDisabled = true,
                 IgnoreMissingResources = false,
-                IsHistoryDisabled = true
+                IsHistoryDisabled = true,
+                Focusable = true
             };
 
             NativeAPI.Initialize(this);
@@ -53,6 +54,7 @@ namespace ReactViewControl {
             DefaultStyleSheet = defaultStyleSheet;
             PluginsFactory = initializePlugins;
             EnableDebugMode = enableDebugMode;
+            Focusable = true;
 
             GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 

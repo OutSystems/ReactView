@@ -1,12 +1,13 @@
 ﻿using Avalonia;
+using Avalonia.ReactiveUI;
 
 namespace Sample.Avalonia {
     class Program {
         static void Main(string[] args) {
             AppBuilder.Configure<App>()
-                      .UsePlatformDetect()
-					  .With(new Win32PlatformOptions { UseWindowsUIComposition = false })
-                      .StartWithClassicDesktopLifetime(args);
+                .UsePlatformDetect()
+                .UseReactiveUI()
+                .StartWithClassicDesktopLifetime(args);
         }
     }
 }

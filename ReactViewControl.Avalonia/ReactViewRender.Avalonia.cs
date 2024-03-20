@@ -41,7 +41,7 @@ namespace ReactViewControl {
             WebView.Focus();
         }
 
-        protected override void OnPropertyChanged<T>(AvaloniaPropertyChangedEventArgs<T> change) {
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {
             base.OnPropertyChanged(change);
 
             if (!ExtendedWebView.Settings.OsrEnabled && change.Property == IsEffectivelyEnabledProperty) {
