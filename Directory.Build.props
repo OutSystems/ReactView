@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <DotnetVersion>net6.0</DotnetVersion>
+    <DotnetVersion>net8.0</DotnetVersion>
     <Platforms>x64;ARM64</Platforms>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
