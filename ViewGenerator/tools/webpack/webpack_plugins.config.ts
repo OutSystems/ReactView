@@ -12,11 +12,12 @@ const config = (env, argv) => {
         argv.mode === "production",
         env.useCache === "true" ? "pluginsCache" : "",
         "Plugins",
-        sanitizeCommandLineParam(env.assemblyName),
-        env.pluginsRelativePath);
+        sanitizeCommandLineParam(env.assemblyName));
 
-    standardConfig.optimization.runtimeChunk = {
-        name: "PluginsRuntime"
+    standardConfig.optimization = {
+        runtimeChunk: {
+            name: "PluginsRuntime"
+        }
     };
 
     // Plugins
