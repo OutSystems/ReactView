@@ -117,7 +117,7 @@ export function sanitizeCommandLineParam(parameter: string): string {
 /*
  * Removes data-test-id attribute
  * */
-export function removeDataTestIdTransformer<T extends TypeScript.Node>(): TypeScript.TransformerFactory<T> {
+export function removeDataTestIdTransformer<T extends TypeScript.Node>(): (context: TypeScript.TransformationContext) => (node: T) => TypeScript.Node {
     return context => {
         const visit: TypeScript.Visitor = node => {
             if (TypeScript.isJsxAttribute(node)) {
