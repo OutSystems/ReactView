@@ -136,6 +136,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
     
     if (isProductionBuild) {
         Configuration.optimization = {
+            flagIncludedChunks: false,
             minimize: true,
             minimizer: [new TerserPlugin({
                 terserOptions: {

@@ -14,10 +14,12 @@ const config = (env, argv) => {
         "Plugins",
         sanitizeCommandLineParam(env.assemblyName));
 
-    standardConfig.optimization = {
-        runtimeChunk: {
-            name: "PluginsRuntime"
-        }
+    if (!standardConfig.optimization) {
+        standardConfig.optimization = {};
+    }
+
+    standardConfig.optimization.runtimeChunk = {
+        name: "PluginsRuntime"
     };
 
     // Plugins
