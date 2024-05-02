@@ -141,7 +141,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
             minimizer: [new TerserPlugin({
                 terserOptions: {
                     keep_classnames: true,
-                    keep_fnames: false,
+                    keep_fnames: true,
                     toplevel: true,
                     module: true
                 }
