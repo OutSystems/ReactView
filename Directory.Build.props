@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <TargetDotnetVersions>net6.0;net8.0</TargetDotnetVersions>
+    <TargetDotnetVersions>net6.0$(NetVersionSuffix);net8.0$(NetVersionSuffix)</TargetDotnetVersions>
     <TargetDotnetVersionsWindows>net6.0-windows;net8.0-windows</TargetDotnetVersionsWindows>
     <Platforms>x64;ARM64</Platforms>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TargetDotnetVersionsWindows)</TargetFrameworks>
+    <TargetFrameworks>$(TargetDotnetVersions)</TargetFrameworks>
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl WPF</AssemblyTitle>
     <Description>ReactViewControl for WPF powered by CefGlue</Description>
@@ -10,6 +10,7 @@
     <UseWpf>true</UseWpf>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+    <NetVersionSuffix>-windows</NetVersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'ReleaseWPF'">
