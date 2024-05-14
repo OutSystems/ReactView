@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(DotnetVersion)-windows</TargetFramework>
+    <TargetFrameworks>$(TargetDotnetVersionsWindows)</TargetFrameworks>
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl WPF</AssemblyTitle>
     <Description>ReactViewControl for WPF powered by CefGlue</Description>
