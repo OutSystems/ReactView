@@ -41,5 +41,15 @@ For now we are using the following node versions:
 
 **Note:** If you wish to upgrade the node version at use, don't forget to delete/replace any previous bindings related to the OS (`darwin-x64-72/` represents node 12.X.X's version).
 
+## Versioning
+The versioning system works as follows:
+
+`<major>.<cef_version>.<patch>`
+
+Whenever you fix a bug, please increase the patch version. \
+Whenever you bring a new feature, please increase the major version. \
+Use the minor version for the current cef version.
+
+
 # TODO
 - Improve documentation
