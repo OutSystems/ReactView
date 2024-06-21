@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Reactive;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using ReactiveUI;
@@ -47,6 +49,10 @@ namespace Sample.Avalonia {
             });
 
             CreateTab();
+            
+#if DEBUG
+            this.AttachDevTools(new KeyGesture(Key.F5));
+#endif
         }
 
         public void CreateTab() {

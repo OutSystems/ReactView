@@ -17,9 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="App.xaml" />
+    <AvaloniaResource Include="App.xaml" />
     <EmbeddedResource Include="MainView\Tasks.png" />
-    <EmbeddedResource Include="MainWindow.xaml" />
+    <AvaloniaResource Include="MainWindow.xaml" />
     <EmbeddedResource Include="Users\User1.png" />
     <EmbeddedResource Include="Users\User2.png" />
   </ItemGroup>
@@ -31,7 +31,9 @@
     
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Diagnostics" />
     <PackageReference Include="Avalonia.ReactiveUI" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="NLog" />
     <PackageReference Include="ViewGenerator">
       <PrivateAssets>all</PrivateAssets>
