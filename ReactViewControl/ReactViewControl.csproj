@@ -7,9 +7,10 @@
     <Description>ReactViewControl for WPF powered by CefGlue</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactViewControl-WPF$(PackageSuffix)</PackageId>
-    <UseWPF>true</UseWPF>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+    <UseWPF>true</UseWPF>
+    <Configuration></Configuration>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'ReleaseWPF'">
