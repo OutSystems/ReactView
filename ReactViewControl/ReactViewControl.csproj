@@ -10,7 +10,6 @@
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
     <UseWPF>true</UseWPF>
-    <Configuration></Configuration>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'ReleaseWPF'">
@@ -26,13 +25,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeInNugetPackage>true</IncludeInNugetPackage>
     </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System.Xaml" />
-    <Reference Include="WindowsBase" />
   </ItemGroup>
 
   <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
