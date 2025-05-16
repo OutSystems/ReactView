@@ -64,7 +64,7 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
 
             view = tryGetView(frameName)!;
             if (!view) {
-                return; // was probably unloaded
+                return; // view was probably unloaded
             }
 
             if (!view.isMain) {
@@ -166,7 +166,7 @@ export function loadComponent(
 
             const renderFinishedTask = cacheEntry ? view.viewLoadTask : null;
             // create proxy for properties obj to delay its methods execution until native object is ready
-            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, renderFinishedTask);
+            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, renderFinishedTask, () => !!tryGetView(frameName));
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
             const componentClass = (getViewModule(componentName) || {}).default;

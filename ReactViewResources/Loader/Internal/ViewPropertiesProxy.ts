@@ -1,7 +1,13 @@
 ﻿import { bindNativeObject } from "./NativeAPI";
 import { Task } from "./Task";
 
-export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void> | null): {} {
+export function createPropertiesProxy(
+    rootElement: Element,
+    objProperties: {},
+    nativeObjName: string,
+    componentRenderedWaitTask?: Task<void> | null,
+    isViewLoaded?: () => boolean): {} {
+    
     const proxy = Object.assign({}, objProperties);
     Object.keys(proxy).forEach(key => {
         const value = objProperties[key];
@@ -10,7 +16,10 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
         } else {
             proxy[key] = async function () {
                 const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
-
+                if (!nativeObject && !isViewLoaded?.()) {
+                    return; // view was probably unloaded
+                }
+                
                 const result = nativeObject[key].apply(window, arguments);
 
                 if (componentRenderedWaitTask) {
