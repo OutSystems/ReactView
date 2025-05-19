@@ -16,7 +16,7 @@ export function createPropertiesProxy(
         } else {
             proxy[key] = async function () {
                 const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
-                if (!nativeObject && !isViewLoaded?.()) {
+                if (!nativeObject) {
                     return; // view was probably unloaded
                 }
                 
