@@ -104,7 +104,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
      * This method will be exposed as the renderHandler. It sets the component
      * in state, which causes the portal to render it.
      */
-    private renderInPortal = (component: React.ReactElement): Promise<void> => {
+    private renderInPortal = (component: React.ReactElement, portalRootDiv: HTMLElement): Promise<void> => {
         const view = this.getView();
         if (!view) {
             return Promise.reject(new Error("ViewFrame not mounted or already destroyed."));
@@ -117,12 +117,11 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         );
 
         return new Promise<void>(resolve => {
-            this.setState({ componentToRender: wrappedComponent }, resolve);
+            this.setState({ componentToRender: wrappedComponent, portalMountPoint: portalRootDiv }, resolve);
         });
     };
 
     public componentDidMount() {
-        debugger
         if (!this.placeholder) return;
 
         const existingView = this.getView();
@@ -138,7 +137,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         childView.parentView = this.parentView;
         childView.context = this.props.context;
 
-        
+        debugger
         
         // Notify the parent that the frame is ready by calling the 'loaded' prop
         const loadedHandler = this.props.loaded;
@@ -149,7 +148,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
 
         // view portal
         // **KEY CHANGE**: Attach our render method to the metadata object
-        childView.renderHandler = this.renderInPortal;
+        
 
         const shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as HTMLElement;
         const head = document.createElement("head");
@@ -173,10 +172,10 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         childView.root = portalRootDiv;
 
         this.parentView.childViews.add(childView);
-        
 
+        childView.renderHandler = component => this.renderInPortal(component, portalRootDiv);
         // Set the mount point to enable the portal, but render no content yet.
-        this.setState({ portalMountPoint: portalRootDiv });
+        // this.setState({ portalMountPoint: portalRootDiv });
         onChildViewAdded(childView);
     }
 
