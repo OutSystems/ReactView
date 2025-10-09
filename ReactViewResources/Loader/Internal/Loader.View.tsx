@@ -18,10 +18,10 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
         <ViewMetadataContext.Provider value={view}>
             <PluginsContext.Provider value={new PluginsContextHolder(Array.from(view.modules.values()))}>
                 <ResourceLoader.Provider value={makeResourceUrl}>
-                    <ViewPortalsCollection views={view.childViews}
-                        viewAdded={onChildViewAdded}
-                        viewRemoved={onChildViewRemoved}
-                        viewErrorRaised={onChildViewErrorRaised} />
+                    {/*<ViewPortalsCollection views={view.childViews}*/}
+                    {/*    viewAdded={onChildViewAdded}*/}
+                    {/*    viewRemoved={onChildViewRemoved}*/}
+                    {/*    viewErrorRaised={onChildViewErrorRaised} />*/}
                     {React.createElement(componentClass, { ref: e => view.modules.set(componentName, e), ...properties })}
                 </ResourceLoader.Provider>
             </PluginsContext.Provider>
