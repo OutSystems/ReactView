@@ -70,7 +70,11 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
     private readonly generation: number;
     private placeholder: HTMLDivElement | null = null;
     private replacement: Element | null = null;
-
+    
+    private shadowRoot: Element | null = null;
+    private head: HTMLElement | null;
+    private root: HTMLElement | null;
+    
     constructor(props: IInternalViewFrameProps<T>, context: any) {
         super(props, context);
 
@@ -104,7 +108,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
      * This method will be exposed as the renderHandler. It sets the component
      * in state, which causes the portal to render it.
      */
-    private renderInPortal = (component: React.ReactElement, portalRootDiv: HTMLElement): Promise<void> => {
+    private renderInPortal = (component: React.ReactElement): Promise<void> => {
         const view = this.getView();
         if (!view) {
             return Promise.reject(new Error("ViewFrame not mounted or already destroyed."));
@@ -117,66 +121,69 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         );
 
         return new Promise<void>(resolve => {
-            this.setState({ componentToRender: wrappedComponent, portalMountPoint: portalRootDiv }, resolve);
+            this.setState({ componentToRender: wrappedComponent }, resolve);
         });
     };
 
     public componentDidMount() {
-        if (!this.placeholder) return;
-
-        const existingView = this.getView();
-        if (existingView) {
-            this.replacement = existingView.placeholder;
-            this.placeholder.parentElement!.replaceChild(this.replacement, this.placeholder);
-            return;
-        }
-
-        const id = this.generation;
-        const childView = newView(id, this.fullName, false, this.placeholder);
-        childView.generation = this.generation;
-        childView.parentView = this.parentView;
-        childView.context = this.props.context;
-
-        debugger
-        
-        // Notify the parent that the frame is ready by calling the 'loaded' prop
-        const loadedHandler = this.props.loaded;
-        if (loadedHandler) {
-            // The handler receives the view object, which now contains our renderHandler
-            childView.viewLoadTask.promise.then(() => loadedHandler());
-        }
-
-        // view portal
-        // **KEY CHANGE**: Attach our render method to the metadata object
-        
-
-        const shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as HTMLElement;
-        const head = document.createElement("head");
-        const body = document.createElement("body");
-        const portalRootDiv = document.createElement("div");
-        portalRootDiv.id = webViewRootId;
-
-        const styleResets = document.createElement("style");
-        styleResets.innerHTML = ":host { all: initial; display: block; }";
-        head.appendChild(styleResets);
-
-        // get sticky stylesheets
-        const stylesheets = getStylesheets(document.head).filter(s => s.dataset.sticky === "true");
-        stylesheets.forEach(s => head.appendChild(document.importNode(s, true)));
-
-        body.appendChild(portalRootDiv);
-        shadowRoot.appendChild(head);
-        shadowRoot.appendChild(body);
-
-        childView.head = head;
-        childView.root = portalRootDiv;
-
-        this.parentView.childViews.add(childView);
-
-        childView.renderHandler = component => this.renderInPortal(component, portalRootDiv);
-        // Set the mount point to enable the portal, but render no content yet.
-        // this.setState({ portalMountPoint: portalRootDiv });
-        onChildViewAdded(childView);
+        // if (!this.placeholder || !this.root || !this.head || !this.shadowRoot) {
+        //     // Should never happen. consider removing
+        //     return;
+        // }
+        //
+        // const existingView = this.getView();
+        // if (existingView) {
+        //     this.replacement = existingView.placeholder;
+        //     this.placeholder.parentElement!.replaceChild(this.replacement, this.placeholder);
+        //     return;
+        // }
+        //
+        // const id = this.generation;
+        // const childView = newView(id, this.fullName, false, this.placeholder);
+        // childView.generation = this.generation;
+        // childView.parentView = this.parentView;
+        // childView.context = this.props.context;
+        //
+        // debugger
+        //
+        // // Notify the parent that the frame is ready by calling the 'loaded' prop
+        // const loadedHandler = this.props.loaded;
+        // if (loadedHandler) {
+        //     // The handler receives the view object, which now contains our renderHandler
+        //     childView.viewLoadTask.promise.then(() => loadedHandler());
+        // }
+        //
+        // // view portal
+        // // **KEY CHANGE**: Attach our render method to the metadata object
+        //
+        //
+        // // const shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as HTMLElement;
+        // // const head = document.createElement("head");
+        // // const body = document.createElement("body");
+        // // const portalRootDiv = document.createElement("div");
+        // // portalRootDiv.id = webViewRootId;
+        //
+        // const styleResets = document.createElement("style");
+        // styleResets.innerHTML = ":host { all: initial; display: block; }";
+        // this.head.appendChild(styleResets);
+        //
+        // // get sticky stylesheets
+        // const stylesheets = getStylesheets(document.head).filter(s => s.dataset.sticky === "true");
+        // stylesheets.forEach(s => this.head?.appendChild(document.importNode(s, true)));
+        //
+        // // body.appendChild(portalRootDiv);
+        // // shadowRoot.appendChild(head);
+        // // shadowRoot.appendChild(body);
+        //
+        // childView.head = this.head;
+        // childView.root = this.root;
+        //
+        // this.parentView.childViews.add(childView);
+        //
+        // childView.renderHandler = component => this.renderInPortal(component);
+        // // Set the mount point to enable the portal, but render no content yet.
+        // // this.setState({ portalMountPoint: portalRootDiv });
+        // onChildViewAdded(childView);
     }
 
     public componentWillUnmount() {
@@ -201,13 +208,99 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         Promise.resolve(null).then(() => onChildViewErrorRaised(existingView, error));
     }
 
-    public render() {
-        const { portalMountPoint, componentToRender } = this.state;
+    private setContainer = (element: HTMLDivElement) => {
+        this.placeholder = element;
+        if (this.placeholder && !this.shadowRoot) {
+            // create an open shadow-dom, so that bubbled events expose the inner element
+            this.shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as Element;
+            // this.forceUpdate();
+        }
+    }
+    
+    private setRoot = (element: HTMLDivElement) => {
+        this.root = element;
 
+        if (!this.placeholder || !this.root || !this.head || !this.shadowRoot) {
+            return;
+        }
+
+        const existingView = this.getView();
+        if (existingView) {
+            this.replacement = existingView.placeholder;
+            this.placeholder.parentElement!.replaceChild(this.replacement, this.placeholder);
+            return;
+        }
+
+        const id = this.generation;
+        const childView = newView(id, this.fullName, false, this.placeholder);
+        childView.generation = this.generation;
+        childView.parentView = this.parentView;
+        childView.context = this.props.context;
+
+        // Notify the parent that the frame is ready by calling the 'loaded' prop
+        const loadedHandler = this.props.loaded;
+        if (loadedHandler) {
+            // The handler receives the view object, which now contains our renderHandler
+            childView.viewLoadTask.promise.then(() => loadedHandler());
+        }
+
+        // view portal
+        // **KEY CHANGE**: Attach our render method to the metadata object
+
+
+        // const shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as HTMLElement;
+        // const head = document.createElement("head");
+        // const body = document.createElement("body");
+        // const portalRootDiv = document.createElement("div");
+        // portalRootDiv.id = webViewRootId;
+
+        const styleResets = document.createElement("style");
+        styleResets.innerHTML = ":host { all: initial; display: block; }";
+        this.head.appendChild(styleResets);
+
+        // get sticky stylesheets
+        const stylesheets = getStylesheets(document.head).filter(s => s.dataset.sticky === "true");
+        stylesheets.forEach(s => this.head?.appendChild(document.importNode(s, true)));
+
+        // body.appendChild(portalRootDiv);
+        // shadowRoot.appendChild(head);
+        // shadowRoot.appendChild(body);
+
+        childView.head = this.head;
+        childView.root = this.root;
+
+        this.parentView.childViews.add(childView);
+
+        childView.renderHandler = component => this.renderInPortal(component);
+        // Set the mount point to enable the portal, but render no content yet.
+        // this.setState({ portalMountPoint: portalRootDiv });
+        onChildViewAdded(childView);
+    }
+    
+    private renderPortal() {        
+        if (!this.shadowRoot) {
+            return null;
+        }
+
+        return ReactDOM.createPortal(
+            <>
+                <head ref={e => this.head = e!}>
+                </head>
+                <body>
+                <div id={webViewRootId} ref={this.setRoot}>
+                    {this.state.componentToRender ? this.state.componentToRender : null}
+                </div>
+                </body>
+            </>,
+            this.shadowRoot);
+    }
+    
+    public render() {
         return (
-            <div ref={e => this.placeholder = e!} className={this.props.className}>
+            <div ref={this.setContainer} className={this.props.className}>
                 {/* The portal now renders the component from the state */}
-                {portalMountPoint && componentToRender && ReactDOM.createPortal(componentToRender, portalMountPoint)}
+                {/*{portalMountPoint && componentToRender && ReactDOM.createPortal(componentToRender, portalMountPoint)}*/}
+                {this.renderPortal()}
             </div>
         );
     }

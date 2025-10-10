@@ -135,7 +135,7 @@ export function loadComponent(
                 // wait for the stylesheet to load before first render
                 await defaultStylesheetLoadTask.promise;
             }
-            debugger
+            
             view = tryGetView(frameName)!;
             if (!view) {
                 return; // view was probably unloaded
@@ -173,7 +173,7 @@ export function loadComponent(
             if (!componentClass) {
                 throw new Error(`Component ${componentName} is not defined or does not have a default class`);
             }
-            debugger
+            
             const { createView } = await import("./Internal/Loader.View");
 
             const viewElement = createView(componentClass, properties, view, componentName);
@@ -181,13 +181,12 @@ export function loadComponent(
             if (!render) {
                 throw new Error(`View ${view.name} render handler is not set`);
             }
-            debugger
+            
             await render(viewElement);
-            debugger
             await waitForNextPaint();
 
             if (cacheEntry) {
-                storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries); // dont need to await
+                //storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries); // dont need to await
             }
 
             // queue view loaded notification to run after all other pending promise notifications (ensure order)
