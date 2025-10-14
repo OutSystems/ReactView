@@ -9,8 +9,8 @@ import { ViewMetadata } from "./ViewMetadata";
 import { ViewPortalsCollection } from "./ViewPortalsCollection";
 import { addView, deleteView } from "./ViewsCollection";
 
-export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
-    return <View componentClass={componentClass} properties={properties} view={view} componentName={componentName} />;
+export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string, componentNativeObject: any, componentNativeObjectName: string) {
+    return <View componentClass={componentClass} properties={properties} view={view} componentName={componentName} componentNativeObject={componentNativeObject} componentNativeObjectName={componentNativeObjectName} />;
 }
 
 interface IViewProps {
@@ -18,9 +18,11 @@ interface IViewProps {
     properties: {};
     view: ViewMetadata;
     componentName: string
+    componentNativeObject: any;
+    componentNativeObjectName: string
 }
 
-const View = ({ componentClass, properties, view, componentName }: IViewProps) => {
+const View = ({ componentClass, properties, view, componentName, componentNativeObject, componentNativeObjectName }: IViewProps) => {
     componentClass.contextType = PluginsContext;
     const makeResourceUrl = (resourceKey: string, ...params: string[]) => formatUrl(view.name, resourceKey, ...params);
 
@@ -28,7 +30,7 @@ const View = ({ componentClass, properties, view, componentName }: IViewProps) =
     
     React.useEffect(() => {
         return () => {
-            console.log("unmounting view", view.name);
+            pluginsContext.current.dispose();
             pluginsContext.current = null!;
         }
     }, []);

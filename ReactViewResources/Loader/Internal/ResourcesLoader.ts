@@ -54,18 +54,51 @@ export function loadStyleSheet(stylesheet: string, containerElement: Element, ma
 }
 
 function waitForLoad<T extends HTMLElement>(element: T, url: string, timeout: number): Promise<T> {
-    return new Promise((resolve) => {
-        const timeoutHandle = setTimeout(
-            () => {
-                if (isDebugModeEnabled) {
-                    showWarningMessage(`Timeout loading resouce: '${url}'. If you paused the application to debug, you may disregard this message.`);
-                }
-            },
-            timeout);
+    return new Promise((resolve, reject) => {
+        // const timeoutHandle = setTimeout(
+        //     () => {
+        //         if (isDebugModeEnabled) {
+        //             showWarningMessage(`Timeout loading resouce: '${url}'. If you paused the application to debug, you may disregard this message.`);
+        //         }
+        //     },
+        //     timeout);
 
-        element.addEventListener("load", () => {
-            clearTimeout(timeoutHandle);
+        // element.addEventListener("load", () => {
+        //     clearTimeout(timeoutHandle);
+        //     resolve(element);
+        // });
+
+        let timeoutHandle: number | undefined;
+
+        // Define handlers ahead of time
+        const loadHandler = () => {
+            cleanup();
             resolve(element);
-        });
+        };
+
+        const errorHandler = () => {
+            cleanup();
+            reject(new Error(`Failed to load resource: '${url}'`));
+        };
+
+        // This central function is key to disposing of everything
+        const cleanup = () => {
+            clearTimeout(timeoutHandle);
+            element.removeEventListener("load", loadHandler);
+            element.removeEventListener("error", errorHandler);
+        };
+
+        // Set the timeout to reject the promise and clean up
+        timeoutHandle = setTimeout(() => {
+            cleanup();
+            const message = `Timeout loading resource: '${url}'.`;
+            if (isDebugModeEnabled) {
+                showWarningMessage(`${message} If you paused the application to debug, you may disregard this message.`);
+            }
+            reject(new Error(message));
+        }, timeout);
+        
+        element.addEventListener("load", loadHandler);
+        element.addEventListener("error", errorHandler);
     });
 }

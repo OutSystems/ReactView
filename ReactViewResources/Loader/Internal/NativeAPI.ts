@@ -33,5 +33,7 @@ export function notifyViewLoaded(viewName: string, id: string): void {
 }
 
 export function notifyViewDestroyed(viewName: string): void {
-    withAPI(api => api.notifyViewDestroyed(viewName));
+    withAPI(api => {
+        api.notifyViewDestroyed(viewName)
+    });
 }

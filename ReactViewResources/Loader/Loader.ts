@@ -176,7 +176,7 @@ export function loadComponent(
             
             const { createView } = await import("./Internal/Loader.View");
 
-            const viewElement = createView(componentClass, properties, view, componentName);
+            const viewElement = createView(componentClass, properties, view, componentName, componentNativeObject, componentNativeObjectName);
             const render = view.renderHandler;
             if (!render) {
                 throw new Error(`View ${view.name} render handler is not set`);

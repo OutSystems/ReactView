@@ -187,6 +187,10 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
     }
 
     public componentWillUnmount() {
+        if (this.fullName.includes("WidgetToolbar")) {
+            debugger
+        }
+        
         if (this.replacement) {
             this.replacement.parentElement!.replaceChild(this.placeholder!, this.replacement);
         }
@@ -195,7 +199,16 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         if (existingView && this.generation === existingView.generation) {
             this.parentView.childViews.remove(existingView);
             onChildViewRemoved(existingView);
+            console.log("unmount internal view frame", this.fullName);
         }
+
+        this.placeholder = null;
+        this.replacement = null;
+        this.shadowRoot = null;
+        this.head = null;
+        this.root = null;
+        
+        
     }
     
     public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -223,7 +236,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         if (!this.placeholder || !this.root || !this.head || !this.shadowRoot) {
             return;
         }
-
+        
         const existingView = this.getView();
         if (existingView) {
             this.replacement = existingView.placeholder;
