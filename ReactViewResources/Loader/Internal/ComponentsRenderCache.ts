@@ -7,27 +7,29 @@ export interface IRenderCacheEntry {
 }
 
 export async function renderCachedView(view: ViewMetadata, componentSource: string, componentPropertiesHash: string): Promise<IRenderCacheEntry | null> {
-    if (!view.isMain) {
-        // disable render from cache for inner views, since react does not currently support portals hydration
-        return null;
-    }
-
-    const componentCacheKey = componentSource + "|" + componentPropertiesHash;
-    
-    const cachedComponentHtml = localStorage.getItem(componentCacheKey);
-    if (cachedComponentHtml) {
-        // render cached component html to reduce time to first render
-        view.root!.innerHTML = cachedComponentHtml;
-        await waitForNextPaint();
-
-        // already on cache, skip storing on cache
-        return null;
-    }
-
-    return {
-        cacheKey: componentCacheKey,
-        componentSource: componentSource
-    };
+    return null;
+    //
+    // if (!view.isMain) {
+    //     // disable render from cache for inner views, since react does not currently support portals hydration
+    //     return null;
+    // }
+    //
+    // const componentCacheKey = componentSource + "|" + componentPropertiesHash;
+    //
+    // const cachedComponentHtml = localStorage.getItem(componentCacheKey);
+    // if (cachedComponentHtml) {
+    //     // render cached component html to reduce time to first render
+    //     view.root!.innerHTML = cachedComponentHtml;
+    //     await waitForNextPaint();
+    //
+    //     // already on cache, skip storing on cache
+    //     return null;
+    // }
+    //
+    // return {
+    //     cacheKey: componentCacheKey,
+    //     componentSource: componentSource
+    // };
 }
 
 export function storeViewRenderInCache(view: ViewMetadata, cacheEntry: IRenderCacheEntry, maxPreRenderedCacheEntries: number): Promise<void> {

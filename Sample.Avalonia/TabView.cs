@@ -30,6 +30,9 @@ namespace Sample.Avalonia {
             mainView.AddTaskButtonClicked += OnMainViewAddTaskButtonClicked;
             mainView.GetTasksCount += () => taskList.Count;
             mainView.TaskListShown += () => taskListView.Load();
+            mainView.InnerViewEditorShown += () => {
+                innerView.Load();
+            };
             mainView.WithPlugin<ViewPlugin>().NotifyViewLoaded += viewName => AppendLog(viewName + " loaded");
 
             taskListView = (TaskListViewModule)mainView.ListView;
@@ -41,8 +44,11 @@ namespace Sample.Avalonia {
             taskListView.WithPlugin<ViewPlugin>().NotifyViewLoaded += (viewName) => AppendLog(viewName + " loaded (child)");
             taskListView.Load();
 
+            innerView = mainView.ToggleEditorView();
             Content = mainView;
         }
+
+        private IViewModule innerView;
 
         private void OnMainViewAddTaskButtonClicked(TaskCreationDetails taskDetails) {
             taskList.Add(new Task() {
@@ -53,6 +59,10 @@ namespace Sample.Avalonia {
             mainView.Refresh(); // refresh task counter
             taskListView.Refresh(); // refresh task list
             AppendLog("Added task: " + taskDetails.text);
+        }
+        
+        public void ToggleCustomInnerView() {
+            innerView = mainView.ToggleEditorView();
         }
 
         public void ToggleHideCompletedTasks() => taskListView.ToggleHideCompletedTasks();

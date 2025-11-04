@@ -10,7 +10,6 @@ import {notifyViewDestroyed, notifyViewInitialized} from "../Internal/NativeAPI"
 import {handleError} from "../Internal/ErrorHandler";
 import {webViewRootId} from "../Internal/Environment";
 
-
 function onChildViewAdded(childView: ViewMetadata) {
     addView(childView.name, childView);
     notifyViewInitialized(childView.name);
@@ -42,7 +41,6 @@ interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
 }
 
 interface IInternalViewFrameState {
-    portalMountPoint: HTMLElement | null;
     // This will hold the component passed to the renderHandler
     componentToRender: React.ReactElement | null;
 }
@@ -68,6 +66,7 @@ export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}> {
 class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, IInternalViewFrameState> {
     private static generation = 0;
     private readonly generation: number;
+    
     private placeholder: HTMLDivElement | null = null;
     private replacement: Element | null = null;
     
@@ -79,7 +78,6 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         super(props, context);
 
         this.state = {
-            portalMountPoint: null,
             componentToRender: null, // Initialize component as null
         };
 
@@ -187,9 +185,6 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
     }
 
     public componentWillUnmount() {
-        if (this.fullName.includes("WidgetToolbar")) {
-            debugger
-        }
         
         if (this.replacement) {
             this.replacement.parentElement!.replaceChild(this.placeholder!, this.replacement);
@@ -201,14 +196,18 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
             onChildViewRemoved(existingView);
             console.log("unmount internal view frame", this.fullName);
         }
+        
+        // if (this.placeholder && this.shadowRoot) {
+        //     this.placeholder?.removeChild(this.shadowRoot)
+        // }
+        
+        this.setState({ componentToRender: null });
 
         this.placeholder = null;
         this.replacement = null;
         this.shadowRoot = null;
         this.head = null;
         this.root = null;
-        
-        
     }
     
     public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -226,7 +225,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         if (this.placeholder && !this.shadowRoot) {
             // create an open shadow-dom, so that bubbled events expose the inner element
             this.shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as Element;
-            // this.forceUpdate();
+            this.forceUpdate();
         }
     }
     
@@ -290,11 +289,11 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, I
         onChildViewAdded(childView);
     }
     
-    private renderPortal() {        
+    private renderPortal() {
         if (!this.shadowRoot) {
             return null;
         }
-
+        
         return ReactDOM.createPortal(
             <>
                 <head ref={e => this.head = e!}>

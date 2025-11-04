@@ -4,21 +4,47 @@ import { Task } from "./Task";
 import { ViewMetadata } from "./ViewMetadata";
 import { getView } from "./ViewsCollection";
 
+console.log("Loading resources loader file...");
+const LoadedScriptsKey = "LOADED_SCRIPTS_KEY";
+const ScriptLoadTasksKey = "SCRIPT_LOAD_TASKS_KEY";
+let loadedScripts: Set<string> = window[LoadedScriptsKey];
+let scriptLoadTasks: Map<string, Task<void>> = window[ScriptLoadTasksKey];
+
+if (!loadedScripts) {
+    console.log("Create new 'loadedScripts' SET !!");
+    loadedScripts = new Set<string>();
+    window[LoadedScriptsKey] = loadedScripts; 
+}
+
+if (!scriptLoadTasks) {
+    console.log("Create new 'scriptLoadTasks' MAP !!");
+    scriptLoadTasks = new Map<string, Task<void>>();
+    window[LoadedScriptsKey] = loadedScripts;
+}
+
 export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void> {
     return new Promise(async (resolve) => {
-        const frameScripts = view.scriptsLoadTasks;
-
         // check if script was already added, fallback to main frame
-        const scriptLoadTask = frameScripts.get(scriptSrc) || !view.isMain ? getView(mainFrameName).scriptsLoadTasks.get(scriptSrc) : null;
+        const scriptLoadTask = scriptLoadTasks.get(scriptSrc) || null;
         if (scriptLoadTask) {
+            console.log("Wait loading TASK for: " + scriptSrc);
             // wait for script to be loaded
             await scriptLoadTask.promise;
+            scriptLoadTasks.delete(scriptSrc);
+            resolve();
+            return;
+        }
+        
+        if(loadedScripts.has(scriptSrc)) {
+            console.log("Load skipped for: " + scriptSrc);
             resolve();
             return;
         }
 
+        console.log("Load script Task: " + scriptSrc);
+        loadedScripts.add(scriptSrc);
         const loadTask = new Task<void>();
-        frameScripts.set(scriptSrc, loadTask);
+        scriptLoadTasks.set(scriptSrc, loadTask);
 
         const script = document.createElement("script");
         script.src = scriptSrc;

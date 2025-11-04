@@ -16,7 +16,7 @@ namespace Sample.Avalonia {
                 return new IViewModule[] { viewPlugin };
             }
 
-            public override bool ShowDeveloperTools => false;
+            public override bool ShowDeveloperTools => true;
 
             public override bool EnableViewPreload => true;
 

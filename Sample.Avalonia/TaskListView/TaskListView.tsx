@@ -71,7 +71,7 @@ export default class TaskListView extends React.Component<ITaskListViewPropertie
 
     public refresh(): void {
         (async () => {
-            const tasks = await this.props.getTasks();
+            const tasks = (await this.props.getTasks()) || [];
             this.setState({ tasks });
         })();
     }

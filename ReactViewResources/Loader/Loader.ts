@@ -115,6 +115,8 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
     innerLoad();
 }
 
+let createView;
+
 export function loadComponent(
     componentName: string,
     componentNativeObjectName: string,
@@ -173,8 +175,12 @@ export function loadComponent(
             if (!componentClass) {
                 throw new Error(`Component ${componentName} is not defined or does not have a default class`);
             }
-            
-            const { createView } = await import("./Internal/Loader.View");
+
+            if (!createView) {
+                console.log("LOAD 'Internal/Loader.View' !!")
+                const loader = await import("./Internal/Loader.View");
+                createView = loader.createView;
+            }
 
             const viewElement = createView(componentClass, properties, view, componentName, componentNativeObject, componentNativeObjectName);
             const render = view.renderHandler;
