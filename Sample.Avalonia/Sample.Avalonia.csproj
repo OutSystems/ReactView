@@ -23,6 +23,8 @@
     <AvaloniaResource Include="MainWindow.xaml" />
     <EmbeddedResource Include="Users\User1.png" />
     <EmbeddedResource Include="Users\User2.png" />
+    <None Remove="sample.html" />
+    <EmbeddedResource Include="sample.html" />
   </ItemGroup>
 
   <ItemGroup>

@@ -67,7 +67,8 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
         this.state = {
             editorViewName: null,
             tasksCount: 0,
-            taskListShowStatus: TaskListShowStatus.Show
+            taskListShowStatus: TaskListShowStatus.Show,
+            renderUIEditor: false,
         };
         this.refresh();
     }
@@ -110,7 +111,7 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
     }
 
     private toggleUIEditor = () => {
-        this.setState(prevState => ({renderUIEditor: !prevState.renderUIEditor});
+        this.setState(prevState => ({renderUIEditor: !prevState.renderUIEditor}));
     }
 
     private onAddTaskButtonClicked = () => {
@@ -147,25 +148,12 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
     
     private renderUIEditor(): JSX.Element {
         return <>
-            <button onClick={this.toggleUIEditor}>Show Tasks</button>
+            <button onClick={this.toggleUIEditor}>Show UI Editor like</button>
             {this.state.renderUIEditor && <UIEditorLike />}
         </>;
     }
 
     public render(): JSX.Element {
-        return (
-            <div className="wrapper">
-                <div className="title">{this.props.titleMessage}</div>
-                <input className="task-input" ref={this.inputRef} onChange={() => this.props.inputChanged()} />
-                <button className="task-add" onClick={this.onAddTaskButtonClicked}>Add Task</button>
-                <button className="tasks-toggle-show" onClick={this.toggleShowTasks}>Show/Block/Hide Tasks</button>
-                {this.renderListView()}
-                <div>{this.state.tasksCount} task(s)</div>
-                
-                <button onClick={this.toggleShowTasks}>Show Tasks</button>
-                {this.renderEditor()}
-                {this.renderUIEditor()}
-            </div>
-        );
+        return this.renderUIEditor();
     }
 }
