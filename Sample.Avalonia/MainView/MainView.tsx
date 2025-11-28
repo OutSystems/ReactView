@@ -132,7 +132,7 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
         if (!this.state.editorViewName) {
             return null;
         }
-        console.log("Render InnerView: ", this.state.editorViewName);
+
         return <ViewFrame key={this.state.editorViewName} name={this.state.editorViewName} className="inner-view-canvas" />;
     }
 
