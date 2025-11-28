@@ -3,6 +3,8 @@ import { modulesFunctionName } from "./Environment";
 
 const views = new Map<string, ViewMetadata>();
 
+window["my-views"] = views; // for debugging
+
 export function addView(name: string, view: ViewMetadata): void {
     views.set(name, view);
 }
@@ -23,6 +25,7 @@ export function getView(viewName: string): ViewMetadata {
     return view;
 }
 
+console.log("modulesFunctionName", modulesFunctionName);
 window[modulesFunctionName] = function getModule(viewName: string, id: string, moduleName: string) {
     const view = views.get(viewName);
     if (view && view.id.toString() === id) {
@@ -35,7 +38,7 @@ window[modulesFunctionName] = function getModule(viewName: string, id: string, m
 
     return new Proxy({}, {
         get: function () {
-            // return a dummy function, call will be ingored, but no exception thrown
+            // return a dummy function, call will be ignored, but no exception thrown
             return new Function();
         }
     });

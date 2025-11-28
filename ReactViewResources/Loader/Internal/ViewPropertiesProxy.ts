@@ -10,7 +10,6 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
         } else {
             proxy[key] = async function () {
                 const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
-
                 const result = nativeObject[key].apply(window, arguments);
 
                 if (componentRenderedWaitTask) {

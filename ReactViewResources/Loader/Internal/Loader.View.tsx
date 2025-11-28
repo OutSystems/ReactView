@@ -9,19 +9,36 @@ import { ViewMetadata } from "./ViewMetadata";
 import { ViewPortalsCollection } from "./ViewPortalsCollection";
 import { addView, deleteView } from "./ViewsCollection";
 
-export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
-    componentClass.contextType = PluginsContext;
+export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string, componentNativeObject: any, componentNativeObjectName: string) {
+    return <View componentClass={componentClass} properties={properties} view={view} componentName={componentName} componentNativeObject={componentNativeObject} componentNativeObjectName={componentNativeObjectName} />;
+}
 
+interface IViewProps {
+    componentClass: any;
+    properties: {};
+    view: ViewMetadata;
+    componentName: string
+    componentNativeObject: any;
+    componentNativeObjectName: string
+}
+
+const View = ({ componentClass, properties, view, componentName, componentNativeObject, componentNativeObjectName }: IViewProps) => {
+    componentClass.contextType = PluginsContext;
     const makeResourceUrl = (resourceKey: string, ...params: string[]) => formatUrl(view.name, resourceKey, ...params);
 
+    const pluginsContext = React.useRef(new PluginsContextHolder(Array.from(view.modules.values())));
+    
+    React.useEffect(() => {
+        return () => {
+            pluginsContext.current.dispose();
+            pluginsContext.current = null!;
+        }
+    }, []);
+    
     return (
         <ViewMetadataContext.Provider value={view}>
-            <PluginsContext.Provider value={new PluginsContextHolder(Array.from(view.modules.values()))}>
+            <PluginsContext.Provider value={pluginsContext.current}>
                 <ResourceLoader.Provider value={makeResourceUrl}>
-                    <ViewPortalsCollection views={view.childViews}
-                        viewAdded={onChildViewAdded}
-                        viewRemoved={onChildViewRemoved}
-                        viewErrorRaised={onChildViewErrorRaised} />
                     {React.createElement(componentClass, { ref: e => view.modules.set(componentName, e), ...properties })}
                 </ResourceLoader.Provider>
             </PluginsContext.Provider>

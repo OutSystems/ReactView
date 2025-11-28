@@ -11,6 +11,7 @@ namespace AMDLoader {
     export let timeout = 5000;
 
     export function getOrCreateDependencyPromise(name: string): Promise<any> {
+        console.log("AMDLoader :: getOrCreateDependencyPromise: ", name);
         name = name.replace(/^.\//, "").toLowerCase();
         if (!promises[name]) {
             promises[name] = new Promise((resolve, reject) => {
@@ -29,12 +30,14 @@ namespace AMDLoader {
     }
 
     export function resolve(name: string, value: any): void {
+        console.log("AMDLoader :: resolve: ", name);1
         getOrCreateDependencyPromise(name); // create promise if necessary
         resolves[name](value);
         defines[name] = true;
     }
 
     export function require(deps: string[], definition: Function): void {
+        console.log("AMDLoader :: require: ", deps);
         if (!deps || deps.length === 0) {
             definition.apply(null, []);
             return;
@@ -49,6 +52,7 @@ namespace AMDLoader {
 }
 
 const define = function (name: string, deps: string[], definition: Function): void {
+    console.log("AMDLoader :: define: ", name);
     if (typeof name !== "string") {
         throw new Error("Unnamed modules are not supported");
     }

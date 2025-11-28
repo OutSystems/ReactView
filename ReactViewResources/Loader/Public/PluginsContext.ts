@@ -14,6 +14,11 @@ export class PluginsContextHolder implements IPluginsContext {
     public getPluginInstance<T>(_class: Type<T>) {
         return this.pluginInstances.get(_class.name);
     }
+    
+    public dispose(): void {
+        this.pluginInstances.clear();
+        this.pluginInstances = null!;
+    }
 }
 
 export const PluginsContext = React.createContext<PluginsContextHolder>(null!);

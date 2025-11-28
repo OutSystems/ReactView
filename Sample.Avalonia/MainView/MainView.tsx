@@ -4,7 +4,8 @@ import ViewPlugin from "./../ViewPlugin/ViewPlugin";
 import { IPluginsContext } from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
-import * as BackgroundImage from "./Tasks.png"; // import images
+import * as BackgroundImage from "./Tasks.png";
+import UIEditorLike from "../UiEditorLike/UIEditorLike"; // import images
 
 export interface ITaskCreationDetails {
     text: string;
@@ -18,8 +19,10 @@ export enum BackgroundKind {
 
 // component properties ... the interface name must start with I prefix and end with Properties suffix
 export interface IMainViewProperties {
+    getInnerViewName(): string;
     getTasksCount(): Promise<number>;
     taskListShown(): void;
+    innerViewEditorShown(): void;
     inputChanged(): void;
     addTaskButtonClicked(taskDetails: ITaskCreationDetails): void;
     readonly titleMessage: string;
@@ -29,10 +32,11 @@ export interface IMainViewProperties {
 // component methods that can be called on .NET  ... the interface name must start with I prefix and end with Behaviors suffix
 export interface IMainViewBehaviors {
     refresh(): void;
+    refreshInnerView(): void;
 }
 
 export interface IChildViews {
-    ListView: TaskListView;
+    ListView: TaskListView
 }
 
 enum TaskListShowStatus {
@@ -44,6 +48,8 @@ enum TaskListShowStatus {
 interface MainViewState {
     tasksCount: number;
     taskListShowStatus: TaskListShowStatus;
+    editorViewName: string;
+    renderUIEditor: boolean;
 }
 
 export default class MainView extends React.Component<IMainViewProperties, MainViewState> implements IMainViewBehaviors {
@@ -59,12 +65,22 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
 
     private async initialize(): Promise<void> {
         this.state = {
+            editorViewName: null,
             tasksCount: 0,
-            taskListShowStatus: TaskListShowStatus.Show
+            taskListShowStatus: TaskListShowStatus.Show,
+            renderUIEditor: false,
         };
         this.refresh();
     }
 
+    public async refreshInnerView(): Promise<void> {
+        console.log("Refreshing inner view...");
+        const editorViewName = await this.props.getInnerViewName();
+
+        console.log("Refreshing inner view: Name: ", editorViewName);
+        this.setState({ editorViewName }, () => this.props.innerViewEditorShown());
+    }
+    
     public refresh(): void {
         (async () => {
             const tasksCount = await this.props.getTasksCount();
@@ -94,6 +110,10 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
         this.setState({ taskListShowStatus: next });
     }
 
+    private toggleUIEditor = () => {
+        this.setState(prevState => ({renderUIEditor: !prevState.renderUIEditor}));
+    }
+
     private onAddTaskButtonClicked = () => {
         const input = this.inputRef.current;
         this.props.addTaskButtonClicked({ text: input.value });
@@ -118,16 +138,22 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
         }
     }
 
+    private renderEditor(): JSX.Element {
+        if (!this.state.editorViewName) {
+            return null;
+        }
+        console.log("Render InnerView: ", this.state.editorViewName);
+        return <ViewFrame key={this.state.editorViewName} name={this.state.editorViewName} className="inner-view-canvas" />;
+    }
+    
+    private renderUIEditor(): JSX.Element {
+        return <>
+            <button onClick={this.toggleUIEditor}>Show UI Editor like</button>
+            {this.state.renderUIEditor && <UIEditorLike />}
+        </>;
+    }
+
     public render(): JSX.Element {
-        return (
-            <div className="wrapper">
-                <div className="title">{this.props.titleMessage}</div>
-                <input className="task-input" ref={this.inputRef} onChange={() => this.props.inputChanged()} />
-                <button className="task-add" onClick={this.onAddTaskButtonClicked}>Add Task</button>
-                <button className="tasks-toggle-show" onClick={this.toggleShowTasks}>Show/Block/Hide Tasks</button>
-                {this.renderListView()}
-                <div>{this.state.tasksCount} task(s)</div>
-            </div>
-        );
+        return this.renderUIEditor();
     }
 }

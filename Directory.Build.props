@@ -5,7 +5,7 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <!-- Please see https://github.com/OutSystems/reactview?tab=readme-ov-file#versioning for versioning rules -->
-    <Version>5.120.1</Version>
+    <Version>5.123.0</Version>
     <Authors>OutSystems</Authors>
     <Product>ReactView</Product>
     <Copyright>Copyright © OutSystems 2023</Copyright>
@@ -14,6 +14,9 @@
 
     <!-- File with mtime of last successful npm install -->
     <NpmInstallStampFile>.npm-install-stamp</NpmInstallStampFile>
+    
+    <!-- Enable building Windows-targeted projects on non-Windows platforms -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <PropertyGroup>

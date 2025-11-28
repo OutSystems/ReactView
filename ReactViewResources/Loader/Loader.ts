@@ -115,6 +115,8 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
     innerLoad();
 }
 
+let createView;
+
 export function loadComponent(
     componentName: string,
     componentNativeObjectName: string,
@@ -135,7 +137,7 @@ export function loadComponent(
                 // wait for the stylesheet to load before first render
                 await defaultStylesheetLoadTask.promise;
             }
-
+            
             view = tryGetView(frameName)!;
             if (!view) {
                 return; // view was probably unloaded
@@ -174,20 +176,23 @@ export function loadComponent(
                 throw new Error(`Component ${componentName} is not defined or does not have a default class`);
             }
 
-            const { createView } = await import("./Internal/Loader.View");
+            if (!createView) {
+                console.log("LOAD 'Internal/Loader.View' !!")
+                const loader = await import("./Internal/Loader.View");
+                createView = loader.createView;
+            }
 
-            const viewElement = createView(componentClass, properties, view, componentName);
+            const viewElement = createView(componentClass, properties, view, componentName, componentNativeObject, componentNativeObjectName);
             const render = view.renderHandler;
             if (!render) {
                 throw new Error(`View ${view.name} render handler is not set`);
             }
-
+            
             await render(viewElement);
-
             await waitForNextPaint();
 
             if (cacheEntry) {
-                storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries); // dont need to await
+                //storeViewRenderInCache(view, cacheEntry, maxPreRenderedCacheEntries); // dont need to await
             }
 
             // queue view loaded notification to run after all other pending promise notifications (ensure order)

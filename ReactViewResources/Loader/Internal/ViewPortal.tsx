@@ -28,12 +28,13 @@ interface IViewPortalState {
  * */
 export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalState> {
 
-    private head: Element;
-    private shadowRoot: HTMLElement;
+    private head: Element | null = null;
+    private shadowRoot: HTMLElement | null = null;
 
     constructor(props: IViewPortalProps, context: any) {
         super(props, context);
 
+        debugger;
         this.state = { component: null! };
         
         this.shadowRoot = props.view.placeholder.attachShadow({ mode: "open" }).getRootNode() as HTMLElement;
@@ -42,6 +43,7 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     private renderPortal(component: React.ReactElement) {
+        debugger;
         const wrappedComponent = (
             <ViewSharedContext.Provider value={this.props.view.context}>
                 {component}
@@ -56,21 +58,24 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     public componentDidMount() {
-        this.props.view.head = this.head;
+        debugger;
+        this.props.view.head = this.head!;
         
         const styleResets = document.createElement("style");
         styleResets.innerHTML = ":host { all: initial; display: block; }";
 
-        this.head.appendChild(styleResets);
+        this.head!.appendChild(styleResets);
 
         // get sticky stylesheets
         const stylesheets = getStylesheets(document.head).filter(s => s.dataset.sticky === "true");
-        stylesheets.forEach(s => this.head.appendChild(document.importNode(s, true)));
+        stylesheets.forEach(s => this.head!.appendChild(document.importNode(s, true)));
 
         this.props.viewMounted(this.props.view);
     }
 
     public componentWillUnmount() {
+        this.head = null;
+        this.shadowRoot = null;
         this.props.viewUnmounted(this.props.view);
     }
 
@@ -90,6 +95,6 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
                     </div>
                 </body>
             </>,
-            this.shadowRoot);
+            this.shadowRoot!);
     }
 }
