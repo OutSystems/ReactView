@@ -99,6 +99,7 @@ export default class TaskListView extends React.Component<ITaskListViewPropertie
     public render(): JSX.Element {
         return (
             <div className="wrapper">
+                <p>Tasks View is Rendered!</p>
                 {this.renderItems()}
             </div>
         );
