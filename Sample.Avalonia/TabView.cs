@@ -13,6 +13,7 @@ namespace Sample.Avalonia {
 
         private MainView mainView;
         private TaskListViewModule taskListView;
+        private IViewModule innerView;
         private int taskCounter;
 
         private readonly List<Task> taskList = new() {
@@ -30,6 +31,9 @@ namespace Sample.Avalonia {
             mainView.AddTaskButtonClicked += OnMainViewAddTaskButtonClicked;
             mainView.GetTasksCount += () => taskList.Count;
             mainView.TaskListShown += () => taskListView.Load();
+            mainView.InnerViewEditorShown += () => {
+                innerView.Load();
+            };
             mainView.WithPlugin<ViewPlugin>().NotifyViewLoaded += viewName => AppendLog(viewName + " loaded");
 
             taskListView = (TaskListViewModule)mainView.ListView;
@@ -41,6 +45,7 @@ namespace Sample.Avalonia {
             taskListView.WithPlugin<ViewPlugin>().NotifyViewLoaded += (viewName) => AppendLog(viewName + " loaded (child)");
             taskListView.Load();
 
+            innerView = mainView.ToggleEditorView();
             Content = mainView;
         }
 
@@ -62,6 +67,10 @@ namespace Sample.Avalonia {
         public void ToggleIsEnabled() => mainView.IsEnabled = !mainView.IsEnabled;
 
         public ReactViewControl.EditCommands EditCommands => mainView.EditCommands;
+        
+        public void ToggleCustomInnerView() {
+            innerView = mainView.ToggleEditorView();
+        }
 
         private void AppendLog(string log) {
             Dispatcher.UIThread.Post(() => {

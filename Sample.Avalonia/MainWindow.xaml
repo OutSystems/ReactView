@@ -30,6 +30,7 @@
                 <MenuItem Header="Hide / Show Completed Tasks" Click="OnToggleHideCompletedTasksMenuItemClick"></MenuItem>
                 <MenuItem Header="Toggle Theme" Click="OnToggleThemeStyleSheetMenuItemClick"></MenuItem>
                 <MenuItem Header="Show dev tools" Click="OnShowDevToolsMenuItemClick"></MenuItem>
+                <MenuItem Header="Toggle Editor View" Click="OnToggleEditorView"></MenuItem>
                 <MenuItem Header="Disable / Enable" Click="OnToggleIsEnabledMenuItemClick"></MenuItem>
             </MenuItem>
         </Menu>

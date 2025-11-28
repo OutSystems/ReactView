@@ -72,6 +72,7 @@ namespace Sample.Avalonia {
         private void OnToggleThemeStyleSheetMenuItemClick(object sender, RoutedEventArgs e) => Settings.IsLightTheme = !Settings.IsLightTheme;
 
         private void OnShowDevToolsMenuItemClick(object sender, RoutedEventArgs e) => SelectedView.ShowDevTools();
+        private void OnToggleEditorView(object sender, RoutedEventArgs e) => SelectedView.ToggleCustomInnerView();
 
         private void OnToggleIsEnabledMenuItemClick(object sender, RoutedEventArgs e) => SelectedView.ToggleIsEnabled();
 

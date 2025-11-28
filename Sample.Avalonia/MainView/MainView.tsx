@@ -4,7 +4,7 @@ import ViewPlugin from "./../ViewPlugin/ViewPlugin";
 import { IPluginsContext } from "PluginsProvider";
 import "./MainView.scss"; // import a stylesheet
 import TaskListView from "./../TaskListView/TaskListView"; // import another component
-import * as BackgroundImage from "./Tasks.png"; // import images
+import * as BackgroundImage from "./Tasks.png";
 
 export interface ITaskCreationDetails {
     text: string;
@@ -18,8 +18,10 @@ export enum BackgroundKind {
 
 // component properties ... the interface name must start with I prefix and end with Properties suffix
 export interface IMainViewProperties {
+    getInnerViewName(): string;
     getTasksCount(): Promise<number>;
     taskListShown(): void;
+    innerViewEditorShown(): void;
     inputChanged(): void;
     addTaskButtonClicked(taskDetails: ITaskCreationDetails): void;
     readonly titleMessage: string;
@@ -29,10 +31,11 @@ export interface IMainViewProperties {
 // component methods that can be called on .NET  ... the interface name must start with I prefix and end with Behaviors suffix
 export interface IMainViewBehaviors {
     refresh(): void;
+    refreshInnerView(): void;
 }
 
 export interface IChildViews {
-    ListView: TaskListView;
+    ListView: TaskListView
 }
 
 enum TaskListShowStatus {
@@ -44,6 +47,7 @@ enum TaskListShowStatus {
 interface MainViewState {
     tasksCount: number;
     taskListShowStatus: TaskListShowStatus;
+    editorViewName: string;
 }
 
 export default class MainView extends React.Component<IMainViewProperties, MainViewState> implements IMainViewBehaviors {
@@ -59,10 +63,16 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
 
     private async initialize(): Promise<void> {
         this.state = {
+            editorViewName: null,
             tasksCount: 0,
-            taskListShowStatus: TaskListShowStatus.Show
+            taskListShowStatus: TaskListShowStatus.Show,
         };
         this.refresh();
+    }
+
+    public async refreshInnerView(): Promise<void> {
+        const editorViewName = await this.props.getInnerViewName();
+        this.setState({ editorViewName }, () => this.props.innerViewEditorShown());
     }
 
     public refresh(): void {
@@ -79,7 +89,7 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
         }
 
         this.viewplugin.notifyViewLoaded("Main View");
-        
+
         if (this.props.backgroundKind === BackgroundKind.Image) {
             // example on how to use an image resource in codee
             document.body.style.backgroundImage = `url(${BackgroundImage})`;
@@ -118,6 +128,14 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
         }
     }
 
+    private renderEditor(): JSX.Element {
+        if (!this.state.editorViewName) {
+            return null;
+        }
+        console.log("Render InnerView: ", this.state.editorViewName);
+        return <ViewFrame key={this.state.editorViewName} name={this.state.editorViewName} className="inner-view-canvas" />;
+    }
+
     public render(): JSX.Element {
         return (
             <div className="wrapper">
@@ -127,6 +145,8 @@ export default class MainView extends React.Component<IMainViewProperties, MainV
                 <button className="tasks-toggle-show" onClick={this.toggleShowTasks}>Show/Block/Hide Tasks</button>
                 {this.renderListView()}
                 <div>{this.state.tasksCount} task(s)</div>
+                
+                {this.renderEditor()}
             </div>
         );
     }
