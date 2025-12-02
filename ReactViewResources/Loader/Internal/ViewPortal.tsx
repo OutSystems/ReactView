@@ -3,19 +3,35 @@ import { webViewRootId } from "../Internal/Environment";
 import { getStylesheets } from "./Common";
 import { ViewMetadata } from "./ViewMetadata";
 import { ViewSharedContext } from "../Public/ViewSharedContext";
+import {addView, deleteView} from "./ViewsCollection";
+import {notifyViewDestroyed, notifyViewInitialized} from "./NativeAPI";
+import {handleError} from "./ErrorHandler";
 
 export type ViewLifecycleEventHandler = (view: ViewMetadata) => void;
 export type ViewErrorHandler = (view: ViewMetadata, error: Error) => void;
 
 export interface IViewPortalProps {
     view: ViewMetadata
-    viewMounted: ViewLifecycleEventHandler;
-    viewUnmounted: ViewLifecycleEventHandler;
-    viewErrorRaised: ViewErrorHandler;
+    shadowRoot: Element;
 }
 
 interface IViewPortalState {
     component: React.ReactElement;
+}
+
+
+function onChildViewAdded(childView: ViewMetadata) {
+    addView(childView.name, childView);
+    notifyViewInitialized(childView.name);
+}
+
+function onChildViewRemoved(childView: ViewMetadata) {
+    deleteView(childView.name);
+    notifyViewDestroyed(childView.name);
+}
+
+function onChildViewErrorRaised(childView: ViewMetadata, error: Error) {
+    handleError(error, childView);
 }
 
 /**
@@ -27,21 +43,19 @@ interface IViewPortalState {
  * A view portal is persisted until its View Frame counterpart disappears.
  * */
 export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalState> {
-
-    private head: Element;
-    private shadowRoot: HTMLElement;
+    private head: HTMLElement;
 
     constructor(props: IViewPortalProps, context: any) {
         super(props, context);
 
         this.state = { component: null! };
         
-        this.shadowRoot = props.view.placeholder.attachShadow({ mode: "open" }).getRootNode() as HTMLElement;
-
         props.view.renderHandler = component => this.renderPortal(component);
     }
 
     private renderPortal(component: React.ReactElement) {
+        console.log("ViewPortal :: renderPortal", this.props.view.name);
+        
         const wrappedComponent = (
             <ViewSharedContext.Provider value={this.props.view.context}>
                 {component}
@@ -56,6 +70,7 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     public componentDidMount() {
+        console.log("ViewPortal :: componentDidMount", this.props.view.name);
         this.props.view.head = this.head;
         
         const styleResets = document.createElement("style");
@@ -67,19 +82,22 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
         const stylesheets = getStylesheets(document.head).filter(s => s.dataset.sticky === "true");
         stylesheets.forEach(s => this.head.appendChild(document.importNode(s, true)));
 
-        this.props.viewMounted(this.props.view);
+        onChildViewAdded(this.props.view);
     }
 
     public componentWillUnmount() {
-        this.props.viewUnmounted(this.props.view);
+        console.log("ViewPortal :: componentWillUnmount", this.props.view.name);
+        onChildViewRemoved(this.props.view);
     }
 
     public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         // execute error handling inside promise, to avoid the error handler to rethrow exception inside componentDidCatch
-        Promise.resolve(null).then(() => this.props.viewErrorRaised(this.props.view, error));
+        Promise.resolve(null).then(() => onChildViewErrorRaised(this.props.view, error));
     }
 
     public render(): React.ReactNode {
+        console.log("Render ViewPortal view:", this.props.view);
+        console.log("Render ViewPortal viewName:", this.props.view.name);
         return ReactDOM.createPortal(
             <>
                 <head ref={e => this.head = e!}>
@@ -90,6 +108,6 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
                     </div>
                 </body>
             </>,
-            this.shadowRoot);
+            this.props.shadowRoot);
     }
 }
