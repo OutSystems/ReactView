@@ -54,8 +54,6 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     private renderPortal(component: React.ReactElement) {
-        console.log("ViewPortal :: renderPortal", this.props.view.name);
-        
         const wrappedComponent = (
             <ViewSharedContext.Provider value={this.props.view.context}>
                 {component}
@@ -70,7 +68,6 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     public componentDidMount() {
-        console.log("ViewPortal :: componentDidMount", this.props.view.name);
         this.props.view.head = this.head;
         
         const styleResets = document.createElement("style");
@@ -86,7 +83,6 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     public componentWillUnmount() {
-        console.log("ViewPortal :: componentWillUnmount", this.props.view.name);
         onChildViewRemoved(this.props.view);
     }
 
@@ -96,8 +92,6 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
     }
 
     public render(): React.ReactNode {
-        console.log("Render ViewPortal view:", this.props.view);
-        console.log("Render ViewPortal viewName:", this.props.view.name);
         return ReactDOM.createPortal(
             <>
                 <head ref={e => this.head = e!}>

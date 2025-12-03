@@ -13,18 +13,11 @@ interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
 /**
  * Placeholder were a child view is mounted.
  * */
-export class ViewFrame<T> extends React.Component<IViewFrameProps<T>, {}> {
-    public render(): JSX.Element {
-        return (
-            <ViewMetadataContext.Consumer>
-                {viewMetadata =>
-                    <ViewSharedContext.Consumer>
-                        {viewContext => <InternalViewFrame viewMetadata={viewMetadata} context={viewContext} {...this.props} />}
-                    </ViewSharedContext.Consumer>
-                }
-            </ViewMetadataContext.Consumer>
-        );
-    }
+export function ViewFrame<T>(props: IViewFrameProps<T>): JSX.Element {
+    const viewMetadata = React.useContext(ViewMetadataContext);
+    const viewContext = React.useContext(ViewSharedContext);
+
+    return <InternalViewFrame viewMetadata={viewMetadata} context={viewContext} {...props} />;
 }
 
 class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {}, ViewMetadata> {
@@ -48,12 +41,6 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
 
         // keep track of this frame generation, so that we can keep tracking the most recent frame instance
         this.generation = ++InternalViewFrame.generation;
-
-        // const view = this.getView();
-        // if (view) {
-        //     // update the existing view generation
-        //     view.generation = this.generation;
-        // }
     }
 
     private setPlaceholder = (element: HTMLDivElement) => {
@@ -83,30 +70,22 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     }
 
     private getView(): ViewMetadata | undefined {
-        console.log("ViewFrame : getView ", this.fullName);
-        console.log("ViewFrame : getView ", this.parentView.childViews);
         const fullName = this.fullName;
         return this.parentView.childViews.items.find(c => c.name === fullName);
     }
 
     public componentDidMount() {
-        console.log("ViewFrame :: componentDidMount: ", this.fullName);
-        debugger;
         const existingView = this.getView();
         if (existingView) {
+            // update the existing view generation
+            existingView.generation = this.generation;
+
             // there's a view already rendered, insert in current frame's placeholder
-            console.log("ViewFrame :: Existing View: ", existingView);
-            console.log("ViewFrame :: Existing ViewName: ", existingView.name);
-            console.log("ViewFrame :: Existing ViewchildViews: ", existingView.childViews);
-            console.log("ViewFrame :: Placeholder: ", this.placeholder);
-            console.log("ViewFrame :: Placeholder Parent: ", this.placeholder.parentElement);
             this.replacement = existingView.placeholder;
             this.placeholder.parentElement!.replaceChild(this.replacement, this.placeholder);
             return;
         }
 
-        console.log("ViewFrame :: componentDidMount: CreateNewView", this.fullName);
-        
         const id = this.generation; // for this purpose we can use generation (we just need a unique number)
         const childView = newView(id, this.fullName, false, this.placeholder);
         childView.generation = this.generation;
@@ -131,7 +110,6 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
         if (existingView && this.generation === existingView.generation) {
             // this is the most recent frame - meaning it was not replaced by another one - so the view should be removed
             this.parentView.childViews.remove(existingView);
-            console.log("unmount internal view frame", this.fullName);
         }
 
         
@@ -139,7 +117,6 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     }
 
     public render() {
-        console.log("Render ViewFrame: ", this.fullName);
         return <div ref={this.setPlaceholder} className={this.props.className}>
             {this.shadowRoot && <ViewPortal view={this.getView()!} shadowRoot={this.shadowRoot} />}
         </div>;
