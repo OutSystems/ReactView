@@ -2,8 +2,6 @@
     notifyViewLoaded(viewName: string): void;
 }
 
-console.log("Plugin loaded");
-
 export default class ViewPlugin {
 
     constructor(private nativeObject: IViewPluginProperties) {
