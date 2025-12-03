@@ -4,17 +4,15 @@ import { getEnsureDisposeInnerViewsFlag, ViewMetadataContext } from "../Internal
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
 import { ViewMetadata } from "./ViewMetadata";
-import {addView, deleteView} from "./ViewsCollection";
-import {notifyViewDestroyed, notifyViewInitialized} from "./NativeAPI";
-import {handleError} from "./ErrorHandler";
-import {ViewPortalsCollectionLegacy} from "./ViewPortalsCollectionsLegacy";
+import { ViewPortalsCollectionLegacy } from "./ViewPortalsCollectionsLegacy";
+import { addView, deleteView } from "./ViewsCollection";
+import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
+import { handleError } from "./ErrorHandler";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
     const makeResourceUrl = (resourceKey: string, ...params: string[]) => formatUrl(view.name, resourceKey, ...params);
-    
-    console.log("Creating view:", view.name, getEnsureDisposeInnerViewsFlag());
-    
+
     if(!getEnsureDisposeInnerViewsFlag()) {
         return <ViewMetadataContext.Provider value={view}>
             <PluginsContext.Provider value={new PluginsContextHolder(Array.from(view.modules.values()))}>
