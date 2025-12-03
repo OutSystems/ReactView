@@ -3,11 +3,11 @@ import * as ReactDOM from "react-dom";
 import { getEnsureDisposeInnerViewsFlag, ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
+import { handleError } from "./ErrorHandler";
+import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
 import { ViewMetadata } from "./ViewMetadata";
 import { ViewPortalsCollectionLegacy } from "./ViewPortalsCollectionsLegacy";
 import { addView, deleteView } from "./ViewsCollection";
-import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
-import { handleError } from "./ErrorHandler";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
