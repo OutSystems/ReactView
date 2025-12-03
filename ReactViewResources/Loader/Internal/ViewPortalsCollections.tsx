@@ -29,10 +29,10 @@ export class ViewPortalsCollection extends React.Component<IViewPortalsCollectio
     private renderViewPortal(view: ViewMetadata) {
         return (
             <ViewPortalLegacy key={view.name}
-                        view={view}
-                        viewMounted={this.props.viewAdded}
-                        viewUnmounted={this.props.viewRemoved}
-                        viewErrorRaised={this.props.viewErrorRaised} />
+                view={view}
+                viewMounted={this.props.viewAdded}
+                viewUnmounted={this.props.viewRemoved}
+                viewErrorRaised={this.props.viewErrorRaised} />
         );
     }
 
