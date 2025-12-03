@@ -31,6 +31,6 @@ namespace ReactViewControl {
         /// </summary>
         public virtual bool EnableViewPreload => true;
 
-        public virtual bool EnsureInnerViewsAreDisposed => false;
+        public virtual bool EnsureInnerViewsAreDisposed => true;
     }
 }
