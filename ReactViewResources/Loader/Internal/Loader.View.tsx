@@ -1,16 +1,15 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
+import { getEnsureDisposeInnerViewsFlag, ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
 import { ViewMetadata } from "./ViewMetadata";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
-    
-    console.log("Loader.View: createView", view.name, componentName);
-
     const makeResourceUrl = (resourceKey: string, ...params: string[]) => formatUrl(view.name, resourceKey, ...params);
+    
+    console.log("Creating view:", view.name, getEnsureDisposeInnerViewsFlag());
 
     return (
         <ViewMetadataContext.Provider value={view}>

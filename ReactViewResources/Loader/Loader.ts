@@ -11,6 +11,7 @@ import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
+import { setEnsureDisposeInnerViewsFlag } from "./Internal/ViewMetadataContext";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
@@ -126,7 +127,8 @@ export function loadComponent(
     hasPlugins: boolean,
     componentNativeObject: any,
     frameName: string,
-    componentHash: string): void {
+    componentHash: string,
+    ensureDisposeInnerViews: boolean): void {
 
     async function innerLoad() {
         let view: ViewMetadata;
@@ -134,6 +136,11 @@ export function loadComponent(
             if (hasStyleSheet) {
                 // wait for the stylesheet to load before first render
                 await defaultStylesheetLoadTask.promise;
+            }
+            
+            if (frameName === mainFrameName) {
+                console.log(`Set ensureDisposeInnerViewsFlag to ${ensureDisposeInnerViews} for main frame`);
+                setEnsureDisposeInnerViewsFlag(ensureDisposeInnerViews);
             }
 
             view = tryGetView(frameName)!;

@@ -1,8 +1,8 @@
 ﻿import * as React from "react";
 import { IViewFrameProps } from "ViewFrame";
 import { newView, ViewMetadata } from "../Internal/ViewMetadata";
-import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
-import { ViewSharedContext } from "./ViewSharedContext";
+import { getEnsureDisposeInnerViewsFlag, ViewMetadataContext } from "../Internal/ViewMetadataContext";
+import { ViewSharedContext} from "./ViewSharedContext";
 import {ViewPortal} from "../Internal/ViewPortal";
 
 interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
@@ -16,6 +16,8 @@ interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
 export function ViewFrame<T>(props: IViewFrameProps<T>): JSX.Element {
     const viewMetadata = React.useContext(ViewMetadataContext);
     const viewContext = React.useContext(ViewSharedContext);
+
+    console.log("Creating ViewFrame:", props.name, getEnsureDisposeInnerViewsFlag());
 
     return <InternalViewFrame viewMetadata={viewMetadata} context={viewContext} {...props} />;
 }
@@ -44,10 +46,8 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     }
 
     private setPlaceholder = (element: HTMLDivElement) => {
-        console.log("ViewFrame :: Setting placeholder REF");
         this.placeholder = element;
         if (this.placeholder && !this.shadowRoot) {
-            console.log("ViewFrame :: Attach Shadow Root");
             // create an open shadow-dom, so that bubbled events expose the inner element
             this.shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as Element;
             this.forceUpdate();

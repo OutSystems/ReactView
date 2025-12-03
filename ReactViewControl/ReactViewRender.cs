@@ -35,8 +35,10 @@ namespace ReactViewControl {
         private bool enableDebugMode;
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
+        private readonly bool ensureDisposeInnerViews;
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool ensureInnerViewsAreDisposed) {
+            this.ensureDisposeInnerViews = ensureInnerViewsAreDisposed;
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -68,12 +70,12 @@ namespace ReactViewControl {
 
             ExtraInitialize();
 
-            var urlParams = new string[] {
+            var urlParams = new[] {
                 new ResourceUrl(ResourcesAssembly).ToString(),
                 enableDebugMode ? "true" : "false",
                 ExecutionEngine.ModulesObjectName,
                 NativeAPI.NativeObjectName,
-                ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl
+                ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl,
             };
 
             WebView.LoadResource(new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams)));
@@ -270,7 +272,7 @@ namespace ReactViewControl {
 
             RegisterNativeObject(frame.Component, frame);
 
-            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0);
+            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews);
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
             }
