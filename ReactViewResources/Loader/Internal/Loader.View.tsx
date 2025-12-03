@@ -17,7 +17,7 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
         return <ViewMetadataContext.Provider value={view}>
             <PluginsContext.Provider value={new PluginsContextHolder(Array.from(view.modules.values()))}>
                 <ResourceLoader.Provider value={makeResourceUrl}>
-                    <ViewPortalsCollectionLegacy views={view.childViews} 
+                    <ViewPortalsCollectionLegacy views={view.childViews}
                         viewAdded={onChildViewAdded}
                         viewRemoved={onChildViewRemoved}
                         viewErrorRaised={onChildViewErrorRaised} />
