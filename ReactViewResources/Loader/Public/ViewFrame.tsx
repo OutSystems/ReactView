@@ -114,7 +114,6 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
             // this is the most recent frame - meaning it was not replaced by another one - so the view should be removed
             this.parentView.childViews.remove(existingView);
         }
-
         this.shadowRoot = null;
     }
 
