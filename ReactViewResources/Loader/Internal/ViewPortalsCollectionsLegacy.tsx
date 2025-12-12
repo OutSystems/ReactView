@@ -1,7 +1,7 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { ObservableListCollection } from "./ObservableCollection";
 import { ViewMetadata } from "./ViewMetadata";
-import { ViewPortal, ViewLifecycleEventHandler, ViewErrorHandler } from "./ViewPortal";
+import { ViewPortalLegacy, ViewLifecycleEventHandler, ViewErrorHandler } from "./ViewPortalLegacy";
 export { ViewLifecycleEventHandler, ViewErrorHandler } from "./ViewPortal";
 
 interface IViewPortalsCollectionProps {
@@ -15,7 +15,7 @@ interface IViewPortalsCollectionProps {
  * Handles notifications from the views collection. Whenever a view is added or removed
  * the corresponding ViewPortal is added or removed
  * */
-export class ViewPortalsCollection extends React.Component<IViewPortalsCollectionProps> {
+export class ViewPortalsCollectionLegacy extends React.Component<IViewPortalsCollectionProps> {
 
     constructor(props: IViewPortalsCollectionProps, context: any) {
         super(props, context);
@@ -28,7 +28,7 @@ export class ViewPortalsCollection extends React.Component<IViewPortalsCollectio
 
     private renderViewPortal(view: ViewMetadata) {
         return (
-            <ViewPortal key={view.name}
+            <ViewPortalLegacy key={view.name}
                 view={view}
                 viewMounted={this.props.viewAdded}
                 viewUnmounted={this.props.viewRemoved}

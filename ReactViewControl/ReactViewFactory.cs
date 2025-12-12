@@ -30,5 +30,7 @@ namespace ReactViewControl {
         /// The view is cached and preloaded. First render occurs earlier.
         /// </summary>
         public virtual bool EnableViewPreload => true;
+
+        public virtual bool EnsureInnerViewsAreDisposed => true;
     }
 }

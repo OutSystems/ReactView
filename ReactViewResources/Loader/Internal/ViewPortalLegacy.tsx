@@ -3,48 +3,41 @@ import { webViewRootId } from "../Internal/Environment";
 import { getStylesheets } from "./Common";
 import { ViewMetadata } from "./ViewMetadata";
 import { ViewSharedContext } from "../Public/ViewSharedContext";
-import { addView, deleteView } from "./ViewsCollection";
-import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
-import { handleError } from "./ErrorHandler";
 
 export type ViewLifecycleEventHandler = (view: ViewMetadata) => void;
 export type ViewErrorHandler = (view: ViewMetadata, error: Error) => void;
 
 export interface IViewPortalProps {
     view: ViewMetadata
-    shadowRoot: Element;
+    viewMounted: ViewLifecycleEventHandler;
+    viewUnmounted: ViewLifecycleEventHandler;
+    viewErrorRaised: ViewErrorHandler;
 }
 
 interface IViewPortalState {
     component: React.ReactElement;
 }
 
-export function onChildViewAdded(childView: ViewMetadata) {
-    addView(childView.name, childView);
-    notifyViewInitialized(childView.name);
-}
-
-export function onChildViewRemoved(childView: ViewMetadata) {
-    deleteView(childView.name);
-    notifyViewDestroyed(childView.name);
-}
-
-export function onChildViewErrorRaised(childView: ViewMetadata, error: Error) {
-    handleError(error, childView);
-}
-
 /**
  * A ViewPortal is were a view is rendered. The view DOM is then moved into the appropriate placeholder.
  * This way we avoid a view being recreated (and losing state) when its ViewFrame is moved in the tree.
- */
-export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalState> {
-    private head: HTMLElement;
+ *
+ * A View Frame notifies its sibling view collection when a new instance is mounted.
+ * Upon mount, a View Portal is created and it will be responsible for rendering its view component in the shadow dom.
+ * A view portal is persisted until its View Frame counterpart disappears.
+ * */
+export class ViewPortalLegacy extends React.Component<IViewPortalProps, IViewPortalState> {
+
+    private head: Element;
+    private shadowRoot: HTMLElement;
 
     constructor(props: IViewPortalProps, context: any) {
         super(props, context);
 
         this.state = { component: null! };
-        
+
+        this.shadowRoot = props.view.placeholder.attachShadow({ mode: "open" }).getRootNode() as HTMLElement;
+
         props.view.renderHandler = component => this.renderPortal(component);
     }
 
@@ -64,7 +57,7 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
 
     public componentDidMount() {
         this.props.view.head = this.head;
-        
+
         const styleResets = document.createElement("style");
         styleResets.innerHTML = ":host { all: initial; display: block; }";
 
@@ -74,16 +67,16 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
         const stylesheets = getStylesheets(document.head).filter(s => s.dataset.sticky === "true");
         stylesheets.forEach(s => this.head.appendChild(document.importNode(s, true)));
 
-        onChildViewAdded(this.props.view);
+        this.props.viewMounted(this.props.view);
     }
 
     public componentWillUnmount() {
-        onChildViewRemoved(this.props.view);
+        this.props.viewUnmounted(this.props.view);
     }
 
     public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         // execute error handling inside promise, to avoid the error handler to rethrow exception inside componentDidCatch
-        Promise.resolve(null).then(() => onChildViewErrorRaised(this.props.view, error));
+        Promise.resolve(null).then(() => this.props.viewErrorRaised(this.props.view, error));
     }
 
     public render(): React.ReactNode {
@@ -92,11 +85,11 @@ export class ViewPortal extends React.Component<IViewPortalProps, IViewPortalSta
                 <head ref={e => this.head = e!}>
                 </head>
                 <body>
-                    <div id={webViewRootId} ref={e => this.props.view.root = e!}>
-                        {this.state.component ? this.state.component : null}
-                    </div>
+                <div id={webViewRootId} ref={e => this.props.view.root = e!}>
+                    {this.state.component ? this.state.component : null}
+                </div>
                 </body>
             </>,
-            this.props.shadowRoot);
+            this.shadowRoot);
     }
 }

@@ -22,7 +22,7 @@ namespace ReactViewControl {
             /// <summary>
             /// Loads the specified react component into the specified frame
             /// </summary>
-            public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins) {
+            public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins, bool ensureDisposeInnerViews) {
                 var mainSource = ViewRender.ToFullUrl(NormalizeUrl(component.MainJsSource));
                 var dependencySources = component.DependencyJsSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
                 var cssSources = component.CssSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
@@ -56,6 +56,7 @@ namespace ReactViewControl {
                     componentSerialization,
                     JavascriptSerializer.Serialize(frameName),
                     JavascriptSerializer.Serialize(componentHash),
+                    JavascriptSerializer.Serialize(ensureDisposeInnerViews),
                 };
 
                 ExecuteLoaderFunction("loadComponent", loadArgs);
