@@ -3,9 +3,9 @@ import { webViewRootId } from "../Internal/Environment";
 import { getStylesheets } from "./Common";
 import { ViewMetadata } from "./ViewMetadata";
 import { ViewSharedContext } from "../Public/ViewSharedContext";
-import {addView, deleteView} from "./ViewsCollection";
-import {notifyViewDestroyed, notifyViewInitialized} from "./NativeAPI";
-import {handleError} from "./ErrorHandler";
+import { addView, deleteView } from "./ViewsCollection";
+import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
+import { handleError } from "./ErrorHandler";
 
 export type ViewLifecycleEventHandler = (view: ViewMetadata) => void;
 export type ViewErrorHandler = (view: ViewMetadata, error: Error) => void;
