@@ -35,7 +35,7 @@ export interface IMainViewBehaviors {
 }
 
 export interface IChildViews {
-    ListView: TaskListView
+    ListView: TaskListView;
 }
 
 enum TaskListShowStatus {

@@ -115,7 +115,6 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
             this.parentView.childViews.remove(existingView);
         }
 
-        
         this.shadowRoot = null;
     }
 
