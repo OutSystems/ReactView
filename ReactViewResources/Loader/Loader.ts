@@ -139,7 +139,6 @@ export function loadComponent(
             }
             
             if (frameName === mainFrameName) {
-                console.log(`Set ensureDisposeInnerViewsFlag to ${ensureDisposeInnerViews} for main frame`);
                 setEnsureDisposeInnerViewsFlag(ensureDisposeInnerViews);
             }
 
