@@ -3,11 +3,9 @@ import * as ReactDOM from "react-dom";
 import { getEnsureDisposeInnerViewsFlag, ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
-import { handleError } from "./ErrorHandler";
-import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
 import { ViewMetadata } from "./ViewMetadata";
+import { onChildViewAdded, onChildViewRemoved, onChildViewErrorRaised } from "./ViewPortal";
 import { ViewPortalsCollectionLegacy } from "./ViewPortalsCollectionsLegacy";
-import { addView, deleteView } from "./ViewsCollection";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
@@ -40,18 +38,4 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
 
 export function renderMainView(children: React.ReactElement, container: Element) {
     return new Promise<void>(resolve => ReactDOM.hydrate(children, container, resolve));
-}
-
-function onChildViewAdded(childView: ViewMetadata) {
-    addView(childView.name, childView);
-    notifyViewInitialized(childView.name);
-}
-
-function onChildViewRemoved(childView: ViewMetadata) {
-    deleteView(childView.name);
-    notifyViewDestroyed(childView.name);
-}
-
-function onChildViewErrorRaised(childView: ViewMetadata, error: Error) {
-    handleError(error, childView);
 }

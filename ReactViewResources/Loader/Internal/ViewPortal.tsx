@@ -19,18 +19,17 @@ interface IViewPortalState {
     component: React.ReactElement;
 }
 
-
-function onChildViewAdded(childView: ViewMetadata) {
+export function onChildViewAdded(childView: ViewMetadata) {
     addView(childView.name, childView);
     notifyViewInitialized(childView.name);
 }
 
-function onChildViewRemoved(childView: ViewMetadata) {
+export function onChildViewRemoved(childView: ViewMetadata) {
     deleteView(childView.name);
     notifyViewDestroyed(childView.name);
 }
 
-function onChildViewErrorRaised(childView: ViewMetadata, error: Error) {
+export function onChildViewErrorRaised(childView: ViewMetadata, error: Error) {
     handleError(error, childView);
 }
 
