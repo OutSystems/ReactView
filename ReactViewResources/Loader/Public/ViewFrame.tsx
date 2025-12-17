@@ -55,6 +55,16 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
             this.shadowRoot = this.placeholder.attachShadow({ mode: "open" }).getRootNode() as Element;
             this.forceUpdate();
         }
+
+        // Forward the ref to the consumer
+        const { rootRef } = this.props;
+        if (rootRef) {
+            if (typeof rootRef === "function") {
+                rootRef(element);
+            } else {
+                (rootRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+            }
+        }
     }
 
     private get fullName() {

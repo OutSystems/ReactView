@@ -62,6 +62,7 @@ declare module "ViewFrame" {
         name: keyof T;
         className?: string;
         loaded?: () => void;
+        rootRef?: React.Ref<HTMLDivElement>;
     }
 
     export class ViewFrame<T> extends React.Component<IViewFrameProps<T>> { }
