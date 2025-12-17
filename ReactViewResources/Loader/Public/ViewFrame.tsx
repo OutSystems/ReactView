@@ -62,7 +62,7 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
             if (typeof rootRef === "function") {
                 rootRef(element);
             } else {
-                (rootRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+                (rootRef as React.MutableRefObject<HTMLElement | null>).current = element;
             }
         }
     }

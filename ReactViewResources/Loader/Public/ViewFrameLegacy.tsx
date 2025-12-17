@@ -95,7 +95,7 @@ export default class InternalViewFrameLegacy<T> extends React.Component<IInterna
             if (typeof rootRef === "function") {
                 rootRef(element);
             } else {
-                (rootRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+                (rootRef as React.MutableRefObject<HTMLElement | null>).current = element;
             }
         }
     }
