@@ -86,7 +86,21 @@ export default class InternalViewFrameLegacy<T> extends React.Component<IInterna
         }
     }
 
+    private setPlaceholder = (element: HTMLDivElement) => {
+        this.placeholder = element;
+
+        // Forward the ref to the consumer
+        const { rootRef } = this.props;
+        if (rootRef) {
+            if (typeof rootRef === "function") {
+                rootRef(element);
+            } else {
+                (rootRef as React.MutableRefObject<HTMLElement | null>).current = element;
+            }
+        }
+    }
+
     public render() {
-        return <div ref={e => this.placeholder = e!} className={this.props.className} />;
+        return <div ref={this.setPlaceholder} className={this.props.className} />;
     }
 }
