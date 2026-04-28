@@ -36,6 +36,7 @@
     </ItemGroup>
     <Message Condition="'@(JSFilesToDelete)' != ''" Text="Deleting old files: @(JSFilesToDelete)" Importance="high" />
     <Delete Files="@(JSFilesToDelete)"/>
+    <RemoveDir Directories=".bootstrap" />
   </Target>
 
   <Target Name="VG_CleanCSSFiles" >
