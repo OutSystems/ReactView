@@ -26,6 +26,7 @@ namespace ReactViewControl {
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
         private Dictionary<string, WeakReference<FrameInfo>> RecoverableFrames { get; } = new Dictionary<string, WeakReference<FrameInfo>>();
+        private Dictionary<string, IViewModule> ChildViewModules { get; } = new Dictionary<string, IViewModule>();
 
         private ExtendedWebView WebView { get; }
         private Assembly UserCallingAssembly { get; }
@@ -205,6 +206,7 @@ namespace ReactViewControl {
 
                 Frames.Clear();
                 Frames.Add(mainFrame.Name, mainFrame);
+                ChildViewModules.Clear();
                 var previousComponentReady = mainFrame.IsComponentReadyToLoad;
                 mainFrame.Reset();
                 mainFrame.IsComponentReadyToLoad = previousComponentReady;
@@ -407,6 +409,9 @@ namespace ReactViewControl {
         private void BindComponentToFrame(IViewModule component, FrameInfo frame) {
             frame.Component = component;
             component.Bind(frame, this);
+            if (!frame.IsMain) {
+                ChildViewModules[frame.Name] = component;
+            }
         }
 
         /// <summary>
@@ -604,6 +609,13 @@ namespace ReactViewControl {
             var newFrame = new FrameInfo(frameName);
             Frames[frameName] = newFrame;
             AddPlugins(PluginsFactory(), newFrame);
+
+            // The old FrameInfo was destroyed. The IViewModule itself is
+            // kept alive by ChildViewModules, so rebind it to this new frame.
+            if (!newFrame.IsMain && ChildViewModules.TryGetValue(frameName, out var existingComponent)) {
+                BindComponentToFrame(existingComponent, newFrame);
+                newFrame.IsComponentReadyToLoad = true;
+            }
 
             return newFrame;
         }
