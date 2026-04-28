@@ -81,7 +81,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
             filename: (chunkData) => getFileName(outputMap, chunkData),
             chunkFilename: OutputDirectoryDefault + JsChunkPlaceholder,
             library: [libraryName, NamePlaceholder],
-            assetModuleFilename:  OutputDirectoryDefault + "[hash][ext][query]",
+            assetModuleFilename: ".bootstrap/[hash][ext][query]",
             libraryTarget: "window",
             globalObject: "window",
             devtoolNamespace: libraryName,

@@ -135,7 +135,7 @@
 
   <Target Name="VG_IncludeGeneratedResources" AfterTargets="VG_GenerateBundle">
     <ItemGroup>
-      <EmbeddedResource Include="**\*.js" Exclude="node_modules\**\*.js;@(EmbeddedResource)" />
+      <EmbeddedResource Include="**\*.js" Exclude="node_modules\**\*.js;.bootstrap\**\*.js;@(EmbeddedResource)" />
       <EmbeddedResource Include="**\*.css" Exclude="node_modules\**\*.css;**\*.min.css;@(EmbeddedResource)" />
       <EmbeddedResource Include="**\*.entry" Exclude="@(EmbeddedResource)" />
     </ItemGroup>
