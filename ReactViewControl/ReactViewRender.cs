@@ -26,7 +26,7 @@ namespace ReactViewControl {
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
         private Dictionary<string, WeakReference<FrameInfo>> RecoverableFrames { get; } = new Dictionary<string, WeakReference<FrameInfo>>();
-        private Dictionary<string, IViewModule> ChildViewModules { get; } = new Dictionary<string, IViewModule>();
+        private Dictionary<string, WeakReference<IViewModule>> ChildViewModules { get; } = new Dictionary<string, WeakReference<IViewModule>>();
 
         private ExtendedWebView WebView { get; }
         private Assembly UserCallingAssembly { get; }
@@ -410,7 +410,7 @@ namespace ReactViewControl {
             frame.Component = component;
             component.Bind(frame, this);
             if (!frame.IsMain) {
-                ChildViewModules[frame.Name] = component;
+                ChildViewModules[frame.Name] = new WeakReference<IViewModule>(component);
             }
         }
 
@@ -610,11 +610,14 @@ namespace ReactViewControl {
             Frames[frameName] = newFrame;
             AddPlugins(PluginsFactory(), newFrame);
 
-            // The old FrameInfo was destroyed. The IViewModule itself is
-            // kept alive by ChildViewModules, so rebind it to this new frame.
-            if (!newFrame.IsMain && ChildViewModules.TryGetValue(frameName, out var existingComponent)) {
-                BindComponentToFrame(existingComponent, newFrame);
-                newFrame.IsComponentReadyToLoad = true;
+            // Rebind the existing IViewModule (kept by the consumer) to the new frame on remount
+            if (!newFrame.IsMain && ChildViewModules.TryGetValue(frameName, out var weakComponent)) {
+                if (weakComponent.TryGetTarget(out var existingComponent)) {
+                    BindComponentToFrame(existingComponent, newFrame);
+                    newFrame.IsComponentReadyToLoad = true;
+                } else {
+                    ChildViewModules.Remove(frameName);
+                }
             }
 
             return newFrame;
