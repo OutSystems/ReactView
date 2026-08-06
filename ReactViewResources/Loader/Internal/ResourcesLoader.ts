@@ -1,39 +1,39 @@
-﻿import { defaultLoadResourcesTimeout, isDebugModeEnabled, mainFrameName } from "./Environment";
+﻿import { defaultLoadResourcesTimeout, isDebugModeEnabled } from "./Environment";
 import { showWarningMessage } from "./MessagesProvider";
 import { Task } from "./Task";
 import { ViewMetadata } from "./ViewMetadata";
-import { getView } from "./ViewsCollection";
+
+// inner views are shadow roots rather than frames, and shadow dom encapsulates styles but not scripts, so
+// a script that has been appended for one view has executed for every other one as well. tracking these
+// per view re-executes the same bundle once per view.
+const scriptLoadTasks = new Map<string, Task<void>>();
 
 export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void> {
-    return new Promise(async (resolve) => {
-        const frameScripts = view.scriptsLoadTasks;
+    const pendingLoad = scriptLoadTasks.get(scriptSrc);
+    if (pendingLoad) {
+        return pendingLoad.promise;
+    }
 
-        // check if script was already added, fallback to main frame
-        const scriptLoadTask = frameScripts.get(scriptSrc) || !view.isMain ? getView(mainFrameName).scriptsLoadTasks.get(scriptSrc) : null;
-        if (scriptLoadTask) {
-            // wait for script to be loaded
-            await scriptLoadTask.promise;
-            resolve();
-            return;
-        }
+    // checked before the task is registered, so that a view without a head does not leave behind a load
+    // that nothing can ever resolve
+    if (!view.head) {
+        throw new Error(`View ${view.name} head is not set`);
+    }
 
-        const loadTask = new Task<void>();
-        frameScripts.set(scriptSrc, loadTask);
+    const loadTask = new Task<void>();
+    scriptLoadTasks.set(scriptSrc, loadTask);
 
-        const script = document.createElement("script");
-        script.src = scriptSrc;
+    const script = document.createElement("script");
+    script.src = scriptSrc;
 
-        waitForLoad(script, scriptSrc, defaultLoadResourcesTimeout)
-            .then(() => {
-                loadTask.setResult();
-                resolve();
-            });
+    // a script that fails is dropped, so that a later view can attempt it again. one that times out is
+    // kept, since it may still arrive
+    waitForLoad(script, scriptSrc, defaultLoadResourcesTimeout, () => scriptLoadTasks.delete(scriptSrc))
+        .then(() => loadTask.setResult());
 
-        if (!view.head) {
-            throw new Error(`View ${view.name} head is not set`);
-        }
-        view.head.appendChild(script);
-    });
+    view.head.appendChild(script);
+
+    return loadTask.promise;
 }
 
 export function loadStyleSheet(stylesheet: string, containerElement: Element, markAsSticky: boolean): Promise<HTMLLinkElement> {
@@ -53,7 +53,7 @@ export function loadStyleSheet(stylesheet: string, containerElement: Element, ma
     });
 }
 
-function waitForLoad<T extends HTMLElement>(element: T, url: string, timeout: number): Promise<T> {
+function waitForLoad<T extends HTMLElement>(element: T, url: string, timeout: number, onFailed?: () => void): Promise<T> {
     return new Promise((resolve) => {
         const timeoutHandle = setTimeout(
             () => {
@@ -79,6 +79,9 @@ function waitForLoad<T extends HTMLElement>(element: T, url: string, timeout: nu
         // a failed resource is not reported back, since no caller handles one today
         function onError(): void {
             cleanup();
+            if (onFailed) {
+                onFailed();
+            }
         }
 
         element.addEventListener("load", onLoad);
