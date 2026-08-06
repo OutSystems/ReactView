@@ -63,9 +63,25 @@ function waitForLoad<T extends HTMLElement>(element: T, url: string, timeout: nu
             },
             timeout);
 
-        element.addEventListener("load", () => {
+        // both listeners capture the element, so whichever outcome happens first has to remove them. the
+        // timeout only warns and never cleans up, so a resource that loads after it still resolves.
+        function cleanup(): void {
             clearTimeout(timeoutHandle);
+            element.removeEventListener("load", onLoad);
+            element.removeEventListener("error", onError);
+        }
+
+        function onLoad(): void {
+            cleanup();
             resolve(element);
-        });
+        }
+
+        // a failed resource is not reported back, since no caller handles one today
+        function onError(): void {
+            cleanup();
+        }
+
+        element.addEventListener("load", onLoad);
+        element.addEventListener("error", onError);
     });
 }
