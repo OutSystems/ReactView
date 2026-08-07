@@ -37,9 +37,11 @@ namespace ReactViewControl {
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
         private readonly bool ensureDisposeInnerViews;
+        private readonly bool loadScriptsOncePerDocument;
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool ensureInnerViewsAreDisposed) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool ensureInnerViewsAreDisposed, bool loadScriptsOncePerDocument = true) {
             this.ensureDisposeInnerViews = ensureInnerViewsAreDisposed;
+            this.loadScriptsOncePerDocument = loadScriptsOncePerDocument;
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -274,7 +276,7 @@ namespace ReactViewControl {
 
             RegisterNativeObject(frame.Component, frame);
 
-            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews);
+            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews, loadScriptsOncePerDocument);
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
             }

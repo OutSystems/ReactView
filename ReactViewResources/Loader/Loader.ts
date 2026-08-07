@@ -12,6 +12,7 @@ import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
 import { setEnsureDisposeInnerViewsFlag } from "./Internal/ViewMetadataContext";
+import { setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
@@ -84,11 +85,11 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                     if (view.isMain) {
                         // only load plugins sources once (in the main frame)
                         // load plugin dependency js sources
-                        const dependencySourcesPromises = dependencySources.map(s => loadScript(s));
+                        const dependencySourcesPromises = dependencySources.map(s => loadScript(s, view));
                         await Promise.all(dependencySourcesPromises);
 
                         // plugin main js source
-                        await loadScript(mainJsSource);
+                        await loadScript(mainJsSource, view);
                     }
 
                     const module = getPluginModule(moduleName) || getViewModule(moduleName);
@@ -128,7 +129,8 @@ export function loadComponent(
     componentNativeObject: any,
     frameName: string,
     componentHash: string,
-    ensureDisposeInnerViews: boolean): void {
+    ensureDisposeInnerViews: boolean,
+    loadScriptsOncePerDocument: boolean): void {
 
     async function innerLoad() {
         let view: ViewMetadata;
@@ -140,6 +142,8 @@ export function loadComponent(
             
             if (frameName === mainFrameName) {
                 setEnsureDisposeInnerViewsFlag(ensureDisposeInnerViews);
+                // the main view always loads first, so the flag is set before any inner view loads a script
+                setLoadScriptsOncePerDocumentFlag(loadScriptsOncePerDocument);
             }
 
             view = tryGetView(frameName)!;
@@ -163,12 +167,12 @@ export function loadComponent(
             await Promise.all(promisesToWaitFor);
 
             // load component dependencies js sources and css sources
-            const dependencyLoadPromises = dependencySources.map(s => loadScript(s) as Promise<any>)
+            const dependencyLoadPromises = dependencySources.map(s => loadScript(s, view) as Promise<any>)
                 .concat(cssSources.map(s => loadStyleSheet(s, head, false)));
             await Promise.all(dependencyLoadPromises);
 
             // main component script should be the last to be loaded, otherwise errors might occur
-            await loadScript(componentSource);
+            await loadScript(componentSource, view);
 
             const renderFinishedTask = cacheEntry ? view.viewLoadTask : null;
             // create proxy for properties obj to delay its methods execution until native object is ready

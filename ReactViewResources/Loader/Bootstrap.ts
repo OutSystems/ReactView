@@ -1,7 +1,7 @@
 ﻿import { waitForDOMReady } from "./Internal/Common";
 import { libsPath, mainFrameName, webViewRootId } from "./Internal/Environment";
 import { loadScript } from "./Internal/ResourcesLoader";
-import { newView } from "./Internal/ViewMetadata";
+import { newView, ViewMetadata } from "./Internal/ViewMetadata";
 
 declare function define(name: string, dependencies: string[], definition: Function);
 
@@ -17,20 +17,20 @@ async function bootstrap() {
     mainView.head = document.head;
     mainView.root = rootElement;
 
-    await loadFramework();
+    await loadFramework(mainView);
 
     const loader = await import("./Loader");
     loader.initialize(mainView);
 }
 
-async function loadFramework(): Promise<void> {
+async function loadFramework(view: ViewMetadata): Promise<void> {
     const reactLib: string = "React";
     const reactDOMLib: string = "ReactDOM";
     const externalLibsPath = libsPath + "node_modules/";
 
-    await loadScript(externalLibsPath + "prop-types/prop-types.min.js"); /* Prop-Types */
-    await loadScript(externalLibsPath + "react/umd/react.production.min.js"); /* React */
-    await loadScript(externalLibsPath + "react-dom/umd/react-dom.production.min.js"); /* ReactDOM */
+    await loadScript(externalLibsPath + "prop-types/prop-types.min.js", view); /* Prop-Types */
+    await loadScript(externalLibsPath + "react/umd/react.production.min.js", view); /* React */
+    await loadScript(externalLibsPath + "react-dom/umd/react-dom.production.min.js", view); /* ReactDOM */
 
     define("react", [], () => window[reactLib]);
     define("react-dom", [], () => window[reactDOMLib]);

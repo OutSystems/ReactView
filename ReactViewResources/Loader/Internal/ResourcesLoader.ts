@@ -1,13 +1,22 @@
-﻿import { defaultLoadResourcesTimeout, isDebugModeEnabled } from "./Environment";
+﻿import { defaultLoadResourcesTimeout, isDebugModeEnabled, mainFrameName } from "./Environment";
 import { showWarningMessage } from "./MessagesProvider";
 import { Task } from "./Task";
+import { ViewMetadata } from "./ViewMetadata";
+import { getLoadScriptsOncePerDocumentFlag } from "./Flags";
+import { getView } from "./ViewsCollection";
 
 // inner views are shadow roots rather than frames, and shadow dom encapsulates styles but not scripts, so
 // a script that has been appended for one view has executed for every other one as well. tracking these
 // per view re-executes the same bundle once per view.
 const scriptLoadTasks = new Map<string, Task<void>>();
 
-export function loadScript(scriptSrc: string): Promise<void> {
+export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void> {
+    // bootstrap runs before the flag is set, but it only loads scripts for the main view, whose head is the
+    // document head and whose per view map is the one the legacy path reads, so both paths behave alike there
+    if (!getLoadScriptsOncePerDocumentFlag()) {
+        return loadScriptPerView(scriptSrc, view);
+    }
+
     const pendingLoad = scriptLoadTasks.get(scriptSrc);
     if (pendingLoad) {
         return pendingLoad.promise;
@@ -29,6 +38,43 @@ export function loadScript(scriptSrc: string): Promise<void> {
     document.head.appendChild(script);
 
     return loadTask.promise;
+}
+
+/**
+ * Pre 5.120.5 behaviour, kept behind LoadScriptsOncePerDocument so that it can be restored. Reproduced as it
+ * was, quirks included: the condition below reads as (ownTask || !isMain) ? mainFrameTask : null, so the
+ * view's own entry is only ever a truthiness test and inner views never reuse what they registered.
+ */
+function loadScriptPerView(scriptSrc: string, view: ViewMetadata): Promise<void> {
+    return new Promise(async (resolve) => {
+        const frameScripts = view.scriptsLoadTasks;
+
+        // check if script was already added, fallback to main frame
+        const scriptLoadTask = frameScripts.get(scriptSrc) || !view.isMain ? getView(mainFrameName).scriptsLoadTasks.get(scriptSrc) : null;
+        if (scriptLoadTask) {
+            // wait for script to be loaded
+            await scriptLoadTask.promise;
+            resolve();
+            return;
+        }
+
+        const loadTask = new Task<void>();
+        frameScripts.set(scriptSrc, loadTask);
+
+        const script = document.createElement("script");
+        script.src = scriptSrc;
+
+        waitForLoad(script, scriptSrc, defaultLoadResourcesTimeout)
+            .then(() => {
+                loadTask.setResult();
+                resolve();
+            });
+
+        if (!view.head) {
+            throw new Error(`View ${view.name} head is not set`);
+        }
+        view.head.appendChild(script);
+    });
 }
 
 export function loadStyleSheet(stylesheet: string, containerElement: Element, markAsSticky: boolean): Promise<HTMLLinkElement> {
