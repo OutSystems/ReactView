@@ -84,11 +84,11 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                     if (view.isMain) {
                         // only load plugins sources once (in the main frame)
                         // load plugin dependency js sources
-                        const dependencySourcesPromises = dependencySources.map(s => loadScript(s, view));
+                        const dependencySourcesPromises = dependencySources.map(s => loadScript(s));
                         await Promise.all(dependencySourcesPromises);
 
                         // plugin main js source
-                        await loadScript(mainJsSource, view);
+                        await loadScript(mainJsSource);
                     }
 
                     const module = getPluginModule(moduleName) || getViewModule(moduleName);
@@ -163,12 +163,12 @@ export function loadComponent(
             await Promise.all(promisesToWaitFor);
 
             // load component dependencies js sources and css sources
-            const dependencyLoadPromises = dependencySources.map(s => loadScript(s, view) as Promise<any>)
+            const dependencyLoadPromises = dependencySources.map(s => loadScript(s) as Promise<any>)
                 .concat(cssSources.map(s => loadStyleSheet(s, head, false)));
             await Promise.all(dependencyLoadPromises);
 
             // main component script should be the last to be loaded, otherwise errors might occur
-            await loadScript(componentSource, view);
+            await loadScript(componentSource);
 
             const renderFinishedTask = cacheEntry ? view.viewLoadTask : null;
             // create proxy for properties obj to delay its methods execution until native object is ready

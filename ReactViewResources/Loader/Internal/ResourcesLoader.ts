@@ -1,23 +1,16 @@
 ﻿import { defaultLoadResourcesTimeout, isDebugModeEnabled } from "./Environment";
 import { showWarningMessage } from "./MessagesProvider";
 import { Task } from "./Task";
-import { ViewMetadata } from "./ViewMetadata";
 
 // inner views are shadow roots rather than frames, and shadow dom encapsulates styles but not scripts, so
 // a script that has been appended for one view has executed for every other one as well. tracking these
 // per view re-executes the same bundle once per view.
 const scriptLoadTasks = new Map<string, Task<void>>();
 
-export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void> {
+export function loadScript(scriptSrc: string): Promise<void> {
     const pendingLoad = scriptLoadTasks.get(scriptSrc);
     if (pendingLoad) {
         return pendingLoad.promise;
-    }
-
-    // checked before the task is registered, so that a view without a head does not leave behind a load
-    // that nothing can ever resolve
-    if (!view.head) {
-        throw new Error(`View ${view.name} head is not set`);
     }
 
     const loadTask = new Task<void>();
@@ -31,7 +24,9 @@ export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void>
     waitForLoad(script, scriptSrc, defaultLoadResourcesTimeout, () => scriptLoadTasks.delete(scriptSrc))
         .then(() => loadTask.setResult());
 
-    view.head.appendChild(script);
+    // not the requesting view's head: it may already be detached, and a script in a detached tree never
+    // runs, so the task above would neither resolve nor fail
+    document.head.appendChild(script);
 
     return loadTask.promise;
 }
