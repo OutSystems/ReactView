@@ -12,6 +12,7 @@ import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
 import { setEnsureDisposeInnerViewsFlag } from "./Internal/ViewMetadataContext";
+import { setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
@@ -128,7 +129,8 @@ export function loadComponent(
     componentNativeObject: any,
     frameName: string,
     componentHash: string,
-    ensureDisposeInnerViews: boolean): void {
+    ensureDisposeInnerViews: boolean,
+    loadScriptsOncePerDocument: boolean): void {
 
     async function innerLoad() {
         let view: ViewMetadata;
@@ -140,6 +142,8 @@ export function loadComponent(
             
             if (frameName === mainFrameName) {
                 setEnsureDisposeInnerViewsFlag(ensureDisposeInnerViews);
+                // the main view always loads first, so the flag is set before any inner view loads a script
+                setLoadScriptsOncePerDocumentFlag(loadScriptsOncePerDocument);
             }
 
             view = tryGetView(frameName)!;
