@@ -21,7 +21,17 @@ function withAPI(action: (api: INativeObject) => void): void {
 
 export async function bindNativeObject<T>(nativeObjectName: string): Promise<T> {
     await cefglue.checkObjectBound(nativeObjectName);
-    return window[nativeObjectName] as T;
+
+    const nativeObject = window[nativeObjectName] as T;
+    if (!nativeObject) {
+        // An object that never bound, or that was unbound along with the view holding it, is handed over
+        // missing otherwise, and each caller then fails on its own: the properties proxy on the method it was
+        // asked for, the plugins on the instance they build with it. By then the name is gone, and what the
+        // console reports is a property read on undefined somewhere inside the bundle.
+        throw new Error(`The native object "${nativeObjectName}" is not bound. The view holding it was most likely already destroyed.`);
+    }
+
+    return nativeObject;
 }
 
 export function notifyViewInitialized(viewName: string): void {
