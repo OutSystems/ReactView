@@ -10,6 +10,12 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
         } else {
             proxy[key] = async function () {
                 const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
+                if (!nativeObject) {
+                    // Reading the method off the missing object is what reports this otherwise, and by then
+                    // both names are gone: what reaches the console is a property read on undefined, raised
+                    // somewhere inside the bundle.
+                    throw new Error(`Cannot call "${key}" on the native object "${nativeObjName}": it is not bound, and the view holding it was most likely already destroyed.`);
+                }
 
                 const result = nativeObject[key].apply(window, arguments);
 
