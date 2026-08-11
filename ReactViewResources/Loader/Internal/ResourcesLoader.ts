@@ -47,6 +47,13 @@ export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void>
  */
 function loadScriptPerView(scriptSrc: string, view: ViewMetadata): Promise<void> {
     return new Promise(async (resolve) => {
+        if (view.isReleased) {
+            // the view was destroyed and let go of its head, and a script appended to a detached tree never
+            // runs anyway, so whoever is loading is told there is nothing coming rather than left waiting
+            resolve();
+            return;
+        }
+
         const frameScripts = view.scriptsLoadTasks;
 
         // check if script was already added, fallback to main frame

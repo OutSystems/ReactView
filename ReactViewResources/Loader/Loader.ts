@@ -12,7 +12,7 @@ import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
 import { setEnsureDisposeInnerViewsFlag } from "./Internal/ViewMetadataContext";
-import { setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
+import { setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
@@ -99,10 +99,20 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
 
                     const pluginNativeObject = await bindNativeObject(nativeObjectFullName);
 
+                    if (view.isReleased) {
+                        // the view was destroyed while this was loading, and plugins reach out to document
+                        // level state as they are built, which nothing would take back: the view is gone and
+                        // it is what disposes them
+                        return;
+                    }
+
                     view.nativeObjectNames.push(nativeObjectFullName); // add to the native objects collection
 
                     const plugin: IPlugin<any> = module.default;
-                    view.modules.set(moduleName, new plugin(pluginNativeObject, view.root as HTMLElement, view.viewLoadTask.promise, getViewInfo(view)));
+                    const pluginInstance = new plugin(pluginNativeObject, view.root as HTMLElement, view.viewLoadTask.promise, getViewInfo(view));
+
+                    view.modules.set(moduleName, pluginInstance);
+                    view.plugins.push(pluginInstance);
                 });
 
                 await Promise.all(pluginsPromises);
@@ -130,7 +140,8 @@ export function loadComponent(
     frameName: string,
     componentHash: string,
     ensureDisposeInnerViews: boolean,
-    loadScriptsOncePerDocument: boolean): void {
+    loadScriptsOncePerDocument: boolean,
+    ensureViewPluginsAreDisposed: boolean): void {
 
     async function innerLoad() {
         let view: ViewMetadata;
@@ -142,8 +153,10 @@ export function loadComponent(
             
             if (frameName === mainFrameName) {
                 setEnsureDisposeInnerViewsFlag(ensureDisposeInnerViews);
-                // the main view always loads first, so the flag is set before any inner view loads a script
+                // the main view always loads first, so the flags are set before any inner view loads a
+                // script or is taken down
                 setLoadScriptsOncePerDocumentFlag(loadScriptsOncePerDocument);
+                setEnsureViewPluginsAreDisposedFlag(ensureViewPluginsAreDisposed);
             }
 
             view = tryGetView(frameName)!;
@@ -173,6 +186,12 @@ export function loadComponent(
 
             // main component script should be the last to be loaded, otherwise errors might occur
             await loadScript(componentSource, view);
+
+            if (view.isReleased) {
+                // the view was destroyed while its component was loading, and rendering it now would attach
+                // a tree, and the plugins that go with it, to something that is already detached
+                return;
+            }
 
             const renderFinishedTask = cacheEntry ? view.viewLoadTask : null;
             // create proxy for properties obj to delay its methods execution until native object is ready

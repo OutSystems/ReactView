@@ -17,7 +17,11 @@ interface IChildViews {
     test: InnerView;
 }
 
-class App extends React.Component<IAppProperties> {
+interface IAppState {
+    isInnerViewHidden: boolean;
+}
+
+class App extends React.Component<IAppProperties, IAppState> {
     firstRenderHtml: string;
     pluginsContext: IPluginsContext;
     innerViewLoadedTask = new Task<boolean>();
@@ -26,10 +30,11 @@ class App extends React.Component<IAppProperties> {
         super(props);
         this.pluginsContext = context;
         this.firstRenderHtml = this.getHtml();
+        this.state = { isInnerViewHidden: false };
     }
 
     renderInnerViewContainer() {
-        if (this.props.autoShowInnerView) {
+        if (this.props.autoShowInnerView && !this.state.isInnerViewHidden) {
             return <ViewFrame<IChildViews> key="test_frame" name="test" className="" loaded={() => this.innerViewLoadedTask.setResult()} />;
         }
 
@@ -104,6 +109,14 @@ class App extends React.Component<IAppProperties> {
 
     checkInnerViewLoaded() {
         this.innerViewLoadedTask.promise.then(() => this.props.event("InnerViewLoaded"));
+    }
+
+    hideInnerView() {
+        this.setState({ isInnerViewHidden: true }, () => this.props.event("InnerViewHidden"));
+    }
+
+    getDisposedPluginModulesCount() {
+        return (window as any).DisposedPluginModules;
     }
 
     loadCustomResource(url: string) {

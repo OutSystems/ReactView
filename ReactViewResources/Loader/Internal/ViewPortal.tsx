@@ -1,7 +1,8 @@
 ﻿import * as React from "react";
 import { webViewRootId } from "../Internal/Environment";
 import { getStylesheets } from "./Common";
-import { ViewMetadata } from "./ViewMetadata";
+import { releaseView, ViewMetadata } from "./ViewMetadata";
+import { getEnsureViewPluginsAreDisposedFlag } from "./Flags";
 import { ViewSharedContext } from "../Public/ViewSharedContext";
 import { addView, deleteView } from "./ViewsCollection";
 import { notifyViewDestroyed, notifyViewInitialized } from "./NativeAPI";
@@ -26,6 +27,13 @@ export function onChildViewAdded(childView: ViewMetadata) {
 
 export function onChildViewRemoved(childView: ViewMetadata) {
     deleteView(childView.name);
+
+    if (getEnsureViewPluginsAreDisposedFlag()) {
+        // plugins call into their native objects as they release, and the notification below is what
+        // unregisters those, so the release has to come first
+        releaseView(childView);
+    }
+
     notifyViewDestroyed(childView.name);
 }
 

@@ -39,5 +39,13 @@ namespace ReactViewControl {
         /// executed for every other one. Set to false to restore the previous per view behaviour.
         /// </summary>
         public virtual bool LoadScriptsOncePerDocument => true;
+
+        /// <summary>
+        /// The plugins of a view are disposed when that view is destroyed. Plugins are not part of the react
+        /// tree, so unmounting does not reach them, and one that registered itself in document level state
+        /// keeps its view's root, and the whole dom under it, alive. Set to false to restore the previous
+        /// behaviour, where only the host released them.
+        /// </summary>
+        public virtual bool EnsureViewPluginsAreDisposed => true;
     }
 }
