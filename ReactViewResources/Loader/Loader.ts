@@ -100,9 +100,7 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                     const pluginNativeObject = await bindNativeObject(nativeObjectFullName);
 
                     if (view.isReleased) {
-                        // the view was destroyed while this was loading, and plugins reach out to document
-                        // level state as they are built, which nothing would take back: the view is gone and
-                        // it is what disposes them
+                        // the view was destroyed while this was loading
                         return;
                     }
 
