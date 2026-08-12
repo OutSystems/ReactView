@@ -186,8 +186,7 @@ export function loadComponent(
             await loadScript(componentSource, view);
 
             if (view.isReleased) {
-                // the view was destroyed while its component was loading, and rendering it now would attach
-                // a tree, and the plugins that go with it, to something that is already detached
+                // the view was destroyed while its component was loading
                 return;
             }
 
