@@ -27,8 +27,10 @@ namespace ReactViewControl {
             /// A view was initialized, load its component.
             /// </summary>
             public void NotifyViewInitialized(string frameName) {
+                ViewRender.LogLifecycle("NOTIFY-VIEW-INITIALIZED-ENTER", frameName, null, toDevTools: false); // RDEV-10097 instrumentation
                 lock (ViewRender.SyncRoot) {
                     var frame = ViewRender.GetOrCreateFrame(frameName);
+                    ViewRender.LogLifecycleFrame("NOTIFY-VIEW-INITIALIZED", frame); // RDEV-10097 instrumentation
                     frame.LoadStatus = LoadStatus.ViewInitialized;
 
                     if (frame.IsMain) {
@@ -50,9 +52,11 @@ namespace ReactViewControl {
             /// Handle component loaded event: component is loaded and ready for interaction.
             /// </summary>
             public void NotifyViewLoaded(string frameName, string id) {
+                ViewRender.LogLifecycle("NOTIFY-VIEW-LOADED-ENTER", frameName, null, $"viewId='{id}'", toDevTools: false); // RDEV-10097 instrumentation
                 lock (ViewRender.SyncRoot) {
                     var frame = ViewRender.GetOrCreateFrame(frameName);
                     frame.LoadStatus = LoadStatus.Ready;
+                    ViewRender.TrackLifecycleViewLoaded(frame, id); // RDEV-10097 instrumentation
 
 #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"View '{frameName}' loaded (id: '{id}')");
@@ -70,16 +74,20 @@ namespace ReactViewControl {
             /// An inner view was destroyed, cleanup its resources.
             /// </summary>
             public void NotifyViewDestroyed(string frameName) {
+                ViewRender.LogLifecycle("NOTIFY-VIEW-DESTROYED-ENTER", frameName, null, toDevTools: false); // RDEV-10097 instrumentation
                 lock (ViewRender.SyncRoot) {
                     if (ViewRender.Frames.TryGetValue(frameName, out var frame)) {
+                        ViewRender.TrackLifecycleViewDestroyed(frame); // RDEV-10097 instrumentation
                         IEnumerable<IViewModule> modules = frame.Plugins;
                         if (frame.Component != null) {
                             modules = modules.Concat(new[] { frame.Component });
                         }
                         foreach (var module in modules) {
-                            ViewRender.UnregisterNativeObject(module, frame);
+                            ViewRender.UnregisterNativeObject(module, frame, "view-destroyed");
                         }
                         ViewRender.Frames.Remove(frameName);
+                    } else {
+                        ViewRender.LogLifecycle("NOTIFY-VIEW-DESTROYED-UNKNOWN-FRAME", frameName, null); // RDEV-10097 instrumentation
                     }
                 }
             }

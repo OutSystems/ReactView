@@ -28,6 +28,7 @@
     <Compile Include="..\ReactViewControl\ReactView.cs" Link="ReactView.cs" />
     <Compile Include="..\ReactViewControl\ReactViewFactory.cs" Link="ReactViewFactory.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.cs" Link="ReactViewRender.cs" />
+    <Compile Include="..\ReactViewControl\ReactViewRender.LifecycleLog.cs" Link="ReactViewRender.LifecycleLog.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.LoaderModule.cs" Link="ReactViewRender.LoaderModule.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.NativeAPI.cs" Link="ReactViewRender.NativeAPI.cs" />
     <Compile Include="..\ReactViewControl\Resource.cs" Link="Resource.cs" />

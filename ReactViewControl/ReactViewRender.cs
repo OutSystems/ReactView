@@ -197,17 +197,21 @@ namespace ReactViewControl {
         private void OnWebViewJavascriptContextReleased(string frameName) {
             if (!WebView.IsMainFrame(frameName)) {
                 // ignore, its an iframe saying goodbye
+                LogLifecycle("JS-CONTEXT-RELEASED-IFRAME-IGNORED", frameName, null, toDevTools: false); // RDEV-10097 instrumentation
                 return;
             }
 
             lock (SyncRoot) {
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
 
+                LogLifecycle("JS-CONTEXT-RELEASED", frameName, null, $"frames={Frames.Count} childViewModules={ChildViewModules.Count} recoverable={RecoverableFrames.Count}"); // RDEV-10097 instrumentation
+
                 Frames.Remove(mainFrame.Name);
                 RecoverableFrames.Clear();
                 foreach (var keyValuePair in Frames) {
                     RecoverableFrames[keyValuePair.Key] = new WeakReference<FrameInfo>(keyValuePair.Value);
-                    UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value);
+                    LogLifecycleFrame("FRAME-TO-RECOVERABLE", keyValuePair.Value); // RDEV-10097 instrumentation
+                    UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value, "js-context-released");
                 }
 
                 Frames.Clear();
@@ -250,6 +254,7 @@ namespace ReactViewControl {
         public void LoadComponent(IViewModule component) {
             lock (SyncRoot) {
                 var frame = GetOrCreateFrame(FrameInfo.MainViewFrameName);
+                LogLifecycleFrame("HOST-LOAD-COMPONENT-MAIN", frame, null, $"incoming#={LifecycleIdOf(component)}"); // RDEV-10097 instrumentation
                 frame.IsComponentReadyToLoad = true;
                 TryLoadComponent(frame);
             }
@@ -258,6 +263,7 @@ namespace ReactViewControl {
         void IChildViewHost.LoadComponent(string frameName, IViewModule component) {
             lock (SyncRoot) {
                 var frame = GetOrCreateFrame(frameName);
+                LogLifecycleFrame("HOST-LOAD-COMPONENT-CHILD", frame, null, $"incoming#={LifecycleIdOf(component)}"); // RDEV-10097 instrumentation
                 if (frame.Component == null) {
                     // component not bound yet? bind it
                     BindComponentToFrame(component, frame);
@@ -273,8 +279,11 @@ namespace ReactViewControl {
         /// <param name="frame"></param>
         private void TryLoadComponent(FrameInfo frame) {
             if (frame.Component == null || frame.LoadStatus != LoadStatus.ViewInitialized || !frame.IsComponentReadyToLoad) {
+                LogLifecycleFrame("TRY-LOAD-COMPONENT-SKIPPED", frame); // RDEV-10097 instrumentation
                 return;
             }
+
+            LogLifecycleFrame("TRY-LOAD-COMPONENT", frame); // RDEV-10097 instrumentation
 
             frame.LoadStatus = LoadStatus.ComponentLoading;
 
@@ -418,6 +427,7 @@ namespace ReactViewControl {
             if (!frame.IsMain) {
                 ChildViewModules[frame.Name] = new WeakReference<IViewModule>(component);
             }
+            LogLifecycleFrame("FRAME-BIND-COMPONENT", frame, null, $"componentName='{component.Name}'"); // RDEV-10097 instrumentation
         }
 
         /// <summary>
@@ -528,7 +538,10 @@ namespace ReactViewControl {
         /// <param name="forceNativeSyncCalls"></param>
         private void RegisterNativeObject(IViewModule module, FrameInfo frame) {
             var nativeObjectName = module.GetNativeObjectFullName(frame.Name);
-            WebView.RegisterJavascriptObject(nativeObjectName, module.CreateNativeObject(), interceptCall: CallNativeMethod);
+            var nativeObject = module.CreateNativeObject();
+            // RDEV-10097 instrumentation: the webview already tells us whether the name was free, this only reads it
+            var registered = WebView.RegisterJavascriptObject(nativeObjectName, nativeObject, interceptCall: CallNativeMethod);
+            TrackLifecycleRegistration(module, frame, nativeObjectName, nativeObject, registered); // RDEV-10097 instrumentation
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -544,8 +557,9 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="module"></param>
         /// <param name="frameName"></param>
-        private void UnregisterNativeObject(IViewModule module, FrameInfo frame) {
+        private void UnregisterNativeObject(IViewModule module, FrameInfo frame, string lifecycleReason = "unspecified") {
             var nativeObjectName = module.GetNativeObjectFullName(frame.Name);
+            TrackLifecycleUnregistration(module, frame, nativeObjectName, lifecycleReason); // RDEV-10097 instrumentation
             WebView.UnregisterJavascriptObject(nativeObjectName);
         }
 
@@ -608,21 +622,26 @@ namespace ReactViewControl {
                 RecoverableFrames.Remove(frameName);
                 if (weakReferenceFrame.TryGetTarget(out var recoverableFrame)) {
                     Frames[frameName] = recoverableFrame;
+                    LogLifecycleFrame("FRAME-RECOVERED", recoverableFrame); // RDEV-10097 instrumentation
                     return recoverableFrame;
                 }
+                LogLifecycle("FRAME-RECOVERY-EXPIRED", frameName, null); // RDEV-10097 instrumentation
             }
 
             var newFrame = new FrameInfo(frameName);
             Frames[frameName] = newFrame;
             AddPlugins(PluginsFactory(), newFrame);
+            LogLifecycleFrame("FRAME-CREATED", newFrame); // RDEV-10097 instrumentation
 
             // Rebind the existing IViewModule (kept by the consumer) to the new frame on remount
             if (!newFrame.IsMain && ChildViewModules.TryGetValue(frameName, out var weakComponent)) {
                 if (weakComponent.TryGetTarget(out var existingComponent)) {
                     BindComponentToFrame(existingComponent, newFrame);
                     newFrame.IsComponentReadyToLoad = true;
+                    LogLifecycleFrame("FRAME-REBOUND-EXISTING-COMPONENT", newFrame, null, $"rebound#={LifecycleIdOf(existingComponent)}"); // RDEV-10097 instrumentation
                 } else {
                     ChildViewModules.Remove(frameName);
+                    LogLifecycle("FRAME-REBIND-COMPONENT-COLLECTED", frameName, null); // RDEV-10097 instrumentation
                 }
             }
 
