@@ -22,6 +22,10 @@ namespace ReactViewControl {
         private const string LifecyclePrefix = "[RV-LIFECYCLE]";
         private const int LifecycleMaxJsSinkFailures = 20;
 
+        // set RV_LIFECYCLE=0 to silence everything, RV_LIFECYCLE_DEVTOOLS=0 to keep only the host side sink
+        private static readonly bool LifecycleEnabled = Environment.GetEnvironmentVariable("RV_LIFECYCLE") != "0";
+        private static readonly bool LifecycleDevToolsEnabled = Environment.GetEnvironmentVariable("RV_LIFECYCLE_DEVTOOLS") != "0";
+
         private static long lifecycleSequence;
         private static int lifecycleRenderCounter;
         private static readonly Stopwatch LifecycleClock = Stopwatch.StartNew();
@@ -83,6 +87,10 @@ namespace ReactViewControl {
         /// </summary>
         private long LogLifecycle(string op, string frameName, string nativeObjectName, string detail = null, bool toDevTools = true) {
             var sequence = Interlocked.Increment(ref lifecycleSequence);
+            if (!LifecycleEnabled) {
+                return sequence;
+            }
+
             try {
                 var line = string.Format(
                     CultureInfo.InvariantCulture,
@@ -138,7 +146,7 @@ namespace ReactViewControl {
         /// v8 context and executing script there would be a needless risk. Those lines are host side only.
         /// </summary>
         private void WriteLifecycleToDevTools(string line) {
-            if (lifecycleJsSinkFailures >= LifecycleMaxJsSinkFailures) {
+            if (!LifecycleDevToolsEnabled || lifecycleJsSinkFailures >= LifecycleMaxJsSinkFailures) {
                 return;
             }
 
