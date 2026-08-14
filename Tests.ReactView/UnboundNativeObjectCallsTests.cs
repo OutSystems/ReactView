@@ -14,6 +14,14 @@ namespace Tests.ReactView {
 
         protected const string CallReachedNativeObject = "CallReachedNativeObject";
 
+        /// <summary>
+        /// The test app methods that call into the inner view native object: one reaching a method that
+        /// returns nothing, the other one a method that returns a value.
+        /// </summary>
+        protected const string CallVoidNativeMethod = "callInnerViewNativeMethod";
+
+        protected const string CallValueReturningNativeMethod = "callInnerViewNativeValueMethod";
+
         protected override void InitializeView() {
             if (TargetView != null) {
                 TargetView.AutoShowInnerView = true;
@@ -35,16 +43,49 @@ namespace Tests.ReactView {
         /// Calls a method of the inner view native object after unbinding it, and returns what came out of
         /// the call: the result reported by the view, or CallReachedNativeObject if the call went through.
         /// </summary>
-        protected async Task<string> CallUnboundInnerViewNativeMethod() {
+        protected async Task<string> CallUnboundInnerViewNativeMethod(string viewMethod = CallVoidNativeMethod) {
             await LoadInnerView();
 
             var callResult = new TaskCompletionSource<string>();
             TargetView.Event += result => callResult.TrySetResult(result);
-            TargetView.InnerView.MethodCalled += _ => callResult.TrySetResult(CallReachedNativeObject);
+            ObserveCallsReachingNativeObject(callResult);
 
-            TargetView.ExecuteMethod("callInnerViewNativeMethod", InnerViewNativeObjectName);
+            TargetView.ExecuteMethod(viewMethod, InnerViewNativeObjectName);
 
             return await callResult.Task;
+        }
+
+        /// <summary>
+        /// Calls a method of the inner view native object after destroying the view that owns it, and
+        /// returns what came out of the call, as CallUnboundInnerViewNativeMethod does.
+        /// </summary>
+        protected async Task<string> CallDestroyedInnerViewNativeMethod(string viewMethod = CallVoidNativeMethod) {
+            await LoadInnerView();
+
+            var innerViewHidden = new TaskCompletionSource<bool>();
+            var callResult = new TaskCompletionSource<string>();
+            TargetView.Event += result => {
+                if (result == "InnerViewHidden") {
+                    innerViewHidden.TrySetResult(true);
+                } else {
+                    callResult.TrySetResult(result);
+                }
+            };
+            ObserveCallsReachingNativeObject(callResult);
+
+            // the notification is sent from the set state callback, which react runs after it has
+            // committed the removal, so the inner view is already torn down by the time it arrives
+            TargetView.ExecuteMethod("hideInnerView");
+            await innerViewHidden.Task;
+
+            TargetView.ExecuteMethod(viewMethod);
+
+            return await callResult.Task;
+        }
+
+        private void ObserveCallsReachingNativeObject(TaskCompletionSource<string> callResult) {
+            TargetView.InnerView.MethodCalled += _ => callResult.TrySetResult(CallReachedNativeObject);
+            TargetView.InnerView.ValueReturningMethodCalled += _ => callResult.TrySetResult(CallReachedNativeObject);
         }
     }
 
@@ -62,27 +103,28 @@ namespace Tests.ReactView {
         [Test(Description = "Tests that a call to the native object of a destroyed view is ignored")]
         public async Task CallToDestroyedViewNativeObjectIsIgnored() {
             await Run(async () => {
-                await LoadInnerView();
+                var callResult = await CallDestroyedInnerViewNativeMethod();
 
-                var innerViewHidden = new TaskCompletionSource<bool>();
-                var callResult = new TaskCompletionSource<string>();
-                TargetView.Event += result => {
-                    if (result == "InnerViewHidden") {
-                        innerViewHidden.TrySetResult(true);
-                    } else {
-                        callResult.TrySetResult(result);
-                    }
-                };
-                TargetView.InnerView.MethodCalled += _ => callResult.TrySetResult(CallReachedNativeObject);
+                Assert.AreEqual("CallCompleted", callResult, "The call to the destroyed view native object was not ignored!");
+            });
+        }
 
-                // the notification is sent from the set state callback, which react runs after it has
-                // committed the removal, so the inner view is already torn down by the time it arrives
-                TargetView.ExecuteMethod("hideInnerView");
-                await innerViewHidden.Task;
+        [Test(Description = "Tests that a value returning call to a native object that is no longer bound fails, instead of being resolved with no value")]
+        public async Task ValueReturningCallToUnboundNativeObjectFails() {
+            await Run(async () => {
+                var callResult = await CallUnboundInnerViewNativeMethod(CallValueReturningNativeMethod);
 
-                TargetView.ExecuteMethod("callInnerViewNativeMethod");
+                Assert.That(callResult, Does.StartWith("CallFailed"), "The value returning call to the unbound native object did not fail!");
+                Assert.That(callResult, Does.Contain("valueReturningMethodCalled"), "The failure does not say which method was called!");
+            });
+        }
 
-                Assert.AreEqual("CallCompleted", await callResult.Task, "The call to the destroyed view native object was not ignored!");
+        [Test(Description = "Tests that a value returning call to the native object of a destroyed view fails, instead of being resolved with no value")]
+        public async Task ValueReturningCallToDestroyedViewNativeObjectFails() {
+            await Run(async () => {
+                var callResult = await CallDestroyedInnerViewNativeMethod(CallValueReturningNativeMethod);
+
+                Assert.That(callResult, Does.StartWith("CallFailed"), "The value returning call to the destroyed view native object did not fail!");
             });
         }
     }

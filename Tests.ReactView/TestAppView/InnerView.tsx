@@ -4,6 +4,7 @@ import { ViewSharedContext } from 'ViewFrame';
 interface IInnerViewProperties {
     loaded: () => void;
     methodCalled: (contextLoaded: boolean) => void;
+    valueReturningMethodCalled: (contextLoaded: boolean) => Promise<string>;
 }
 
 interface IInnerViewBehaviors {

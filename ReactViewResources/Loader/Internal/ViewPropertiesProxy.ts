@@ -3,7 +3,13 @@ import { getBailOutOnUnboundNativeObjectCallsFlag } from "./Flags";
 import { Task } from "./Task";
 import { ViewMetadata } from "./ViewMetadata";
 
-export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, view: ViewMetadata, componentRenderedWaitTask?: Task<void> | null): {} {
+export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, view: ViewMetadata, voidNativeObjectMethods: string[], componentRenderedWaitTask?: Task<void> | null): {} {
+    // only a call that returns nothing can be dropped. Dropping one that returns a value resolves it with
+    // undefined, which the caller then reads and stores, so the teardown race stops being an error here and
+    // becomes one somewhere else, further away from its cause. A method the host said nothing about is
+    // treated as returning a value, the safe default: it keeps failing exactly as it did before the bail out
+    const voidMethods = new Set(voidNativeObjectMethods || []);
+
     const proxy = Object.assign({}, objProperties);
     Object.keys(proxy).forEach(key => {
         const value = objProperties[key];
@@ -13,7 +19,7 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
             proxy[key] = async function () {
                 // read per call: the proxy outlives the view, and what it should do about a call that
                 // arrives after the view is gone is decided by the flag in place at that moment
-                const bailOut = getBailOutOnUnboundNativeObjectCallsFlag();
+                const bailOut = getBailOutOnUnboundNativeObjectCallsFlag() && voidMethods.has(key);
 
                 if (bailOut && view.isReleased) {
                     // destroying the view is what unregisters its native objects, so there is nothing

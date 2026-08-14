@@ -278,9 +278,9 @@ namespace ReactViewControl {
 
             frame.LoadStatus = LoadStatus.ComponentLoading;
 
-            RegisterNativeObject(frame.Component, frame);
+            var nativeObject = RegisterNativeObject(frame.Component, frame);
 
-            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews, loadScriptsOncePerDocument, ensureViewPluginsAreDisposed, bailOutOnUnboundNativeObjectCalls);
+            Loader.LoadComponent(frame.Component, nativeObject, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews, loadScriptsOncePerDocument, ensureViewPluginsAreDisposed, bailOutOnUnboundNativeObjectCalls);
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
             }
@@ -521,14 +521,16 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Registers a .net object to be available on the js context.
+        /// Registers a .net object to be available on the js context, and returns it.
         /// </summary>
         /// <param name="module"></param>
         /// <param name="frameName"></param>
         /// <param name="forceNativeSyncCalls"></param>
-        private void RegisterNativeObject(IViewModule module, FrameInfo frame) {
+        private object RegisterNativeObject(IViewModule module, FrameInfo frame) {
             var nativeObjectName = module.GetNativeObjectFullName(frame.Name);
-            WebView.RegisterJavascriptObject(nativeObjectName, module.CreateNativeObject(), interceptCall: CallNativeMethod);
+            var nativeObject = module.CreateNativeObject();
+            WebView.RegisterJavascriptObject(nativeObjectName, nativeObject, interceptCall: CallNativeMethod);
+            return nativeObject;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

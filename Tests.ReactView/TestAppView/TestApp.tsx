@@ -120,6 +120,14 @@ class App extends React.Component<IAppProperties, IAppState> {
     }
 
     callInnerViewNativeMethod(nativeObjectNameToUnbind?: string) {
+        this.callInnerViewNativeMethodCore(properties => properties.methodCalled(true), nativeObjectNameToUnbind);
+    }
+
+    callInnerViewNativeValueMethod(nativeObjectNameToUnbind?: string) {
+        this.callInnerViewNativeMethodCore(properties => properties.valueReturningMethodCalled(true), nativeObjectNameToUnbind);
+    }
+
+    private callInnerViewNativeMethodCore(call: (properties: any) => Promise<any>, nativeObjectNameToUnbind?: string) {
         const innerViewProperties = (window as any).InnerViewProperties;
 
         if (nativeObjectNameToUnbind) {
@@ -133,7 +141,7 @@ class App extends React.Component<IAppProperties, IAppState> {
             }
         }
 
-        innerViewProperties.methodCalled(true).then(
+        call(innerViewProperties).then(
             () => this.props.event("CallCompleted"),
             (error: any) => this.props.event("CallFailed: " + ((error && error.message) || error))
         );
