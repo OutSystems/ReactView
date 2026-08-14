@@ -70,7 +70,7 @@ async function invokeNative(
  * the same from this side, and that one is a bug worth finding.
  */
 function logUnboundCall(nativeObjName: string, key: string, reason: unknown): void {
-    window.console.debug(`Ignored call to "${nativeObjName}.${key}"`, reason);
+    window.console.warn(`Ignored call to "${nativeObjName}.${key}"`, reason);
 }
 
 function isUnboundNativeObjectError(error: unknown): boolean {
