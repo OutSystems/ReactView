@@ -49,9 +49,9 @@ namespace ReactViewControl {
         public virtual bool EnsureViewPluginsAreDisposed => true;
 
         /// <summary>
-        /// Calls through the view properties proxy bail out when the native object is missing or was
-        /// unregistered (typical remount / teardown races). Set to false to restore the previous behaviour,
-        /// where those calls surface as uncaught errors.
+        /// Calls through the view properties proxy are dropped, and logged to the console, when the view was
+        /// destroyed or its native object is no longer bound (typical remount / teardown races). Set to false
+        /// to restore the previous behaviour, where those calls surface as uncaught errors.
         /// </summary>
         public virtual bool BailOutOnUnboundNativeObjectCalls => true;
     }

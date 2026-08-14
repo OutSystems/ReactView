@@ -119,6 +119,26 @@ class App extends React.Component<IAppProperties, IAppState> {
         return (window as any).DisposedPluginModules;
     }
 
+    callInnerViewNativeMethod(nativeObjectNameToUnbind?: string) {
+        const innerViewProperties = (window as any).InnerViewProperties;
+
+        if (nativeObjectNameToUnbind) {
+            // leaves the js side as unregistering the object does: gone from the window, while its binding
+            // task stays behind resolved, so binding it again succeeds and hands back nothing
+            delete (window as any)[nativeObjectNameToUnbind];
+
+            if ((window as any)[nativeObjectNameToUnbind] !== undefined) {
+                this.props.event("NativeObjectStillBound");
+                return;
+            }
+        }
+
+        innerViewProperties.methodCalled(true).then(
+            () => this.props.event("CallCompleted"),
+            (error: any) => this.props.event("CallFailed: " + ((error && error.message) || error))
+        );
+    }
+
     loadCustomResource(url: string) {
         console.log(url);
         var img = document.createElement("img");

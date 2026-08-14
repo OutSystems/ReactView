@@ -1,8 +1,9 @@
 ﻿import { bindNativeObject } from "./NativeAPI";
 import { getBailOutOnUnboundNativeObjectCallsFlag } from "./Flags";
 import { Task } from "./Task";
+import { ViewMetadata } from "./ViewMetadata";
 
-export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, componentRenderedWaitTask?: Task<void> | null): {} {
+export function createPropertiesProxy(rootElement: Element, objProperties: {}, nativeObjName: string, view: ViewMetadata, componentRenderedWaitTask?: Task<void> | null): {} {
     const proxy = Object.assign({}, objProperties);
     Object.keys(proxy).forEach(key => {
         const value = objProperties[key];
@@ -10,16 +11,24 @@ export function createPropertiesProxy(rootElement: Element, objProperties: {}, n
             proxy[key] = value;
         } else {
             proxy[key] = async function () {
-                if (!getBailOutOnUnboundNativeObjectCallsFlag()) {
-                    return invokeNative(nativeObjName, key, arguments, componentRenderedWaitTask, /*bailOut*/ false);
+                // read per call: the proxy outlives the view, and what it should do about a call that
+                // arrives after the view is gone is decided by the flag in place at that moment
+                const bailOut = getBailOutOnUnboundNativeObjectCallsFlag();
+
+                if (bailOut && view.isReleased) {
+                    // destroying the view is what unregisters its native objects, so there is nothing
+                    // left to call into
+                    logUnboundCall(nativeObjName, key, "the view was destroyed");
+                    return;
                 }
 
                 try {
-                    return await invokeNative(nativeObjName, key, arguments, componentRenderedWaitTask, /*bailOut*/ true);
+                    return await invokeNative(nativeObjName, key, arguments, componentRenderedWaitTask, bailOut);
                 } catch (error) {
-                    // remount / teardown races: the view is still calling in while CefGlue has already
-                    // unregistered the object (rejects with a plain string from NativeObjectMethodDispatcher)
-                    if (isUnboundNativeObjectError(error)) {
+                    // teardown races: the object is still on the window while the host has already
+                    // unregistered it, and the call is rejected on arrival
+                    if (bailOut && isUnboundNativeObjectError(error)) {
+                        logUnboundCall(nativeObjName, key, error);
                         return;
                     }
                     throw error;
@@ -38,13 +47,15 @@ async function invokeNative(
     bailOut: boolean
 ): Promise<any> {
     const nativeObject = window[nativeObjName] || await bindNativeObject(nativeObjName);
-    const method = nativeObject && nativeObject[key];
 
-    if (bailOut && typeof method !== "function") {
+    if (bailOut && (!nativeObject || typeof nativeObject[key] !== "function")) {
+        // unregistering an object deletes it from the window but leaves its binding task behind, already
+        // resolved from the first registration, so binding it again succeeds and hands back nothing
+        logUnboundCall(nativeObjName, key, "the object is no longer bound");
         return;
     }
 
-    const result = method.apply(window, args);
+    const result = nativeObject[key].apply(window, args);
 
     if (componentRenderedWaitTask) {
         // wait until component is rendered, first render should only render static data
@@ -54,10 +65,17 @@ async function invokeNative(
     return result;
 }
 
+/**
+ * A dropped call is usually a teardown race, but a native object that was never registered looks exactly
+ * the same from this side, and that one is a bug worth finding.
+ */
+function logUnboundCall(nativeObjName: string, key: string, reason: unknown): void {
+    window.console.debug(`Ignored call to "${nativeObjName}.${key}"`, reason);
+}
+
 function isUnboundNativeObjectError(error: unknown): boolean {
+    // the call is rejected with a plain string, "Object named X was not found. Make sure it was registered
+    // before.", raised by cef's NativeObjectMethodDispatcher when the object is no longer registered
     const message = typeof error === "string" ? error : error instanceof Error ? error.message : String(error);
-    // CefGlue rejects method calls with a plain string from NativeObjectMethodDispatcher; bind can fail
-    // the same way when the object will never come back
-    return (message.indexOf("was not found") >= 0 && message.indexOf("registered before") >= 0)
-        || message.indexOf("Failed to create native object") >= 0;
+    return message.includes("was not found") && message.includes("registered before");
 }

@@ -194,7 +194,7 @@ export function loadComponent(
 
             const renderFinishedTask = cacheEntry ? view.viewLoadTask : null;
             // create proxy for properties obj to delay its methods execution until native object is ready
-            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, renderFinishedTask);
+            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, view, renderFinishedTask);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
             const componentClass = (getViewModule(componentName) || {}).default;
