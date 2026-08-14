@@ -40,8 +40,9 @@ namespace Tests.ReactView {
         }
 
         /// <summary>
-        /// Calls a method of the inner view native object after unbinding it, and returns what came out of
-        /// the call: the result reported by the view, or CallReachedNativeObject if the call went through.
+        /// Calls a method of the inner view native object after unbinding it, leaving the view itself alive,
+        /// and returns what came out of the call: the result reported by the view, or
+        /// CallReachedNativeObject if the call went through.
         /// </summary>
         protected async Task<string> CallUnboundInnerViewNativeMethod(string viewMethod = CallVoidNativeMethod) {
             await LoadInnerView();
@@ -91,15 +92,6 @@ namespace Tests.ReactView {
 
     public class UnboundNativeObjectCallsTests : UnboundNativeObjectCallsTestsBase {
 
-        [Test(Description = "Tests that a call to a native object that is no longer bound is ignored")]
-        public async Task CallToUnboundNativeObjectIsIgnored() {
-            await Run(async () => {
-                var callResult = await CallUnboundInnerViewNativeMethod();
-
-                Assert.AreEqual("CallCompleted", callResult, "The call to the unbound native object was not ignored!");
-            });
-        }
-
         [Test(Description = "Tests that a call to the native object of a destroyed view is ignored")]
         public async Task CallToDestroyedViewNativeObjectIsIgnored() {
             await Run(async () => {
@@ -109,22 +101,32 @@ namespace Tests.ReactView {
             });
         }
 
-        [Test(Description = "Tests that a value returning call to a native object that is no longer bound fails, instead of being resolved with no value")]
-        public async Task ValueReturningCallToUnboundNativeObjectFails() {
-            await Run(async () => {
-                var callResult = await CallUnboundInnerViewNativeMethod(CallValueReturningNativeMethod);
-
-                Assert.That(callResult, Does.StartWith("CallFailed"), "The value returning call to the unbound native object did not fail!");
-                Assert.That(callResult, Does.Contain("valueReturningMethodCalled"), "The failure does not say which method was called!");
-            });
-        }
-
-        [Test(Description = "Tests that a value returning call to the native object of a destroyed view fails, instead of being resolved with no value")]
-        public async Task ValueReturningCallToDestroyedViewNativeObjectFails() {
+        [Test(Description = "Tests that a value returning call to the native object of a destroyed view is ignored as well: nobody is left to read the result")]
+        public async Task ValueReturningCallToDestroyedViewNativeObjectIsIgnored() {
             await Run(async () => {
                 var callResult = await CallDestroyedInnerViewNativeMethod(CallValueReturningNativeMethod);
 
-                Assert.That(callResult, Does.StartWith("CallFailed"), "The value returning call to the destroyed view native object did not fail!");
+                Assert.AreEqual("CallCompleted", callResult, "The value returning call to the destroyed view native object was not ignored!");
+            });
+        }
+
+        [Test(Description = "Tests that a call to a native object that is no longer bound, made by a view that is still alive, fails instead of being silently dropped")]
+        public async Task CallToUnboundNativeObjectOfLiveViewFails() {
+            await Run(async () => {
+                var callResult = await CallUnboundInnerViewNativeMethod();
+
+                Assert.That(callResult, Does.StartWith("CallFailed"), "The call of a live view to its unbound native object did not fail!");
+                Assert.That(callResult, Does.Contain("methodCalled"), "The failure does not say which method was called!");
+            });
+        }
+
+        [Test(Description = "Tests that a value returning call to a native object that is no longer bound, made by a view that is still alive, fails and says which method it was")]
+        public async Task ValueReturningCallToUnboundNativeObjectOfLiveViewFails() {
+            await Run(async () => {
+                var callResult = await CallUnboundInnerViewNativeMethod(CallValueReturningNativeMethod);
+
+                Assert.That(callResult, Does.StartWith("CallFailed"), "The value returning call of a live view to its unbound native object did not fail!");
+                Assert.That(callResult, Does.Contain("valueReturningMethodCalled"), "The failure does not say which method was called!");
             });
         }
     }
@@ -146,13 +148,12 @@ namespace Tests.ReactView {
             return new ReactViewWithoutBailOut();
         }
 
-        [Test(Description = "Tests that a call to a native object that is no longer bound fails, and says which method it was, when bailing out is disabled")]
-        public async Task CallToUnboundNativeObjectFails() {
+        [Test(Description = "Tests that a call to the native object of a destroyed view fails when bailing out is disabled")]
+        public async Task CallToDestroyedViewNativeObjectFails() {
             await Run(async () => {
-                var callResult = await CallUnboundInnerViewNativeMethod();
+                var callResult = await CallDestroyedInnerViewNativeMethod();
 
-                Assert.That(callResult, Does.StartWith("CallFailed"), "The call to the unbound native object did not fail!");
-                Assert.That(callResult, Does.Contain("methodCalled"), "The failure does not say which method was called!");
+                Assert.That(callResult, Does.StartWith("CallFailed"), "The call to the destroyed view native object did not fail!");
             });
         }
     }

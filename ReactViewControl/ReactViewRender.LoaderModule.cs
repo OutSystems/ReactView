@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using WebViewControl;
 
 namespace ReactViewControl {
@@ -24,7 +22,7 @@ namespace ReactViewControl {
             /// <summary>
             /// Loads the specified react component into the specified frame
             /// </summary>
-            public void LoadComponent(IViewModule component, object componentNativeObject, string frameName, bool hasStyleSheet, bool hasPlugins, bool ensureDisposeInnerViews, bool loadScriptsOncePerDocument, bool ensureViewPluginsAreDisposed, bool bailOutOnUnboundNativeObjectCalls) {
+            public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins, bool ensureDisposeInnerViews, bool loadScriptsOncePerDocument, bool ensureViewPluginsAreDisposed, bool bailOutOnUnboundNativeObjectCalls) {
                 var mainSource = ViewRender.ToFullUrl(NormalizeUrl(component.MainJsSource));
                 var dependencySources = component.DependencyJsSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
                 var cssSources = component.CssSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
@@ -49,7 +47,6 @@ namespace ReactViewControl {
                 // loadScriptsOncePerDocument: boolean
                 // ensureViewPluginsAreDisposed: boolean
                 // bailOutOnUnboundNativeObjectCalls: boolean
-                // voidNativeObjectMethods: string[]
 
                 var loadArgs = new[] {
                     JavascriptSerializer.Serialize(component.Name),
@@ -67,7 +64,6 @@ namespace ReactViewControl {
                     JavascriptSerializer.Serialize(loadScriptsOncePerDocument),
                     JavascriptSerializer.Serialize(ensureViewPluginsAreDisposed),
                     JavascriptSerializer.Serialize(bailOutOnUnboundNativeObjectCalls),
-                    JavascriptSerializer.Serialize(GetVoidNativeObjectMethods(component, componentNativeObject)),
                 };
 
                 ExecuteLoaderFunction("loadComponent", loadArgs);
@@ -151,38 +147,6 @@ namespace ReactViewControl {
                     .OrderBy(p => p.Key)
                     .Select(p => new KeyValuePair<string, object>(JavascriptSerializer.GetJavascriptName(p.Key), p.Value));
                 return JavascriptSerializer.Serialize(nativeObjectMethodsMap, o => JavascriptSerializer.Serialize(o));
-            }
-
-            /// <summary>
-            /// The names, as javascript sees them, of the native object methods that return nothing. Only
-            /// calls to these can be dropped when the object is no longer bound: dropping a call that
-            /// returns a value would hand the caller an undefined result instead of an error, and the
-            /// failure would surface far away from its cause.
-            /// A method that cannot be matched on the native object is left out, so an unexpected shape
-            /// costs the bail out rather than the correctness of the call.
-            /// </summary>
-            private static string[] GetVoidNativeObjectMethods(IViewModule component, object componentNativeObject) {
-                if (componentNativeObject == null) {
-                    return new string[0];
-                }
-
-                var nativeMethods = componentNativeObject.GetType()
-                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(m => m.DeclaringType != typeof(object))
-                    .ToLookup(m => m.Name, StringComparer.OrdinalIgnoreCase);
-
-                return component.Events
-                    .Where(e => nativeMethods.Contains(e) && nativeMethods[e].All(m => ReturnsNothing(m.ReturnType)))
-                    .Select(JavascriptSerializer.GetJavascriptName)
-                    .ToArray();
-            }
-
-            /// <summary>
-            /// A method returning Task, rather than Task&lt;T&gt;, is as void as one returning void: the
-            /// promise the caller awaits carries no value either way.
-            /// </summary>
-            private static bool ReturnsNothing(Type returnType) {
-                return returnType == typeof(void) || returnType == typeof(Task) || returnType == typeof(ValueTask);
             }
 
             private static string ComputeHash(string inputString) {
