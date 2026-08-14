@@ -211,7 +211,7 @@ namespace ReactViewControl {
                 foreach (var keyValuePair in Frames) {
                     RecoverableFrames[keyValuePair.Key] = new WeakReference<FrameInfo>(keyValuePair.Value);
                     LogLifecycleFrame("FRAME-TO-RECOVERABLE", keyValuePair.Value); // RDEV-10097 instrumentation
-                    UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value, "js-context-released");
+                    UnregisterFrameNativeObjects(keyValuePair.Value, "js-context-released");
                 }
 
                 Frames.Clear();
@@ -550,6 +550,23 @@ namespace ReactViewControl {
                 return Host.CallNativeMethod(nativeMethod);
             }
             return Task.FromResult(nativeMethod());
+        }
+
+        /// <summary>
+        /// Unregisters every native object of the frame: the plugins and the component.
+        /// Leaving any of them registered keeps the module, and everything it holds, alive for as long as the
+        /// webview lives, and keeps its name taken, so the registration of the frame that comes next under
+        /// that same name is refused and that frame is left with the native object of its predecessor.
+        /// </summary>
+        /// <param name="frame"></param>
+        private void UnregisterFrameNativeObjects(FrameInfo frame, string lifecycleReason = "unspecified") {
+            IEnumerable<IViewModule> modules = frame.Plugins;
+            if (frame.Component != null) {
+                modules = modules.Concat(new[] { frame.Component });
+            }
+            foreach (var module in modules) {
+                UnregisterNativeObject(module, frame, lifecycleReason);
+            }
         }
 
         /// <summary>

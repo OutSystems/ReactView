@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace ReactViewControl {
+﻿namespace ReactViewControl {
 
     partial class ReactViewRender {
 
@@ -78,13 +75,7 @@ namespace ReactViewControl {
                 lock (ViewRender.SyncRoot) {
                     if (ViewRender.Frames.TryGetValue(frameName, out var frame)) {
                         ViewRender.TrackLifecycleViewDestroyed(frame); // RDEV-10097 instrumentation
-                        IEnumerable<IViewModule> modules = frame.Plugins;
-                        if (frame.Component != null) {
-                            modules = modules.Concat(new[] { frame.Component });
-                        }
-                        foreach (var module in modules) {
-                            ViewRender.UnregisterNativeObject(module, frame, "view-destroyed");
-                        }
+                        ViewRender.UnregisterFrameNativeObjects(frame, "view-destroyed");
                         ViewRender.Frames.Remove(frameName);
                     } else {
                         ViewRender.LogLifecycle("NOTIFY-VIEW-DESTROYED-UNKNOWN-FRAME", frameName, null); // RDEV-10097 instrumentation
