@@ -47,5 +47,12 @@ namespace ReactViewControl {
         /// behaviour, where only the host released them.
         /// </summary>
         public virtual bool EnsureViewPluginsAreDisposed => true;
+
+        /// <summary>
+        /// Calls through the view properties proxy bail out when the native object is missing or was
+        /// unregistered (typical remount / teardown races). Set to false to restore the previous behaviour,
+        /// where those calls surface as uncaught errors.
+        /// </summary>
+        public virtual bool BailOutOnUnboundNativeObjectCalls => true;
     }
 }

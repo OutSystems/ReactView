@@ -39,11 +39,13 @@ namespace ReactViewControl {
         private readonly bool ensureDisposeInnerViews;
         private readonly bool loadScriptsOncePerDocument;
         private readonly bool ensureViewPluginsAreDisposed;
+        private readonly bool bailOutOnUnboundNativeObjectCalls;
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool ensureInnerViewsAreDisposed, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool ensureInnerViewsAreDisposed, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true, bool bailOutOnUnboundNativeObjectCalls = true) {
             this.ensureDisposeInnerViews = ensureInnerViewsAreDisposed;
             this.loadScriptsOncePerDocument = loadScriptsOncePerDocument;
             this.ensureViewPluginsAreDisposed = ensureViewPluginsAreDisposed;
+            this.bailOutOnUnboundNativeObjectCalls = bailOutOnUnboundNativeObjectCalls;
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -278,7 +280,7 @@ namespace ReactViewControl {
 
             RegisterNativeObject(frame.Component, frame);
 
-            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews, loadScriptsOncePerDocument, ensureViewPluginsAreDisposed);
+            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews, loadScriptsOncePerDocument, ensureViewPluginsAreDisposed, bailOutOnUnboundNativeObjectCalls);
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
             }

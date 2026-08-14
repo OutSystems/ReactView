@@ -12,7 +12,7 @@ import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
 import { setEnsureDisposeInnerViewsFlag } from "./Internal/ViewMetadataContext";
-import { setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
+import { setBailOutOnUnboundNativeObjectCallsFlag, setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
@@ -139,7 +139,8 @@ export function loadComponent(
     componentHash: string,
     ensureDisposeInnerViews: boolean,
     loadScriptsOncePerDocument: boolean,
-    ensureViewPluginsAreDisposed: boolean): void {
+    ensureViewPluginsAreDisposed: boolean,
+    bailOutOnUnboundNativeObjectCalls: boolean): void {
 
     async function innerLoad() {
         let view: ViewMetadata;
@@ -155,6 +156,7 @@ export function loadComponent(
                 // script or is taken down
                 setLoadScriptsOncePerDocumentFlag(loadScriptsOncePerDocument);
                 setEnsureViewPluginsAreDisposedFlag(ensureViewPluginsAreDisposed);
+                setBailOutOnUnboundNativeObjectCallsFlag(bailOutOnUnboundNativeObjectCalls);
             }
 
             view = tryGetView(frameName)!;
