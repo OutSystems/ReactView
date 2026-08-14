@@ -12,7 +12,7 @@ import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
 import { setEnsureDisposeInnerViewsFlag } from "./Internal/ViewMetadataContext";
-import { setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
+import { setBailOutOnUnboundNativeObjectCallsFlag, setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
@@ -139,7 +139,8 @@ export function loadComponent(
     componentHash: string,
     ensureDisposeInnerViews: boolean,
     loadScriptsOncePerDocument: boolean,
-    ensureViewPluginsAreDisposed: boolean): void {
+    ensureViewPluginsAreDisposed: boolean,
+    bailOutOnUnboundNativeObjectCalls: boolean): void {
 
     async function innerLoad() {
         let view: ViewMetadata;
@@ -155,6 +156,7 @@ export function loadComponent(
                 // script or is taken down
                 setLoadScriptsOncePerDocumentFlag(loadScriptsOncePerDocument);
                 setEnsureViewPluginsAreDisposedFlag(ensureViewPluginsAreDisposed);
+                setBailOutOnUnboundNativeObjectCallsFlag(bailOutOnUnboundNativeObjectCalls);
             }
 
             view = tryGetView(frameName)!;
@@ -192,7 +194,7 @@ export function loadComponent(
 
             const renderFinishedTask = cacheEntry ? view.viewLoadTask : null;
             // create proxy for properties obj to delay its methods execution until native object is ready
-            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, renderFinishedTask);
+            const properties = createPropertiesProxy(rootElement, componentNativeObject, componentNativeObjectName, view, renderFinishedTask);
             view.nativeObjectNames.push(componentNativeObjectName); // add to the native objects collection
 
             const componentClass = (getViewModule(componentName) || {}).default;

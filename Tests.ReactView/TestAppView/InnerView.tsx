@@ -4,6 +4,7 @@ import { ViewSharedContext } from 'ViewFrame';
 interface IInnerViewProperties {
     loaded: () => void;
     methodCalled: (contextLoaded: boolean) => void;
+    valueReturningMethodCalled: (contextLoaded: boolean) => Promise<string>;
 }
 
 interface IInnerViewBehaviors {
@@ -15,6 +16,9 @@ export default class InnerView extends React.Component<IInnerViewProperties, {}>
     private sharedContextLoaded = false;
 
     componentDidMount() {
+        // kept around on purpose, so that a test can call into this view's native object after the view
+        // itself is gone
+        (window as any).InnerViewProperties = this.props;
         this.props.loaded();
     }
 

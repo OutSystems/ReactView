@@ -21,11 +21,18 @@ namespace Tests.ReactView {
             public void MethodCalled(bool contextLoaded) {
                 Owner.MethodCalled?.Invoke(contextLoaded);
             }
+
+            public string ValueReturningMethodCalled(bool contextLoaded) {
+                Owner.ValueReturningMethodCalled?.Invoke(contextLoaded);
+                return nameof(ValueReturningMethodCalled);
+            }
         }
 
         public event Action Loaded;
 
         public event Action<bool> MethodCalled;
+
+        public event Action<bool> ValueReturningMethodCalled;
 
         public void TestMethod() {
             ExecutionEngine.ExecuteMethod(this, "testMethod");
@@ -41,7 +48,7 @@ namespace Tests.ReactView {
             return new Properties(this);
         }
 
-        protected override string[] Events => new[] { "loaded", "methodCalled" };
+        protected override string[] Events => new[] { "loaded", "methodCalled", "valueReturningMethodCalled" };
 
     }
 }

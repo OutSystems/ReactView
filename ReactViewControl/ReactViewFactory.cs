@@ -47,5 +47,17 @@ namespace ReactViewControl {
         /// behaviour, where only the host released them.
         /// </summary>
         public virtual bool EnsureViewPluginsAreDisposed => true;
+
+        /// <summary>
+        /// Calls through the view properties proxy into a view that was already destroyed are dropped, and
+        /// logged to the console, whatever they return: destroying a view unregisters its native objects, so
+        /// there is nothing left to call into and nobody left to receive a result.
+        /// Every other call is left alone and still surfaces as an error, including one whose native object
+        /// was unregistered while its view is still live: that is a broken channel to the presenter, and
+        /// dropping it would silently discard a real user interaction.
+        /// Set to false to restore the previous behaviour, where a call into a destroyed view surfaces as an
+        /// uncaught error as well.
+        /// </summary>
+        public virtual bool BailOutOnUnboundNativeObjectCalls => true;
     }
 }
