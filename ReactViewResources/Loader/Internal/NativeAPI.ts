@@ -20,8 +20,14 @@ function withAPI(action: (api: INativeObject) => void): void {
 }
 
 export async function bindNativeObject<T>(nativeObjectName: string): Promise<T> {
-    await cefglue.checkObjectBound(nativeObjectName);
-    return window[nativeObjectName] as T;
+    const bound = await cefglue.checkObjectBound(nativeObjectName);
+    const nativeObject = window[nativeObjectName];
+    if (!bound || nativeObject === undefined) {
+        // resolving undefined instead would only move the failure to whoever dereferences it, where it
+        // reads as "cannot read properties of undefined" and names the method rather than the object
+        throw new Error(`Native object "${nativeObjectName}" is not bound. It was either never registered or unregistered already.`);
+    }
+    return nativeObject as T;
 }
 
 export function notifyViewInitialized(viewName: string): void {

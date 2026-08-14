@@ -97,7 +97,17 @@ export function loadPlugins(plugins: any[][], frameName: string): void {
                         throw new Error(`Failed to load '${moduleName}' (might not be a module with a default export)`);
                     }
 
-                    const pluginNativeObject = await bindNativeObject(nativeObjectFullName);
+                    let pluginNativeObject: unknown;
+                    try {
+                        pluginNativeObject = await bindNativeObject(nativeObjectFullName);
+                    } catch (error) {
+                        if (!view.isReleased) {
+                            throw error;
+                        }
+                        // destroying the view is what unregisters the native object this plugin would have
+                        // been given, so a failure to bind here is the teardown, not a broken plugin
+                        return;
+                    }
 
                     if (view.isReleased) {
                         // the view was destroyed while this was loading
