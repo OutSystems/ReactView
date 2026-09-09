@@ -27,6 +27,7 @@ namespace ReactViewControl {
                 webView.ExecuteScriptFunctionWithSerializedParams(method, args);
             } else {
                 PendingExecutions.Enqueue(Tuple.Create(module, methodCall, args));
+                ReactViewDiagnostics.Log($"Call '{methodCall}' to module '{module.Name}' was buffered: execution engine not started (queued: {PendingExecutions.Count})");
             }
         }
 
@@ -34,6 +35,7 @@ namespace ReactViewControl {
 
         public Task<T> EvaluateMethodAsync<T>(IViewModule module, string methodCall, params object[] args) {
             if (webView == null) {
+                ReactViewDiagnostics.Log($"Evaluate '{methodCall}' on module '{module.Name}' answered with a default value: execution engine not started");
                 return Task.FromResult<T>(default);
             }
             module.Host?.HandledBeforeExecuteMethod();
@@ -42,6 +44,9 @@ namespace ReactViewControl {
         }
 
         public void Start(ExtendedWebView webView, string frameName, string id) {
+            if (!PendingExecutions.IsEmpty) {
+                ReactViewDiagnostics.Log($"Execution engine started for '{frameName}': flushing {PendingExecutions.Count} buffered call(s)");
+            }
             this.id = id;
             this.frameName = frameName;
             this.webView = webView;

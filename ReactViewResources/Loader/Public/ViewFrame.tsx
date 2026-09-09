@@ -87,7 +87,16 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
         return this.parentView.childViews.items.find(c => c.name === fullName);
     }
 
+    private onChildViewsChanged = () => {
+        if (!this.getView()) {
+            // view unloaded from outside (Loader.unloadView): drop the portal so it tears down
+            this.forceUpdate();
+        }
+    };
+
     public componentDidMount() {
+        this.parentView.childViews.addChangedListener(this.onChildViewsChanged);
+
         const existingView = this.getView();
         if (existingView) {
             // update the existing view generation
@@ -114,6 +123,9 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     }
 
     public componentWillUnmount() {
+        // stop listening before the removal below re-enters this frame
+        this.parentView.childViews.removeChangedListener(this.onChildViewsChanged);
+
         if (this.replacement) {
             // put back the original container, otherwise react will complain
             this.replacement.parentElement!.replaceChild(this.placeholder, this.replacement);
@@ -128,8 +140,10 @@ class InternalViewFrame<T> extends React.Component<IInternalViewFrameProps<T>, {
     }
 
     public render() {
+        // the view can be unloaded (Loader.unloadView) before this frame re-renders
+        const view = this.getView();
         return <div ref={this.setPlaceholder} className={this.props.className}>
-            {this.shadowRoot && <ViewPortal view={this.getView()!} shadowRoot={this.shadowRoot} />}
+            {this.shadowRoot && view && <ViewPortal view={view} shadowRoot={this.shadowRoot} />}
         </div>;
     }
 }

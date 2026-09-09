@@ -17,6 +17,18 @@ import { setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
 export { showErrorMessage } from "./Internal/MessagesProvider";
 
+/**
+ * Unloads a child view without waiting for its owner ViewFrame to re-render. Removing the view from
+ * its parent's collection drives the regular portal teardown.
+ */
+export function unloadView(viewName: string): void {
+    const view = tryGetView(viewName);
+    if (!view || view.isMain || !view.parentView) {
+        return;
+    }
+    view.parentView.childViews.remove(view);
+}
+
 const bootstrapTask = new Task();
 const defaultStylesheetLoadTask = new Task();
 

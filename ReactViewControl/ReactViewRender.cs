@@ -26,6 +26,7 @@ namespace ReactViewControl {
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
         private Dictionary<string, WeakReference<FrameInfo>> RecoverableFrames { get; } = new Dictionary<string, WeakReference<FrameInfo>>();
+        private bool hasPendingContextLossCleanup;
         private Dictionary<string, WeakReference<IViewModule>> ChildViewModules { get; } = new Dictionary<string, WeakReference<IViewModule>>();
 
         private ExtendedWebView WebView { get; }
@@ -189,7 +190,9 @@ namespace ReactViewControl {
         internal EditCommands EditCommands { get; }
 
         /// <summary>
-        /// Javascript context was destroyed, cleanup everything.
+        /// Javascript context was released. A release can arrive out of order with its replacement's
+        /// creation, so the cleanup waits for the new main view to initialize instead of running here,
+        /// which would strand the current document's live views.
         /// </summary>
         /// <param name="frameName"></param>
         private void OnWebViewJavascriptContextReleased(string frameName) {
@@ -199,6 +202,22 @@ namespace ReactViewControl {
             }
 
             lock (SyncRoot) {
+                hasPendingContextLossCleanup = true;
+            }
+            ReactViewDiagnostics.Log("Main javascript context released: stale frames will be cleaned when a new main view initializes");
+        }
+
+        /// <summary>
+        /// Discards the frames of a document whose main javascript context was lost. Runs before the
+        /// replacement's child views register, so same-name views get fresh frames.
+        /// </summary>
+        private void RunPendingContextLossCleanup() {
+            lock (SyncRoot) {
+                if (!hasPendingContextLossCleanup) {
+                    return;
+                }
+                hasPendingContextLossCleanup = false;
+
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
 
                 Frames.Remove(mainFrame.Name);
@@ -208,12 +227,38 @@ namespace ReactViewControl {
                     UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value);
                 }
 
+                ReactViewDiagnostics.Log($"Cleaned {Frames.Count} stale frame(s) after a main javascript context loss");
+
                 Frames.Clear();
                 Frames.Add(mainFrame.Name, mainFrame);
                 ChildViewModules.Clear();
                 var previousComponentReady = mainFrame.IsComponentReadyToLoad;
                 mainFrame.Reset();
                 mainFrame.IsComponentReadyToLoad = previousComponentReady;
+            }
+        }
+
+        /// <summary>
+        /// Unloads a child view without waiting for the react tree that owns its frame to re-render.
+        /// Both sides are idempotent with the regular ViewFrame unmount teardown.
+        /// </summary>
+        /// <param name="frameName"></param>
+        public void UnloadChildView(string frameName) {
+            Loader.UnloadView(frameName);
+
+            lock (SyncRoot) {
+                if (Frames.TryGetValue(frameName, out var frame) && !frame.IsMain) {
+                    IEnumerable<IViewModule> modules = frame.Plugins;
+                    if (frame.Component != null) {
+                        modules = modules.Concat(new[] { frame.Component });
+                    }
+                    foreach (var module in modules) {
+                        UnregisterNativeObject(module, frame);
+                    }
+                    Frames.Remove(frameName);
+                    ReactViewDiagnostics.Log($"View '{frameName}' unloaded on host initiative");
+                }
+                ChildViewModules.Remove(frameName);
             }
         }
 

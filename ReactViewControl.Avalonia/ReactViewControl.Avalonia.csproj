@@ -25,7 +25,9 @@
     <Compile Include="..\ReactViewControl\IFrame.cs" Link="IFrame.cs" />
     <Compile Include="..\ReactViewControl\IViewModule.cs" Link="IViewModule.cs" />
     <Compile Include="..\ReactViewControl\LoadStatus.cs" Link="LoadStatus.cs" />
+    <Compile Include="..\ReactViewControl\Properties\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
     <Compile Include="..\ReactViewControl\ReactView.cs" Link="ReactView.cs" />
+    <Compile Include="..\ReactViewControl\ReactViewDiagnostics.cs" Link="ReactViewDiagnostics.cs" />
     <Compile Include="..\ReactViewControl\ReactViewFactory.cs" Link="ReactViewFactory.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.cs" Link="ReactViewRender.cs" />
     <Compile Include="..\ReactViewControl\ReactViewRender.LoaderModule.cs" Link="ReactViewRender.LoaderModule.cs" />
