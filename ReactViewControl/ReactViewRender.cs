@@ -238,6 +238,30 @@ namespace ReactViewControl {
             }
         }
 
+        /// <summary>
+        /// Unloads a child view without waiting for the react tree that owns its frame to re-render.
+        /// Both sides are idempotent with the regular ViewFrame unmount teardown.
+        /// </summary>
+        /// <param name="frameName"></param>
+        public void UnloadChildView(string frameName) {
+            Loader.UnloadView(frameName);
+
+            lock (SyncRoot) {
+                if (Frames.TryGetValue(frameName, out var frame) && !frame.IsMain) {
+                    IEnumerable<IViewModule> modules = frame.Plugins;
+                    if (frame.Component != null) {
+                        modules = modules.Concat(new[] { frame.Component });
+                    }
+                    foreach (var module in modules) {
+                        UnregisterNativeObject(module, frame);
+                    }
+                    Frames.Remove(frameName);
+                    ReactViewDiagnostics.Log($"View '{frameName}' unloaded on host initiative");
+                }
+                ChildViewModules.Remove(frameName);
+            }
+        }
+
         public void Dispose() {
             WebView.Dispose();
         }

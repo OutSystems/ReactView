@@ -76,6 +76,7 @@ namespace ReactViewControl {
             /// </summary>
             public void NotifyViewDestroyed(string frameName) {
                 lock (ViewRender.SyncRoot) {
+                    ReactViewDiagnostics.Log($"View '{frameName}' destroyed");
                     if (ViewRender.Frames.TryGetValue(frameName, out var frame)) {
                         IEnumerable<IViewModule> modules = frame.Plugins;
                         if (frame.Component != null) {

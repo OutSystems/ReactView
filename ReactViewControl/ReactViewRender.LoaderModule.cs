@@ -95,6 +95,15 @@ namespace ReactViewControl {
             }
 
             /// <summary>
+            /// Unloads the specified child view without waiting for the react tree that owns its
+            /// frame to re-render.
+            /// </summary>
+            /// <param name="frameName"></param>
+            public void UnloadView(string frameName) {
+                ExecuteLoaderFunction("unloadView", JavascriptSerializer.Serialize(frameName));
+            }
+
+            /// <summary>
             /// Shows an resource load error message for the spcified url.
             /// </summary>
             /// <param name="url"></param>

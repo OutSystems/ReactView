@@ -130,6 +130,13 @@ namespace ReactViewControl {
         public bool IsReady => View.IsReady;
 
         /// <summary>
+        /// Unloads a child view, releasing its renderer-side resources even if the react tree that owns
+        /// its frame never re-renders.
+        /// </summary>
+        /// <param name="frameName"></param>
+        public void UnloadChildView(string frameName) => View.UnloadChildView(frameName);
+
+        /// <summary>
         /// Gets or sets the control zoom percentage (1 = 100%)
         /// </summary>
         public double ZoomPercentage { get => View.ZoomPercentage; set => View.ZoomPercentage = value; }
