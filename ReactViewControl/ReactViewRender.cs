@@ -26,6 +26,7 @@ namespace ReactViewControl {
 
         private Dictionary<string, FrameInfo> Frames { get; } = new Dictionary<string, FrameInfo>();
         private Dictionary<string, WeakReference<FrameInfo>> RecoverableFrames { get; } = new Dictionary<string, WeakReference<FrameInfo>>();
+        private bool hasPendingContextLossCleanup;
         private Dictionary<string, WeakReference<IViewModule>> ChildViewModules { get; } = new Dictionary<string, WeakReference<IViewModule>>();
 
         private ExtendedWebView WebView { get; }
@@ -189,7 +190,9 @@ namespace ReactViewControl {
         internal EditCommands EditCommands { get; }
 
         /// <summary>
-        /// Javascript context was destroyed, cleanup everything.
+        /// Javascript context was released. A release can arrive out of order with its replacement's
+        /// creation, so the cleanup waits for the new main view to initialize instead of running here,
+        /// which would strand the current document's live views.
         /// </summary>
         /// <param name="frameName"></param>
         private void OnWebViewJavascriptContextReleased(string frameName) {
@@ -199,6 +202,22 @@ namespace ReactViewControl {
             }
 
             lock (SyncRoot) {
+                hasPendingContextLossCleanup = true;
+            }
+            ReactViewDiagnostics.Log("Main javascript context released: stale frames will be cleaned when a new main view initializes");
+        }
+
+        /// <summary>
+        /// Discards the frames of a document whose main javascript context was lost. Runs before the
+        /// replacement's child views register, so same-name views get fresh frames.
+        /// </summary>
+        private void RunPendingContextLossCleanup() {
+            lock (SyncRoot) {
+                if (!hasPendingContextLossCleanup) {
+                    return;
+                }
+                hasPendingContextLossCleanup = false;
+
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
 
                 Frames.Remove(mainFrame.Name);
@@ -207,6 +226,8 @@ namespace ReactViewControl {
                     RecoverableFrames[keyValuePair.Key] = new WeakReference<FrameInfo>(keyValuePair.Value);
                     UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value);
                 }
+
+                ReactViewDiagnostics.Log($"Cleaned {Frames.Count} stale frame(s) after a main javascript context loss");
 
                 Frames.Clear();
                 Frames.Add(mainFrame.Name, mainFrame);

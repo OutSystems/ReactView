@@ -28,6 +28,11 @@ namespace ReactViewControl {
             /// </summary>
             public void NotifyViewInitialized(string frameName) {
                 lock (ViewRender.SyncRoot) {
+                    if (frameName == FrameInfo.MainViewFrameName) {
+                        // a new main view proves the released context was really replaced; children register after it
+                        ViewRender.RunPendingContextLossCleanup();
+                    }
+
                     var frame = ViewRender.GetOrCreateFrame(frameName);
                     frame.LoadStatus = LoadStatus.ViewInitialized;
 
