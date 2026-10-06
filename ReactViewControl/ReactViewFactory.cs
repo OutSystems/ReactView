@@ -31,8 +31,6 @@ namespace ReactViewControl {
         /// </summary>
         public virtual bool EnableViewPreload => true;
 
-        public virtual bool EnsureInnerViewsAreDisposed => true;
-
         /// <summary>
         /// Each script is loaded once per document, instead of once per view. Inner views are shadow roots,
         /// and shadow dom does not encapsulate scripts, so a script appended for one view has already

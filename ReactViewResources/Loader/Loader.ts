@@ -11,7 +11,6 @@ import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
 import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
-import { setEnsureDisposeInnerViewsFlag } from "./Internal/ViewMetadataContext";
 import { setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
@@ -137,7 +136,6 @@ export function loadComponent(
     componentNativeObject: any,
     frameName: string,
     componentHash: string,
-    ensureDisposeInnerViews: boolean,
     loadScriptsOncePerDocument: boolean,
     ensureViewPluginsAreDisposed: boolean): void {
 
@@ -150,7 +148,6 @@ export function loadComponent(
             }
             
             if (frameName === mainFrameName) {
-                setEnsureDisposeInnerViewsFlag(ensureDisposeInnerViews);
                 // the main view always loads first, so the flags are set before any inner view loads a
                 // script or is taken down
                 setLoadScriptsOncePerDocumentFlag(loadScriptsOncePerDocument);

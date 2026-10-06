@@ -22,7 +22,7 @@ namespace ReactViewControl {
             /// <summary>
             /// Loads the specified react component into the specified frame
             /// </summary>
-            public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins, bool ensureDisposeInnerViews, bool loadScriptsOncePerDocument, bool ensureViewPluginsAreDisposed) {
+            public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins, bool loadScriptsOncePerDocument, bool ensureViewPluginsAreDisposed) {
                 var mainSource = ViewRender.ToFullUrl(NormalizeUrl(component.MainJsSource));
                 var dependencySources = component.DependencyJsSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
                 var cssSources = component.CssSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
@@ -43,7 +43,6 @@ namespace ReactViewControl {
                 // componentNativeObject: Dictionary<any>,
                 // frameName: string
                 // componentHash: string
-                // ensureDisposeInnerViews: boolean
                 // loadScriptsOncePerDocument: boolean
                 // ensureViewPluginsAreDisposed: boolean
 
@@ -59,7 +58,6 @@ namespace ReactViewControl {
                     componentSerialization,
                     JavascriptSerializer.Serialize(frameName),
                     JavascriptSerializer.Serialize(componentHash),
-                    JavascriptSerializer.Serialize(ensureDisposeInnerViews),
                     JavascriptSerializer.Serialize(loadScriptsOncePerDocument),
                     JavascriptSerializer.Serialize(ensureViewPluginsAreDisposed),
                 };

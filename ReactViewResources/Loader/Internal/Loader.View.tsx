@@ -1,29 +1,13 @@
 ﻿import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { getEnsureDisposeInnerViewsFlag, ViewMetadataContext } from "../Internal/ViewMetadataContext";
+import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { PluginsContext, PluginsContextHolder } from "../Public/PluginsContext";
 import { formatUrl, ResourceLoader } from "../Public/ResourceLoader";
 import { ViewMetadata } from "./ViewMetadata";
-import { onChildViewAdded, onChildViewRemoved, onChildViewErrorRaised } from "./ViewPortal";
-import { ViewPortalsCollectionLegacy } from "./ViewPortalsCollectionsLegacy";
 
 export function createView(componentClass: any, properties: {}, view: ViewMetadata, componentName: string) {
     componentClass.contextType = PluginsContext;
     const makeResourceUrl = (resourceKey: string, ...params: string[]) => formatUrl(view.name, resourceKey, ...params);
-
-    if(!getEnsureDisposeInnerViewsFlag()) {
-        return <ViewMetadataContext.Provider value={view}>
-            <PluginsContext.Provider value={new PluginsContextHolder(Array.from(view.modules.values()))}>
-                <ResourceLoader.Provider value={makeResourceUrl}>
-                    <ViewPortalsCollectionLegacy views={view.childViews}
-                        viewAdded={onChildViewAdded}
-                        viewRemoved={onChildViewRemoved}
-                        viewErrorRaised={onChildViewErrorRaised} />
-                    {React.createElement(componentClass, { ref: e => view.modules.set(componentName, e), ...properties })}
-                </ResourceLoader.Provider>
-            </PluginsContext.Provider>
-        </ViewMetadataContext.Provider>;
-    }
 
     return (
         <ViewMetadataContext.Provider value={view}>
