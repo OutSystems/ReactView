@@ -1,10 +1,9 @@
 ﻿import * as React from "react";
 import { IViewFrameProps } from "ViewFrame";
 import { newView, ViewMetadata } from "../Internal/ViewMetadata";
-import { getEnsureDisposeInnerViewsFlag, ViewMetadataContext } from "../Internal/ViewMetadataContext";
+import { ViewMetadataContext } from "../Internal/ViewMetadataContext";
 import { ViewSharedContext} from "./ViewSharedContext";
 import {ViewPortal} from "../Internal/ViewPortal";
-import InternalViewFrameLegacy from "./ViewFrameLegacy";
 
 export interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
     viewMetadata: ViewMetadata;
@@ -17,10 +16,6 @@ export interface IInternalViewFrameProps<T> extends IViewFrameProps<T> {
 export function ViewFrame<T>(props: IViewFrameProps<T>): JSX.Element {
     const viewMetadata = React.useContext(ViewMetadataContext);
     const viewContext = React.useContext(ViewSharedContext);
-    
-    if(!getEnsureDisposeInnerViewsFlag()) {
-        return <InternalViewFrameLegacy viewMetadata={viewMetadata} context={viewContext} {...props} />;
-    }
 
     return <InternalViewFrame viewMetadata={viewMetadata} context={viewContext} {...props} />;
 }

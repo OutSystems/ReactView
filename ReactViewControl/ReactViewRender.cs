@@ -36,12 +36,10 @@ namespace ReactViewControl {
         private bool enableDebugMode;
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
-        private readonly bool ensureDisposeInnerViews;
         private readonly bool loadScriptsOncePerDocument;
         private readonly bool ensureViewPluginsAreDisposed;
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool ensureInnerViewsAreDisposed, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true) {
-            this.ensureDisposeInnerViews = ensureInnerViewsAreDisposed;
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true) {
             this.loadScriptsOncePerDocument = loadScriptsOncePerDocument;
             this.ensureViewPluginsAreDisposed = ensureViewPluginsAreDisposed;
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
@@ -278,7 +276,7 @@ namespace ReactViewControl {
 
             RegisterNativeObject(frame.Component, frame);
 
-            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, ensureDisposeInnerViews, loadScriptsOncePerDocument, ensureViewPluginsAreDisposed);
+            Loader.LoadComponent(frame.Component, frame.Name, DefaultStyleSheet != null, frame.Plugins.Length > 0, loadScriptsOncePerDocument, ensureViewPluginsAreDisposed);
             if (isInputDisabled && frame.IsMain) {
                 Loader.DisableMouseInteractions();
             }
