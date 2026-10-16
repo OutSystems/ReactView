@@ -7,7 +7,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WebViewControl;
+#if !NATIVE_WEBVIEW
 using Xilium.CefGlue;
+#endif
 
 namespace ReactViewControl {
 
@@ -69,7 +71,9 @@ namespace ReactViewControl {
             WebView.LoadFailed += OnWebViewLoadFailed;
             WebView.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
             WebView.TextDragging += textContent => TextDragging?.Invoke(textContent);
+#if !NATIVE_WEBVIEW
             WebView.KeyPressed += OnWebViewKeyPressed;
+#endif
 
             ExtraInitialize();
 
@@ -472,9 +476,11 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="keyEvent"></param>
         /// <param name="handled"></param>
+#if !NATIVE_WEBVIEW
         private void OnWebViewKeyPressed(CefKeyEvent keyEvent, out bool handled) {
             handled = isInputDisabled;
         }
+#endif
 
         private CustomResourceRequestedEventHandler[] GetCustomResourceHandlers(FrameInfo frame) {
             var globalHandlers = CustomResourceRequested?.GetInvocationList().Cast<CustomResourceRequestedEventHandler>() ?? Enumerable.Empty<CustomResourceRequestedEventHandler>();
@@ -584,6 +590,10 @@ namespace ReactViewControl {
                     return;
                 }
                 isInputDisabled = disable;
+#if NATIVE_WEBVIEW
+                // the native web view receives the key events directly, they are discarded inside the page
+                WebView.IsKeyboardInputDisabled = disable;
+#endif
                 var frame = GetOrCreateFrame(FrameInfo.MainViewFrameName);
                 if (frame.LoadStatus >= LoadStatus.ComponentLoading) {
                     if (disable) {

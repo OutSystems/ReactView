@@ -4,11 +4,16 @@
     <TargetFramework>$(TargetDotnetVersion)</TargetFramework>
     <RootNamespace>ReactViewControl</RootNamespace>
     <AssemblyTitle>ReactViewControl Avalonia</AssemblyTitle>
-    <Description>ReactViewControl for Avalonia powered by CefGlue</Description>
+    <Description>ReactViewControl for Avalonia powered by the native web view of the operating system</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>ReactViewControl-Avalonia$(PackageSuffix)</PackageId>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
     <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- the shared sources have a few differences between the native web view and the cef based one -->
+    <DefineConstants>$(DefineConstants);NATIVE_WEBVIEW</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAvalonia'">
@@ -41,11 +46,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WebViewControl-Avalonia$(WebViewPackageSuffix)" />
     <PackageReference Include="Avalonia" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WebViewControl.Native.Avalonia\WebViewControl.Native.Avalonia.csproj" />
     <ProjectReference Include="..\ReactViewResources\ReactViewResources.csproj">
       <PrivateAssets>all</PrivateAssets>
       <IncludeInNugetPackage>true</IncludeInNugetPackage>

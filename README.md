@@ -17,6 +17,12 @@ See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List
 2) Follow [these](ViewGenerator/readme.txt "Instructions") intructions 
 3) For more details check the Sample project.
 
+## Web view engine
+
+The Avalonia version of ReactView renders using the **native web view of the operating system** (WKWebView on macOS) instead of a bundled Chromium,
+see [WebViewControl.Native.Avalonia](WebViewControl.Native.Avalonia/README.md) for the details, the platform support and the known differences.
+The WPF version still uses a bundled Chromium (through the `WebViewControl-WPF` package).
+
 ## Releases
 Stable binaries are released on NuGet, and contain everything you need to start creating ReactView based apps.
 - [![ReactViewControl-Avalonia](https://img.shields.io/nuget/v/ReactViewControl-Avalonia.svg?style=flat&label=ReactView-Avalonia)](https://www.nuget.org/packages/ReactViewControl-Avalonia/)
@@ -48,7 +54,7 @@ The versioning system works as follows:
 
 Whenever you fix a bug, please increase the patch version. \
 Whenever you bring a new feature, please increase the major version. \
-Use the minor version for the current cef version.
+Use the minor version for the current cef version (only applies to the WPF version, the Avalonia version does not bundle cef).
 
 
 # TODO

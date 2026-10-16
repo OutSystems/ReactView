@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.29230.47
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactViewControl.Avalonia", "ReactViewControl.Avalonia\ReactViewControl.Avalonia.csproj", "{6A17926A-BD42-4C4D-8255-07C847B23C01}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebViewControl.Native.Avalonia", "WebViewControl.Native.Avalonia\WebViewControl.Native.Avalonia.csproj", "{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactViewResources", "ReactViewResources\ReactViewResources.csproj", "{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactViewControl", "ReactViewControl\ReactViewControl.csproj", "{4FE01227-BBE0-4B87-9B11-2418F6F77512}"
@@ -47,6 +49,20 @@ Global
 		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseAvalonia|x64.Build.0 = ReleaseAvalonia|x64
 		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseWPF|ARM64.ActiveCfg = ReleaseWPF|ARM64
 		{6A17926A-BD42-4C4D-8255-07C847B23C01}.ReleaseWPF|x64.ActiveCfg = ReleaseWPF|x64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Debug|ARM64.Build.0 = Debug|ARM64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Release|ARM64.ActiveCfg = Release|ARM64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Release|ARM64.Build.0 = Release|ARM64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.ReleaseAvalonia|ARM64.ActiveCfg = ReleaseAvalonia|ARM64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.ReleaseAvalonia|ARM64.Build.0 = ReleaseAvalonia|ARM64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Debug|x64.ActiveCfg = Debug|x64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Debug|x64.Build.0 = Debug|x64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Release|x64.ActiveCfg = Release|x64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.Release|x64.Build.0 = Release|x64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.ReleaseAvalonia|x64.ActiveCfg = ReleaseAvalonia|x64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.ReleaseAvalonia|x64.Build.0 = ReleaseAvalonia|x64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.ReleaseWPF|ARM64.ActiveCfg = ReleaseWPF|ARM64
+		{8D0EE237-A3FA-45CB-A0C3-3735A96E6AC1}.ReleaseWPF|x64.ActiveCfg = ReleaseWPF|x64
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Debug|ARM64.ActiveCfg = Debug|ARM64
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Debug|ARM64.Build.0 = Debug|ARM64
 		{6A3B80C3-A44C-4494-A16B-75D2281B0A5D}.Release|ARM64.ActiveCfg = Release|ARM64

@@ -44,7 +44,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="WebViewControl-Avalonia$(WebViewPackageSuffix)" />
   </ItemGroup>
   
   <ItemGroup>

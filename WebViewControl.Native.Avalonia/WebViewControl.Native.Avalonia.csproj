@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(TargetDotnetVersion)</TargetFramework>
+    <RootNamespace>WebViewControl</RootNamespace>
+    <AssemblyName>WebViewControl.Native.Avalonia</AssemblyName>
+    <AssemblyTitle>WebViewControl Native Avalonia</AssemblyTitle>
+    <Description>WebView control for Avalonia powered by the operating system's native web view (WKWebView on macOS) instead of a bundled Chromium.</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>WebViewControl-Native-Avalonia$(PackageSuffix)</PackageId>
+    <Configurations>Debug;Release;ReleaseAvalonia;ReleaseWPF</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'ReleaseAvalonia'">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- JS side of the native <-> javascript bridge, injected in every document before any page script runs -->
+    <EmbeddedResource Include="Resources\NativeBridge.js" LogicalName="WebViewControl.Native.NativeBridge.js" />
+  </ItemGroup>
+
+</Project>

@@ -30,7 +30,15 @@ namespace ReactViewControl {
             }
         }
 
+#if NATIVE_WEBVIEW
+        // the results are delivered through the UI thread, so the wait must not block it
+        public T EvaluateMethod<T>(IViewModule module, string methodCall, params object[] args) {
+            var task = EvaluateMethodAsync<T>(module, methodCall, args);
+            return webView != null ? webView.WaitForResult(task) : task.Result;
+        }
+#else
         public T EvaluateMethod<T>(IViewModule module, string methodCall, params object[] args) => EvaluateMethodAsync<T>(module, methodCall, args).Result;
+#endif
 
         public Task<T> EvaluateMethodAsync<T>(IViewModule module, string methodCall, params object[] args) {
             if (webView == null) {
