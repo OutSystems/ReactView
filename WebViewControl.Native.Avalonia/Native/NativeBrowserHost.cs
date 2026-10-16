@@ -21,6 +21,7 @@ namespace WebViewControl.Native {
         protected override IPlatformHandle CreateNativeControlCore(IPlatformHandle parent) {
             // the browser might have been created already (preloaded views), in that case the existing view is just attached
             owner.EnsureBrowserCreated(800, 600);
+            browser.OnHostBoundsChanged(Bounds.Width, Bounds.Height, this.GetVisualRoot()?.RenderScaling ?? 1.0);
             return browser.CreatePlatformHandle(parent);
         }
 
@@ -28,13 +29,13 @@ namespace WebViewControl.Native {
             base.OnPropertyChanged(change);
 
             if (change.Property == BoundsProperty) {
-                var scaling = this.GetVisualRoot()?.RenderScaling ?? 1.0;
-                browser.OnHostBoundsChanged((int)System.Math.Ceiling(Bounds.Width * scaling), (int)System.Math.Ceiling(Bounds.Height * scaling));
+                browser.OnHostBoundsChanged(Bounds.Width, Bounds.Height, this.GetVisualRoot()?.RenderScaling ?? 1.0);
             }
         }
 
         protected override void DestroyNativeControlCore(IPlatformHandle control) {
             // the native view is owned by the browser, it can be attached again later. It is released when the web view is disposed.
+            browser.OnHostDetached();
         }
     }
 }

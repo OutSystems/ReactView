@@ -121,9 +121,14 @@ namespace WebViewControl.Native {
         void Create(int width, int height);
 
         /// <summary>
-        /// Called when the size of the control hosting the native view changes (in device pixels).
+        /// Called when the size of the control hosting the native view changes (in device independent units).
         /// </summary>
-        void OnHostBoundsChanged(int pixelWidth, int pixelHeight);
+        void OnHostBoundsChanged(double width, double height, double scaling);
+
+        /// <summary>
+        /// Called when the native view stops being hosted by the avalonia control (its window was closed, the view was removed...).
+        /// </summary>
+        void OnHostDetached();
 
         /// <summary>
         /// Gets the handle to be hosted by the avalonia native control host.

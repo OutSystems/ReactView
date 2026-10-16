@@ -56,7 +56,9 @@ namespace WebViewControl.Native.Mac {
         [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, double a, double b, double c, double d);
         [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr a, long b, byte c);
         [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr bytes, UIntPtr length, long encoding);
+        [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, CGRect rect);
         [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, CGRect rect, IntPtr a);
+        [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, CGRect rect, long a, long b, byte c);
         [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern IntPtr Send(IntPtr receiver, IntPtr selector, long a, IntPtr b, IntPtr c, byte d);
 
         [DllImport(LibObjc, EntryPoint = "objc_msgSend")] public static extern byte SendBool(IntPtr receiver, IntPtr selector);

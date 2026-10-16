@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using Avalonia.Threading;
 
 namespace WebViewControl.Native {
 
@@ -11,7 +13,9 @@ namespace WebViewControl.Native {
 
         public static void Write(string message) {
             if (Enabled) {
-                Console.Error.WriteLine("[webview-native] " + message);
+                var thread = Thread.CurrentThread;
+                var where = Dispatcher.UIThread.CheckAccess() ? "UI" : $"thread {thread.ManagedThreadId}";
+                Console.Error.WriteLine($"[webview-native] [{where}] {message}");
             }
         }
     }

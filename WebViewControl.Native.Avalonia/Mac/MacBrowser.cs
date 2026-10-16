@@ -67,6 +67,15 @@ namespace WebViewControl.Native.Mac {
         private IntPtr bridge;
         private IntPtr userContentController;
         private IntPtr webView;
+
+        // The view that avalonia hosts. The web view is inside it, so its size is not tied to the size of the host:
+        // WebKit does not render a view with an empty frame, and the host is empty until the page reports the size of its content.
+        private IntPtr hostView;
+        private int preloadWidth = 800;
+        private int preloadHeight = 600;
+        private double hostWidth;
+        private double hostHeight;
+        private bool isHostAttached;
         private bool disposed;
         private bool allowDeveloperTools;
         private string lastTitle;
@@ -95,6 +104,9 @@ namespace WebViewControl.Native.Mac {
             }
 
             var settings = WebView.Settings;
+
+            preloadWidth = Math.Max(1, width);
+            preloadHeight = Math.Max(1, height);
 
             bridge = MacBridgeClass.CreateInstance(this);
 
@@ -146,6 +158,9 @@ namespace WebViewControl.Native.Mac {
 
             ApplyInspectable(allowDeveloperTools);
 
+            // the view is created before it is hosted (preload)
+            UpdateWebViewParent();
+
             // notify asynchronously, like the other browser events
             Dispatcher.UIThread.Post(() => {
                 if (!disposed) {
@@ -154,10 +169,59 @@ namespace WebViewControl.Native.Mac {
             });
         }
 
-        public void OnHostBoundsChanged(int pixelWidth, int pixelHeight) {
-            // the native view is resized by the avalonia native control host
+        public void OnHostDetached() {
+            isHostAttached = false;
+            if (!disposed) {
+                UpdateWebViewParent();
+            }
+        }
+
+        // ---- parking ------------------------------------------------------------------------------------------------
+
+        private static IntPtr parkingWindow;
+
+        /// <summary>
+        /// WebKit only renders the pages of the views that are visible: a view that is not in a window is "hidden", so requestAnimationFrame never runs,
+        /// the timers are throttled and the ResizeObserver notifications are not delivered. The views are created before they are hosted (preload) and
+        /// the windows that host them wait for the page to report its layout (the size of the dialogs, of the tooltips) before being shown,
+        /// so a view that is not hosted yet is kept in an invisible window (the chromium based web view always renders).
+        /// The window is tiny, transparent, ignores the mouse and floats above the normal windows (otherwise the other windows would occlude it).
+        /// </summary>
+        private void Park() {
+            var parkingContent = parkingWindow == IntPtr.Zero ? IntPtr.Zero : Send(parkingWindow, Sel("contentView"));
+            if (parkingContent != IntPtr.Zero && Send(webView, Sel("superview")) == parkingContent) {
+                return; // already parked
+            }
+
+            if (parkingWindow == IntPtr.Zero) {
+                var screen = Send(Cls("NSScreen"), Sel("mainScreen"));
+                var screenFrame = screen == IntPtr.Zero ? new CGRect(0, 0, 100, 100) : SendRect(screen, Sel("frame"));
+
+                var window = Send(Send(Cls("NSWindow"), Sel("alloc")), Sel("initWithContentRect:styleMask:backing:defer:"),
+                                  new CGRect(screenFrame.X + screenFrame.Width / 2, screenFrame.Y + screenFrame.Height / 2, 1, 1), 0L /* borderless */, 2L /* buffered */, (byte)0);
+                Send(window, Sel("setReleasedWhenClosed:"), (byte)0);
+                Send(window, Sel("setOpaque:"), (byte)0);
+                Send(window, Sel("setBackgroundColor:"), Send(Cls("NSColor"), Sel("clearColor")));
+                Send(window, Sel("setHasShadow:"), (byte)0);
+                Send(window, Sel("setIgnoresMouseEvents:"), (byte)1);
+                Send(window, Sel("setExcludedFromWindowsMenu:"), (byte)1);
+                Send(window, Sel("setAlphaValue:"), 0.0);
+                Send(window, Sel("setLevel:"), 3L); // NSFloatingWindowLevel
+                Send(window, Sel("setCollectionBehavior:"), 1L | 8L | 16L | 64L); // all spaces, transient, stationary, ignored by the windows cycle
+                Send(window, Sel("orderFrontRegardless"));
+                parkingWindow = window;
+            }
+
+            NativeTrace.Write("parking the web view in the invisible window, so it keeps rendering until it is hosted");
+            Send(Send(parkingWindow, Sel("contentView")), Sel("addSubview:"), webView);
+        }
+
+        public void OnHostBoundsChanged(double width, double height, double scaling) {
+            hostWidth = width;
+            hostHeight = height;
+            UpdateWebViewParent();
             if (NativeTrace.Enabled && webView != IntPtr.Zero) {
-                NativeTrace.Write($"host bounds {pixelWidth}x{pixelHeight}; view frame={SendRect(webView, Sel("frame"))} window={DescribeWindow(Send(webView, Sel("window")))}");
+                NativeTrace.Write($"host bounds {width:0.#}x{height:0.#}; web view frame={SendRect(webView, Sel("frame"))} window={DescribeWindow(Send(webView, Sel("window")))}");
             }
         }
 
@@ -203,7 +267,38 @@ namespace WebViewControl.Native.Mac {
         public IPlatformHandle CreatePlatformHandle(IPlatformHandle parent) {
             Create(800, 600);
             NativeTrace.Write($"attaching native view to host view (window={DescribeWindow(Send(parent.Handle, Sel("window")))})");
-            return new PlatformHandle(webView, "NSView");
+
+            if (hostView == IntPtr.Zero) {
+                hostView = New("NSView");
+            }
+            isHostAttached = true;
+            UpdateWebViewParent();
+            return new PlatformHandle(hostView, "NSView");
+        }
+
+        private bool HostHasSize => hostWidth >= 1 && hostHeight >= 1;
+
+        /// <summary>
+        /// The web view is inside the avalonia host while the host has a size, and has the size of the host. Otherwise (not hosted, or the host is
+        /// still empty) it is parked and keeps the size it was preloaded with.
+        /// Avalonia hides the native views of the hosts that are empty, and WebKit does not render a view that is hidden or has an empty frame.
+        /// But the host is empty until the page reports the size of its content, which it can only do if it is rendered: so while the host is empty
+        /// the page is laid out, rendered and can report the size of its content as if it was hosted (as the cef based web view did).
+        /// </summary>
+        private void UpdateWebViewParent() {
+            if (webView == IntPtr.Zero) {
+                return;
+            }
+
+            if (isHostAttached && HostHasSize) {
+                if (Send(webView, Sel("superview")) != hostView) {
+                    Send(hostView, Sel("addSubview:"), webView); // also takes it from the parking window
+                }
+                Send(webView, Sel("setFrame:"), new CGRect(0, 0, hostWidth, hostHeight));
+            } else {
+                Park();
+                Send(webView, Sel("setFrame:"), new CGRect(0, 0, preloadWidth, preloadHeight));
+            }
         }
 
         private static IntPtr GetDataStore(bool persist) {
@@ -601,6 +696,11 @@ namespace WebViewControl.Native.Mac {
                 Send(userContentController, Sel("removeScriptMessageHandlerForName:"), NSString(BridgeHandlerName));
                 Send(userContentController, Sel("removeAllUserScripts"));
                 Send(webView, Sel("removeFromSuperview"));
+                if (hostView != IntPtr.Zero) {
+                    Send(hostView, Sel("removeFromSuperview"));
+                    Release(hostView);
+                    hostView = IntPtr.Zero;
+                }
                 Release(userContentController);
                 Release(webView);
                 webView = IntPtr.Zero;

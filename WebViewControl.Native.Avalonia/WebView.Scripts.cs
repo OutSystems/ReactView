@@ -193,18 +193,24 @@ namespace WebViewControl {
                 return;
             }
 
+            var tracking = NativeWatchdog.Track($"call from page {objectName}.{methodName}");
             object result;
             try {
                 var arguments = method.ConvertArguments(argumentsJson);
                 result = nativeObject.InterceptCall(() => method.Invoke(nativeObject.Target, arguments));
             } catch (Exception e) {
+                tracking.Dispose();
                 RejectNativeCall(callId, e.Message);
                 return;
             }
 
             if (result is Task task) {
-                task.ContinueWith(t => RunInUI(() => CompleteNativeCall(callId, t)), TaskScheduler.Default);
+                task.ContinueWith(t => RunInUI(() => {
+                    tracking.Dispose();
+                    CompleteNativeCall(callId, t);
+                }), TaskScheduler.Default);
             } else {
+                tracking.Dispose();
                 ResolveNativeCall(callId, result);
             }
         }
@@ -467,6 +473,12 @@ namespace WebViewControl {
                 return default; // disposing
             }
 
+            using (NativeWatchdog.Track($"script evaluation {functionName ?? "(script)"} (javascript context {(contextReady ? "ready" : "NOT created yet")})")) {
+                return await AwaitEvaluation<T>(scriptTask, timeout).ConfigureAwait(false);
+            }
+        }
+
+        private static async Task<T> AwaitEvaluation<T>(ScriptTask scriptTask, TimeSpan? timeout) {
             if (timeout.HasValue) {
                 var winner = await Task.WhenAny(scriptTask.Completion.Task, Task.Delay(timeout.Value)).ConfigureAwait(false);
                 if (winner != scriptTask.Completion.Task) {
