@@ -20,6 +20,37 @@ namespace WebViewControl.Native {
         public NameValueCollection Headers { get; set; }
         public Stream Content { get; set; }
         public bool AutoDisposeContent { get; set; }
+
+        /// <summary>
+        /// Reads the whole content, always from its start: applications can serve the same (seekable) stream instance to several requests
+        /// (e.g. cached images), and the cef based web view always read the streams from the beginning.
+        /// Concurrent requests that share a stream are serialized.
+        /// </summary>
+        public byte[] ReadContent() {
+            var stream = Content;
+            if (stream == null) {
+                return Array.Empty<byte>();
+            }
+
+            try {
+                lock (stream) {
+                    if (stream.CanSeek) {
+                        stream.Position = 0;
+                    }
+                    if (stream is MemoryStream memoryStream) {
+                        return memoryStream.ToArray();
+                    }
+                    using (var buffer = new MemoryStream()) {
+                        stream.CopyTo(buffer);
+                        return buffer.ToArray();
+                    }
+                }
+            } finally {
+                if (AutoDisposeContent) {
+                    stream.Dispose();
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -118,6 +149,12 @@ namespace WebViewControl.Native {
         double ZoomFactor { get; set; }
 
         bool AreDeveloperToolsAllowed { get; set; }
+
+        /// <summary>
+        /// Disables the same origin policy (cross origin requests are not blocked, canvases are not tainted).
+        /// Only applied when the native web view is created.
+        /// </summary>
+        bool IsWebSecurityDisabled { get; set; }
         void ShowDeveloperTools();
         void CloseDeveloperTools();
 

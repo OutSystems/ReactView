@@ -205,7 +205,13 @@ namespace WebViewControl {
 
         public void GoForward() => browser.GoForward();
 
-        public bool IsSecurityDisabled { get; set; }
+        /// <summary>
+        /// Disables the same origin policy of the pages (cross origin requests are allowed). Must be set before the browser is initialized.
+        /// </summary>
+        public bool IsSecurityDisabled {
+            get => browser.IsWebSecurityDisabled;
+            set => browser.IsWebSecurityDisabled = value;
+        }
 
         public bool IgnoreCertificateErrors { get; set; }
 

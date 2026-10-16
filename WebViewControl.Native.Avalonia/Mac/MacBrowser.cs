@@ -43,29 +43,15 @@ namespace WebViewControl.Native.Mac {
             // read the content in the caller thread, it can be slow
             byte[] content = Array.Empty<byte>();
             try {
-                if (response?.Content != null) {
-                    content = ReadAllBytes(response.Content);
+                if (response != null) {
+                    content = response.ReadContent();
                 }
             } catch (Exception e) {
                 browser.ReportError(e);
                 response = null;
-            } finally {
-                if (response?.AutoDisposeContent == true) {
-                    response.Content?.Dispose();
-                }
             }
 
             browser.RunOnUIThread(() => browser.SendSchemeTaskResponse(this, response, content));
-        }
-
-        private static byte[] ReadAllBytes(Stream stream) {
-            if (stream is MemoryStream memoryStream) {
-                return memoryStream.ToArray();
-            }
-            using (var buffer = new MemoryStream()) {
-                stream.CopyTo(buffer);
-                return buffer.ToArray();
-            }
         }
     }
 
@@ -84,6 +70,16 @@ namespace WebViewControl.Native.Mac {
         private bool disposed;
         private bool allowDeveloperTools;
         private string lastTitle;
+
+        static MacBrowser() {
+            if (NativeTrace.Enabled) {
+                // the windows of the application, every 4 seconds
+                DispatcherTimer.Run(() => {
+                    TraceWindows("periodic");
+                    return true;
+                }, TimeSpan.FromSeconds(4));
+            }
+        }
 
         public MacBrowser(INativeBrowserOwner owner) {
             this.owner = owner;
@@ -122,8 +118,13 @@ namespace WebViewControl.Native.Mac {
                 Send(userContentController, Sel("addUserScript:"), userScript);
                 Release(userScript);
 
-                // the web view works on a copy of the configuration, the developer extras have to be set before it is created
-                SetDeveloperExtras(Send(configuration, Sel("preferences")), allowDeveloperTools);
+                // the web view works on a copy of the configuration, the preferences have to be set before it is created
+                var preferences = Send(configuration, Sel("preferences"));
+                SetDeveloperExtras(preferences, allowDeveloperTools);
+                if (IsWebSecurityDisabled && RespondsTo(preferences, "_setWebSecurityEnabled:")) {
+                    // same as the cef based web view with IsSecurityDisabled (--disable-web-security)
+                    Send(preferences, Sel("_setWebSecurityEnabled:"), (byte)0);
+                }
 
                 webView = Send(Send(Cls("WKWebView"), Sel("alloc")), Sel("initWithFrame:configuration:"), new CGRect(0, 0, width, height), configuration);
             } finally {
@@ -155,10 +156,53 @@ namespace WebViewControl.Native.Mac {
 
         public void OnHostBoundsChanged(int pixelWidth, int pixelHeight) {
             // the native view is resized by the avalonia native control host
+            if (NativeTrace.Enabled && webView != IntPtr.Zero) {
+                NativeTrace.Write($"host bounds {pixelWidth}x{pixelHeight}; view frame={SendRect(webView, Sel("frame"))} window={DescribeWindow(Send(webView, Sel("window")))}");
+            }
+        }
+
+        private static string DescribeWindow(IntPtr window) {
+            if (window == IntPtr.Zero) {
+                return "none";
+            }
+            var title = FromNSString(Send(window, Sel("title")));
+            var cls = FromNSString(Send(Send(window, Sel("class")), Sel("description")));
+            return $"'{title}' {cls} visible={SendBool(window, Sel("isVisible"))} key={SendBool(window, Sel("isKeyWindow"))} frame={SendRect(window, Sel("frame"))}";
+        }
+
+        /// <summary>
+        /// Trace only: logs the windows of the application.
+        /// </summary>
+        internal static void TraceWindows(string reason) {
+            var windows = Send(Send(Cls("NSApplication"), Sel("sharedApplication")), Sel("windows"));
+            var count = SendLong(windows, Sel("count"));
+            NativeTrace.Write($"windows ({reason}): {count}");
+            for (long i = 0; i < count; i++) {
+                var window = Send(windows, Sel("objectAtIndex:"), (IntPtr)i);
+                NativeTrace.Write("   " + DescribeWindow(window));
+                if (SendBool(window, Sel("isVisible")) != 0) {
+                    TraceViews(Send(window, Sel("contentView")), 1);
+                }
+            }
+        }
+
+        private static void TraceViews(IntPtr view, int depth) {
+            if (view == IntPtr.Zero || depth > 6) {
+                return;
+            }
+            var cls = FromNSString(Send(Send(view, Sel("class")), Sel("description")));
+            var extra = cls == "WKWebView" ? $" url={FromNSUrl(Send(view, Sel("URL")))} loading={SendBool(view, Sel("isLoading"))}" : "";
+            NativeTrace.Write($"   {new string(' ', depth * 2)}{cls} frame={SendRect(view, Sel("frame"))} hidden={SendBool(view, Sel("isHidden"))}{extra}");
+            var subviews = Send(view, Sel("subviews"));
+            var count = SendLong(subviews, Sel("count"));
+            for (long i = 0; i < count; i++) {
+                TraceViews(Send(subviews, Sel("objectAtIndex:"), (IntPtr)i), depth + 1);
+            }
         }
 
         public IPlatformHandle CreatePlatformHandle(IPlatformHandle parent) {
             Create(800, 600);
+            NativeTrace.Write($"attaching native view to host view (window={DescribeWindow(Send(parent.Handle, Sel("window")))})");
             return new PlatformHandle(webView, "NSView");
         }
 
@@ -193,6 +237,8 @@ namespace WebViewControl.Native.Mac {
                 }
             }
         }
+
+        public bool IsWebSecurityDisabled { get; set; }
 
         public bool AreDeveloperToolsAllowed {
             get => allowDeveloperTools;

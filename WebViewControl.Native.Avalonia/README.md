@@ -45,8 +45,11 @@ Things that behave differently or are not available (yet):
 * **No Windows implementation** (a `WebView2` backend can be added behind `INativeBrowser`).
 * **Synchronous waits on the UI thread** (`ExecutionEngine.EvaluateMethod<T>`, generated for methods returning values) are supported by running a nested
   application event loop while waiting, because WKWebView only delivers results through the UI thread. Prefer the async variants.
-* `ExternalResourceRequested` / `IsSecurityDisabled`: `http(s)` requests cannot be intercepted by WKWebView, so these never fire / have no effect.
+* `ExternalResourceRequested`: `http(s)` requests cannot be intercepted by WKWebView, so it never fires.
   Content that the application needs to serve itself must use one of the custom schemes (e.g. `CustomResourceRequested`).
+* `IsSecurityDisabled` (set by ReactView on every view) disables WebKit's same origin policy, as `--disable-web-security` did with cef:
+  cross origin `fetch`/XHR work without CORS headers and cross origin images do not taint canvases. It must be set before the browser is
+  initialized. Without it, such requests fail with WebKit's generic `Load failed` error.
 * `ResourceHandler.Redirect`: WKWebView does not follow redirects of custom schemes, so the redirect is resolved natively and its content is served
   in place of the requested url: `http(s)` targets are fetched (`HttpClient`), other targets go through the resources pipeline again. The page keeps the original url.
 * Request headers cannot be changed (`SetHeader*` only changes the copy seen by handlers).
@@ -69,8 +72,8 @@ The page is also inspectable from Safari's *Develop* menu.
 
 ## Diagnostics
 
-Set the `WEBVIEW_NATIVE_TRACE=1` environment variable to write the bridge traffic (resource requests, messages from the page, page console output,
-unhandled async exceptions) to the standard error.
+Set the `WEBVIEW_NATIVE_TRACE=1` environment variable to write the bridge traffic (resource requests and responses, messages from the page,
+page console output, failed `fetch`/XHR requests with their url, unhandled async exceptions) to the standard error.
 
 ## `#if NATIVE_WEBVIEW`
 
