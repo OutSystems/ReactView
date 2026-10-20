@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WebViewControl;
-using Xilium.CefGlue;
 
 namespace ReactViewControl {
 
@@ -472,7 +471,7 @@ namespace ReactViewControl {
         /// </summary>
         /// <param name="keyEvent"></param>
         /// <param name="handled"></param>
-        private void OnWebViewKeyPressed(CefKeyEvent keyEvent, out bool handled) {
+        private void OnWebViewKeyPressed(KeyEventDetails keyEvent, out bool handled) {
             handled = isInputDisabled;
         }
 

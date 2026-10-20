@@ -5,7 +5,7 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
     <!-- Please see https://github.com/OutSystems/reactview?tab=readme-ov-file#versioning for versioning rules -->
-    <Version>5.120.8</Version>
+    <Version>6.120.0</Version>
     <Authors>OutSystems</Authors>
     <Product>ReactView</Product>
     <Copyright>Copyright © OutSystems 2023</Copyright>
@@ -18,7 +18,13 @@
 
   <PropertyGroup>
     <AvaloniaVersion>11.0.10</AvaloniaVersion>
-    <WebViewVersion>3.120.10</WebViewVersion>
+    <WebViewVersion>4.120.0</WebViewVersion>
+    <!--
+      The web engine the controls are built with (see WebViewControl):
+      - Cef (default): bundled Chromium, through CefGlue
+      - Native: the web engine of the operating system, WKWebView on macOS and WebView2 on Windows (Avalonia only)
+    -->
+    <WebViewEngine Condition="'$(WebViewEngine)' == ''">Cef</WebViewEngine>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == '' or '$(Platform)' == 'x64'">
@@ -29,6 +35,12 @@
   <PropertyGroup Condition="'$(Platform)' == 'ARM64'">
     <PackageSuffix>-ARM64</PackageSuffix>
     <WebViewPackageSuffix>-ARM64</WebViewPackageSuffix>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(WebViewEngine)' == 'Native'">
+    <!-- the native flavor ships no browser binaries, the same package serves every architecture -->
+    <PackageSuffix>-Native</PackageSuffix>
+    <WebViewPackageSuffix>-Native</WebViewPackageSuffix>
   </PropertyGroup>
 
   <ItemGroup>

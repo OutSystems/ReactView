@@ -17,6 +17,17 @@ See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List
 2) Follow [these](ViewGenerator/readme.txt "Instructions") intructions 
 3) For more details check the Sample project.
 
+## Web engines
+ReactView renders with the web engine of [WebViewControl](https://github.com/OutSystems/WebView#web-engines), chosen at build time with the `WebViewEngine` property:
+- `Cef` (default): Chromium bundled with the app, through CefGlue.
+- `Native`: the web engine of the system, WKWebView on macOS and WebView2 on Windows (Avalonia only, WPF always uses CEF). The packages get the `-Native` suffix (eg: `ReactViewControl-Avalonia-Native`).
+
+```
+dotnet build Sample.Avalonia/Sample.Avalonia.csproj -p:WebViewEngine=Native
+```
+
+The loader binds the native objects through `webviewBridge` when the web engine provides it, and through CefGlue's `cefglue` otherwise.
+
 ## Releases
 Stable binaries are released on NuGet, and contain everything you need to start creating ReactView based apps.
 - [![ReactViewControl-Avalonia](https://img.shields.io/nuget/v/ReactViewControl-Avalonia.svg?style=flat&label=ReactView-Avalonia)](https://www.nuget.org/packages/ReactViewControl-Avalonia/)
