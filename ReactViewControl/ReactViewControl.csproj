@@ -1,5 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- WPF always renders with CEF, the native engines are only available for Avalonia -->
+  <PropertyGroup Condition="'$(WebViewEngine)' == 'Native'">
+    <PackageSuffix Condition="'$(Platform)' == 'ARM64'">-ARM64</PackageSuffix>
+    <PackageSuffix Condition="'$(Platform)' != 'ARM64'" />
+    <WebViewPackageSuffix>$(PackageSuffix)</WebViewPackageSuffix>
+  </PropertyGroup>
+
   <PropertyGroup>
     <TargetFramework>$(TargetDotnetVersion)-windows</TargetFramework>
     <RootNamespace>ReactViewControl</RootNamespace>

@@ -24,6 +24,7 @@
 
         <PackageVersion Include="WebViewControl-Avalonia" Version="$(WebViewVersion)" />
         <PackageVersion Include="WebViewControl-Avalonia-ARM64" Version="$(WebViewVersion)" />
+        <PackageVersion Include="WebViewControl-Avalonia-Native" Version="$(WebViewVersion)" />
 
         <PackageVersion Include="WebViewControl-WPF" Version="$(WebViewVersion)" />
         <PackageVersion Include="WebViewControl-WPF-ARM64" Version="$(WebViewVersion)" />

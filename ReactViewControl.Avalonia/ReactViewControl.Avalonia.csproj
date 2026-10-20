@@ -15,6 +15,10 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(WebViewEngine)' == 'Native'">
+    <Description>ReactViewControl for Avalonia powered by the web engine of the system (WKWebView on macOS, WebView2 on Windows)</Description>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\ReactViewControl\EditCommands.cs" Link="EditCommands.cs" />
     <Compile Include="..\ReactViewControl\ExecutionEngine.cs" Link="ExecutionEngine.cs" />

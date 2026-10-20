@@ -6,9 +6,18 @@ interface INativeObject {
     notifyViewDestroyed(frameName: string): void;
 }
 
-declare const cefglue: {
-    checkObjectBound(objName: string): Promise<boolean>
-};
+interface IObjectBinder {
+    checkObjectBound(objName: string): Promise<boolean>;
+}
+
+// the bindings of the native objects are exposed by the web engine: webviewBridge with the
+// system engines (WKWebView on macOS, WebView2 on Windows), cefglue with CEF
+declare const webviewBridge: IObjectBinder | undefined;
+declare const cefglue: IObjectBinder;
+
+function getObjectBinder(): IObjectBinder {
+    return typeof webviewBridge !== "undefined" ? webviewBridge : cefglue;
+}
 
 function withAPI(action: (api: INativeObject) => void): void {
     const api = window[nativeAPIObjectName];
@@ -20,7 +29,7 @@ function withAPI(action: (api: INativeObject) => void): void {
 }
 
 export async function bindNativeObject<T>(nativeObjectName: string): Promise<T> {
-    await cefglue.checkObjectBound(nativeObjectName);
+    await getObjectBinder().checkObjectBound(nativeObjectName);
     return window[nativeObjectName] as T;
 }
 
