@@ -34,7 +34,7 @@ namespace ReactViewControl {
                     using (var reader = new StreamReader(stream)) {
                         var allEntries = reader.ReadToEnd();
                         if (!string.IsNullOrEmpty(allEntries)) {
-                            return allEntries.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                            return allEntries.ReplaceLineEndings().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
                         }
                     }
                 }
