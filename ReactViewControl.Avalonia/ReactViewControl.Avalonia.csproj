@@ -46,11 +46,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="WebViewControl-Avalonia$(WebViewPackageSuffix)" />
     <PackageReference Include="Avalonia" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WebViewControl.Native.Avalonia\WebViewControl.Native.Avalonia.csproj" />
     <ProjectReference Include="..\ReactViewResources\ReactViewResources.csproj">
       <PrivateAssets>all</PrivateAssets>
       <IncludeInNugetPackage>true</IncludeInNugetPackage>

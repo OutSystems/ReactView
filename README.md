@@ -19,9 +19,8 @@ See the [Sample.Avalonia](Sample.Avalonia) project for an example of a Task List
 
 ## Web view engine
 
-The Avalonia version of ReactView renders using the **native web view of the operating system** (WKWebView on macOS) instead of a bundled Chromium,
-see [WebViewControl.Native.Avalonia](WebViewControl.Native.Avalonia/README.md) for the details, the platform support and the known differences,
-and [docs/NativeWebView.md](docs/NativeWebView.md) for the full reference of the changes, the problems found and their fixes.
+The Avalonia version of ReactView renders using the **native web view of the operating system** (WKWebView on macOS) instead of a bundled Chromium.
+The web view lives in the [WebView](https://github.com/OutSystems/WebView) repository (`WebViewControl-Avalonia` package, see its `docs/NativeWebView.md`).
 The WPF version still uses a bundled Chromium (through the `WebViewControl-WPF` package).
 
 ## Releases
