@@ -38,6 +38,12 @@
     <Compile Include="..\ReactViewControl\ModuleDependenciesProviderFactory.cs" Link="ModuleDependenciesProviderFactory.cs" />
     <Compile Include="..\ReactViewControl\IModuleDependenciesProvider.cs" Link="IModuleDependenciesProvider.cs" />
     <Compile Include="..\ReactViewControl\FileDependenciesProvider.cs" Link="FileDependenciesProvider.cs" />
+    <Compile Include="..\ReactViewControl\CefViewTransport.cs" Link="CefViewTransport.cs" />
+    <Compile Include="..\ReactViewControl\EditCommand.cs" Link="EditCommand.cs" />
+    <Compile Include="..\ReactViewControl\IViewTransport.cs" Link="IViewTransport.cs" />
+    <Compile Include="..\ReactViewControl\IViewTransportFactory.cs" Link="IViewTransportFactory.cs" />
+    <Compile Include="..\ReactViewControl\IViewTransportHost.cs" Link="IViewTransportHost.cs" />
+    <Compile Include="..\ReactViewControl\ViewTransportFactory.cs" Link="ViewTransportFactory.cs" />
   </ItemGroup>
 
   <ItemGroup>

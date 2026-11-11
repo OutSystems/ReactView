@@ -16,7 +16,7 @@ namespace ReactViewControl {
 
             private NativeAPI(ReactViewRender viewRender) {
                 ViewRender = viewRender;
-                ViewRender.WebView.RegisterJavascriptObject(NativeObjectName, this);
+                ViewRender.Transport.RegisterJavascriptObject(NativeObjectName, this);
             }
 
             public static void Initialize(ReactViewRender viewRender) {
@@ -33,8 +33,8 @@ namespace ReactViewControl {
 
                     if (frame.IsMain) {
                         // from now on we have to watch for js context released
-                        ViewRender.WebView.JavascriptContextReleased -= ViewRender.OnWebViewJavascriptContextReleased;
-                        ViewRender.WebView.JavascriptContextReleased += ViewRender.OnWebViewJavascriptContextReleased;
+                        ViewRender.Transport.JavascriptContextReleased -= ViewRender.OnJavascriptContextReleased;
+                        ViewRender.Transport.JavascriptContextReleased += ViewRender.OnJavascriptContextReleased;
 
                         // only need to load the stylesheet for the main frame
                         LoadStyleSheet();
@@ -58,7 +58,7 @@ namespace ReactViewControl {
                     System.Diagnostics.Debug.WriteLine($"View '{frameName}' loaded (id: '{id}')");
 #endif
                     // start component execution engine
-                    frame.ExecutionEngine.Start(ViewRender.WebView, frameName, id);
+                    frame.ExecutionEngine.Start(ViewRender.Transport, frameName, id);
 
                     if (frame.IsMain) {
                         ReactView.AsyncExecuteInUI(() => ViewRender.Ready?.Invoke(), false);

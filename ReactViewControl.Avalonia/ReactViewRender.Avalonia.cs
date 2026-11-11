@@ -12,7 +12,9 @@ namespace ReactViewControl {
     partial class ReactViewRender : Control {
 
         partial void ExtraInitialize() {
-            VisualChildren.Add(WebView);
+            if (Transport.Control is Control control) {
+                VisualChildren.Add(control);
+            }
         }
 
         private IEnumerable<Screen> GetScreens() {
@@ -33,12 +35,12 @@ namespace ReactViewControl {
                 initialBrowserSizeHeight = (int) screens.Max(s => s.WorkingArea.Height * (ExtendedWebView.Settings.OsrEnabled ? 1 : s.PixelDensity));
             }
 
-            WebView.InitializeBrowser(initialBrowserSizeWidth, initialBrowserSizeHeight);
+            Transport.Initialize(initialBrowserSizeWidth, initialBrowserSizeHeight);
         }
 
         protected override void OnGotFocus(GotFocusEventArgs e) {
             e.Handled = true;
-            WebView.Focus();
+            Transport.Focus();
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change) {

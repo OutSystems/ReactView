@@ -132,8 +132,8 @@ namespace ReactViewControl {
             /// <param name="args"></param>
             private void ExecuteLoaderFunction(string functionName, params string[] args) {
                 // using setimeout we make sure the function is already defined
-                var loaderUrl = new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.LoaderUrl);
-                ViewRender.WebView.ExecuteScript($"import('{loaderUrl}').then(m => m.default.{LoaderModuleName}).then({LoaderModuleName} => {LoaderModuleName}.{functionName}({string.Join(",", args)}))");
+                var loaderUrl = ViewRender.Transport.ToDocumentUrl(new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.LoaderUrl).ToString());
+                ViewRender.Transport.ExecuteScript($"import('{loaderUrl}').then(m => m.default.{LoaderModuleName}).then({LoaderModuleName} => {LoaderModuleName}.{functionName}({string.Join(",", args)}))");
             }
 
             private static string SerializeComponent(IViewModule component) {
