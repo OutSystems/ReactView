@@ -188,7 +188,11 @@ namespace ReactViewControl {
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
 
                 Frames.Remove(mainFrame.Name);
-                RecoverableFrames.Clear();
+                // what earlier contexts released stays recoverable: a context can be released before it loads again
+                // all the frames of the previous one (eg: a page reloaded twice in a row), and the frames it loads
+                // can still be destroyed and created again (see GetOrCreateFrame)
+                RemoveCollected(RecoverableFrames);
+                RemoveCollected(ChildViewModules);
                 foreach (var keyValuePair in Frames) {
                     RecoverableFrames[keyValuePair.Key] = new WeakReference<FrameInfo>(keyValuePair.Value);
                     // a frame gets its component when the view binds one, which may not have happened yet
@@ -199,10 +203,15 @@ namespace ReactViewControl {
 
                 Frames.Clear();
                 Frames.Add(mainFrame.Name, mainFrame);
-                ChildViewModules.Clear();
                 var previousComponentReady = mainFrame.IsComponentReadyToLoad;
                 mainFrame.Reset();
                 mainFrame.IsComponentReadyToLoad = previousComponentReady;
+            }
+        }
+
+        private static void RemoveCollected<T>(Dictionary<string, WeakReference<T>> references) where T : class {
+            foreach (var name in references.Where(r => !r.Value.TryGetTarget(out _)).Select(r => r.Key).ToArray()) {
+                references.Remove(name);
             }
         }
 
