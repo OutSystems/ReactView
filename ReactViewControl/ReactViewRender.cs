@@ -7,11 +7,10 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WebViewControl;
-using Xilium.CefGlue;
 
 namespace ReactViewControl {
 
-    internal partial class ReactViewRender : IChildViewHost, IDisposable {
+    internal partial class ReactViewRender : IChildViewHost, IViewTransportHost, IDisposable {
 
 #if DEBUG
         private static int counter;
@@ -28,7 +27,7 @@ namespace ReactViewControl {
         private Dictionary<string, WeakReference<FrameInfo>> RecoverableFrames { get; } = new Dictionary<string, WeakReference<FrameInfo>>();
         private Dictionary<string, WeakReference<IViewModule>> ChildViewModules { get; } = new Dictionary<string, WeakReference<IViewModule>>();
 
-        private ExtendedWebView WebView { get; }
+        private IViewTransport Transport { get; }
         private Assembly UserCallingAssembly { get; }
         private LoaderModule Loader { get; }
         private Func<IViewModule[]> PluginsFactory { get; }
@@ -44,14 +43,7 @@ namespace ReactViewControl {
             this.ensureViewPluginsAreDisposed = ensureViewPluginsAreDisposed;
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
-            // must useSharedDomain for the local storage to be shared
-            WebView = new ExtendedWebView(useSharedDomain: true) {
-                DisableBuiltinContextMenus = true,
-                IsSecurityDisabled = true,
-                IgnoreMissingResources = false,
-                IsHistoryDisabled = true,
-                Focusable = true
-            };
+            Transport = ViewTransportFactory.Instance.CreateTransport(this);
 
             NativeAPI.Initialize(this);
             Loader = new LoaderModule(this);
@@ -63,31 +55,27 @@ namespace ReactViewControl {
 
             GetOrCreateFrame(FrameInfo.MainViewFrameName); // creates the main frame
 
-            WebView.Disposed += Dispose;
-            WebView.BeforeNavigate += OnWebViewBeforeNavigate;
-            WebView.BeforeResourceLoad += OnWebViewBeforeResourceLoad;
-            WebView.LoadFailed += OnWebViewLoadFailed;
-            WebView.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
-            WebView.TextDragging += textContent => TextDragging?.Invoke(textContent);
-            WebView.KeyPressed += OnWebViewKeyPressed;
+            Transport.Disposed += Dispose;
+            Transport.FilesDragging += fileNames => FilesDragging?.Invoke(fileNames);
+            Transport.TextDragging += textContent => TextDragging?.Invoke(textContent);
 
             ExtraInitialize();
 
             var urlParams = new[] {
-                new ResourceUrl(ResourcesAssembly).ToString(),
+                Transport.ToDocumentUrl(new ResourceUrl(ResourcesAssembly).ToString()),
                 enableDebugMode ? "true" : "false",
                 ExecutionEngine.ModulesObjectName,
                 NativeAPI.NativeObjectName,
-                ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl,
+                Transport.ToDocumentUrl(ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl),
             };
 
-            WebView.LoadResource(new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams)));
+            Transport.LoadResource(new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams)));
 
             if (preloadWebView) {
                 PreloadWebView();
             }
 
-            EditCommands = new EditCommands(WebView);
+            EditCommands = new EditCommands(Transport);
         }
 
         partial void ExtraInitialize();
@@ -96,7 +84,7 @@ namespace ReactViewControl {
 
         public ReactView Host { get; set; }
 
-        public bool IsDisposing => WebView.IsDisposing;
+        public bool IsDisposing => Transport.IsDisposing;
 
         /// <summary>
         /// True when the main component has been rendered.
@@ -117,11 +105,11 @@ namespace ReactViewControl {
             get { return enableDebugMode; }
             set {
                 enableDebugMode = value;
-                WebView.AllowDeveloperTools = enableDebugMode;
+                Transport.AllowDeveloperTools = enableDebugMode;
                 if (enableDebugMode) {
-                    WebView.ResourceLoadFailed += Loader.ShowResourceLoadFailedMessage;
+                    Transport.ResourceLoadFailed += Loader.ShowResourceLoadFailedMessage;
                 } else {
-                    WebView.ResourceLoadFailed -= Loader.ShowResourceLoadFailedMessage;
+                    Transport.ResourceLoadFailed -= Loader.ShowResourceLoadFailedMessage;
                 }
             }
         }
@@ -130,8 +118,8 @@ namespace ReactViewControl {
         /// Gets or sets the webview zoom percentage (1 = 100%)
         /// </summary>
         public double ZoomPercentage {
-            get { return WebView.ZoomPercentage; }
-            set { WebView.ZoomPercentage = value; }
+            get { return Transport.ZoomPercentage; }
+            set { Transport.ZoomPercentage = value; }
         }
 
         /// <summary>
@@ -143,28 +131,34 @@ namespace ReactViewControl {
         /// Event fired when an async exception occurs (eg: executing javascript)
         /// </summary>
         public event UnhandledAsyncExceptionEventHandler UnhandledAsyncException {
-            add { WebView.UnhandledAsyncException += value; }
-            remove { WebView.UnhandledAsyncException -= value; }
+            add { Transport.UnhandledAsyncException += value; }
+            remove { Transport.UnhandledAsyncException -= value; }
         }
 
         /// <summary>
         /// Event fired when a resource fails to load.
         /// </summary>
         public event ResourceLoadFailedEventHandler ResourceLoadFailed {
-            add { WebView.ResourceLoadFailed += value; }
-            remove { WebView.ResourceLoadFailed -= value; }
+            add { Transport.ResourceLoadFailed += value; }
+            remove { Transport.ResourceLoadFailed -= value; }
         }
 
         /// <summary>
         /// Handle embedded resource requests. You can use this event to change the resource being loaded.
         /// </summary>
-        public event ResourceRequestedEventHandler EmbeddedResourceRequested;
+        public event ResourceRequestedEventHandler EmbeddedResourceRequested {
+            add { Transport.EmbeddedResourceRequested += value; }
+            remove { Transport.EmbeddedResourceRequested -= value; }
+        }
 
         /// <summary>
         /// Handle external resource requests.
         /// Call <see cref="ResourceHandler.BeginAsyncResponse"/> to handle the request in an async way.
         /// </summary>
-        public event ResourceRequestedEventHandler ExternalResourceRequested;
+        public event ResourceRequestedEventHandler ExternalResourceRequested {
+            add { Transport.ExternalResourceRequested += value; }
+            remove { Transport.ExternalResourceRequested -= value; }
+        }
 
         /// <summary>
         /// Handle custom resource requests. Use this event to load the resource based on provided key.
@@ -187,43 +181,49 @@ namespace ReactViewControl {
         internal EditCommands EditCommands { get; }
 
         /// <summary>
-        /// Javascript context was destroyed, cleanup everything.
+        /// Javascript context of the main document was destroyed, cleanup everything.
         /// </summary>
-        /// <param name="frameName"></param>
-        private void OnWebViewJavascriptContextReleased(string frameName) {
-            if (!WebView.IsMainFrame(frameName)) {
-                // ignore, its an iframe saying goodbye
-                return;
-            }
-
+        private void OnJavascriptContextReleased() {
             lock (SyncRoot) {
                 var mainFrame = Frames[FrameInfo.MainViewFrameName];
 
                 Frames.Remove(mainFrame.Name);
-                RecoverableFrames.Clear();
+                // what earlier contexts released stays recoverable: a context can be released before it loads again
+                // all the frames of the previous one (eg: a page reloaded twice in a row), and the frames it loads
+                // can still be destroyed and created again (see GetOrCreateFrame)
+                RemoveCollected(RecoverableFrames);
+                RemoveCollected(ChildViewModules);
                 foreach (var keyValuePair in Frames) {
                     RecoverableFrames[keyValuePair.Key] = new WeakReference<FrameInfo>(keyValuePair.Value);
-                    UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value);
+                    // a frame gets its component when the view binds one, which may not have happened yet
+                    if (keyValuePair.Value.Component != null) {
+                        UnregisterNativeObject(keyValuePair.Value.Component, keyValuePair.Value);
+                    }
                 }
 
                 Frames.Clear();
                 Frames.Add(mainFrame.Name, mainFrame);
-                ChildViewModules.Clear();
                 var previousComponentReady = mainFrame.IsComponentReadyToLoad;
                 mainFrame.Reset();
                 mainFrame.IsComponentReadyToLoad = previousComponentReady;
             }
         }
 
+        private static void RemoveCollected<T>(Dictionary<string, WeakReference<T>> references) where T : class {
+            foreach (var name in references.Where(r => !r.Value.TryGetTarget(out _)).Select(r => r.Key).ToArray()) {
+                references.Remove(name);
+            }
+        }
+
         public void Dispose() {
-            WebView.Dispose();
+            Transport.Dispose();
         }
 
         /// <summary>
         /// Initialize the underlying webview if has been initialized yet.
         /// </summary>
         public void EnsureInitialized() {
-            if (!WebView.IsBrowserInitialized) {
+            if (!Transport.IsInitialized) {
                 PreloadWebView();
             }
         }
@@ -332,14 +332,14 @@ namespace ReactViewControl {
         /// Opens the developer tools.
         /// </summary>
         public void ShowDeveloperTools() {
-            WebView.ShowDeveloperTools();
+            Transport.ShowDeveloperTools();
         }
 
         /// <summary>
         /// Closes the developer tools.
         /// </summary>
         public void CloseDeveloperTools() {
-            WebView.CloseDeveloperTools();
+            Transport.CloseDeveloperTools();
         }
 
         /// <summary>
@@ -416,86 +416,29 @@ namespace ReactViewControl {
             }
         }
 
-        /// <summary>
-        /// Handles webview url load request.
-        /// </summary>
-        /// <param name="request"></param>
-        private void OnWebViewBeforeNavigate(Request request) {
-            if (request.IsMainFrame && !request.Url.OrdinalStartsWith($"{ResourceUrl.EmbeddedScheme}{Uri.SchemeDelimiter}")) {
-                UrlHelper.OpenInExternalBrowser(request.Url);
-                request.Cancel();
-            }
-        }
-
-        /// <summary>
-        /// Handles the webview load of resources
-        /// </summary>
-        /// <param name="resourceHandler"></param>
-        private void OnWebViewBeforeResourceLoad(ResourceHandler resourceHandler) {
-            var url = resourceHandler.Url;
-            var scheme = url.Substring(0, Math.Max(0, url.OrdinalIndexOf(Uri.SchemeDelimiter)));
-
-            switch (scheme.ToLowerInvariant()) {
-                case ResourceUrl.CustomScheme:
-                    HandleCustomResourceRequested(resourceHandler);
-                    break;
-
-                case ResourceUrl.EmbeddedScheme:
-                    // webview already started BeginAsyncResponse
-                    EmbeddedResourceRequested?.Invoke(resourceHandler);
-                    break;
-
-                case "http":
-                case "https":
-                    ExternalResourceRequested?.Invoke(resourceHandler);
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Handles webview load errors.
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="errorCode"></param>
-        /// <param name="frameName">The iframe name, not to be confused with view frame name</param>
-        private void OnWebViewLoadFailed(string url, int errorCode, string frameName) {
-            if (!WebView.IsMainFrame(frameName)) {
-                // ignore errors in iframes
-                return;
-            }
-
-            throw new Exception($"Failed to load view (error: {errorCode})");
-        }
-
-        /// <summary>
-        /// Handles webview keypresses.
-        /// </summary>
-        /// <param name="keyEvent"></param>
-        /// <param name="handled"></param>
-        private void OnWebViewKeyPressed(CefKeyEvent keyEvent, out bool handled) {
-            handled = isInputDisabled;
-        }
-
         private CustomResourceRequestedEventHandler[] GetCustomResourceHandlers(FrameInfo frame) {
             var globalHandlers = CustomResourceRequested?.GetInvocationList().Cast<CustomResourceRequestedEventHandler>() ?? Enumerable.Empty<CustomResourceRequestedEventHandler>();
             var frameHandlers = frame.CustomResourceRequestedHandler?.GetInvocationList().Cast<CustomResourceRequestedEventHandler>() ?? Enumerable.Empty<CustomResourceRequestedEventHandler>();
             return globalHandlers.Concat(frameHandlers).ToArray();
         }
 
+        bool IViewTransportHost.IsInputDisabled => isInputDisabled;
+
         /// <summary>
-        /// Handle custom resource request and forward it to the appropriate frame.
+        /// Finds the handlers of the frame the custom resource belongs to.
         /// </summary>
         /// <param name="url"></param>
+        /// <param name="loadResource">Calls the handlers and returns the response of the first one that returns a stream.</param>
         /// <returns></returns>
-        private void HandleCustomResourceRequested(ResourceHandler resourceHandler) {
-            var url = resourceHandler.Url;
+        bool IViewTransportHost.TryGetCustomResourceLoader(string url, out Func<Resource> loadResource) {
+            loadResource = null;
 
             if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Segments.Length > 1 && uri.Host.Equals(CustomResourceBaseUrl, StringComparison.InvariantCultureIgnoreCase)) {
                 var frameName = uri.Segments.ElementAt(1).TrimEnd(ResourceUrl.PathSeparator.ToCharArray());
                 if (frameName != null && Frames.TryGetValue(frameName, out var frame)) {
                     var customResourceRequestedHandlers = GetCustomResourceHandlers(frame);
                     if (customResourceRequestedHandlers.Any()) {
-                        resourceHandler.BeginAsyncResponse(() => {
+                        loadResource = () => {
                             // get resource key from the query params
                             var resourceKeyAndOptions = uri.Query.TrimStart('?').Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries).Select(p => Uri.UnescapeDataString(p));
                             var resourceKey = resourceKeyAndOptions.FirstOrDefault();
@@ -503,17 +446,19 @@ namespace ReactViewControl {
 
                             // get response from first handler that returns a stream
                             var response = customResourceRequestedHandlers.Select(h => h(resourceKey, options)).FirstOrDefault(r => r?.Content != null);
-
-                            if (response != null) {
-                                var extension = (response.Extension ?? Path.GetExtension(resourceKey)).TrimStart('.');
-                                resourceHandler.RespondWith(response.Content, extension);
-                            } else {
-                                resourceHandler.RespondWith(MemoryStream.Null);
+                            if (response == null) {
+                                return null;
                             }
-                        });
+
+                            var extension = (response.Extension ?? Path.GetExtension(resourceKey)).TrimStart('.');
+                            return new Resource(response.Content, extension);
+                        };
+                        return true;
                     }
                 }
             }
+
+            return false;
         }
 
         /// <summary>
@@ -524,7 +469,7 @@ namespace ReactViewControl {
         /// <param name="forceNativeSyncCalls"></param>
         private void RegisterNativeObject(IViewModule module, FrameInfo frame) {
             var nativeObjectName = module.GetNativeObjectFullName(frame.Name);
-            WebView.RegisterJavascriptObject(nativeObjectName, module.CreateNativeObject(), interceptCall: CallNativeMethod);
+            Transport.RegisterJavascriptObject(nativeObjectName, module.CreateNativeObject(), interceptCall: CallNativeMethod);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -542,7 +487,7 @@ namespace ReactViewControl {
         /// <param name="frameName"></param>
         private void UnregisterNativeObject(IViewModule module, FrameInfo frame) {
             var nativeObjectName = module.GetNativeObjectFullName(frame.Name);
-            WebView.UnregisterJavascriptObject(nativeObjectName);
+            Transport.UnregisterJavascriptObject(nativeObjectName);
         }
 
         /// <summary>
@@ -552,14 +497,14 @@ namespace ReactViewControl {
         /// <returns></returns>
         private string ToFullUrl(string url) {
             if (url.OrdinalContains(Uri.SchemeDelimiter)) {
-                return url;
+                return Transport.ToDocumentUrl(url);
             }
 
             if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
-                return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
+                return Transport.ToDocumentUrl(new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString());
             }
 
-            return new ResourceUrl(UserCallingAssembly, url).ToString();
+            return Transport.ToDocumentUrl(new ResourceUrl(UserCallingAssembly, url).ToString());
         }
 
         /// <summary>

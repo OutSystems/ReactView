@@ -115,6 +115,10 @@ class App extends React.Component<IAppProperties, IAppState> {
         this.setState({ isInnerViewHidden: true }, () => this.props.event("InnerViewHidden"));
     }
 
+    showInnerView() {
+        this.setState({ isInnerViewHidden: false });
+    }
+
     getDisposedPluginModulesCount() {
         return (window as any).DisposedPluginModules;
     }

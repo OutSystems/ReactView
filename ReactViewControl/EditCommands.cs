@@ -1,27 +1,25 @@
-﻿using WebViewControl;
-
-namespace ReactViewControl {
+﻿namespace ReactViewControl {
 
     public class EditCommands {
 
-        private WebView WebView { get; }
+        private IViewTransport Transport { get; }
 
-        internal EditCommands(WebView webView) {
-            WebView = webView;
+        internal EditCommands(IViewTransport transport) {
+            Transport = transport;
         }
 
-        public void Cut() => WebView.EditCommands.Cut();
+        public void Cut() => Transport.ExecuteEditCommand(EditCommand.Cut);
 
-        public void Copy() => WebView.EditCommands.Copy();
+        public void Copy() => Transport.ExecuteEditCommand(EditCommand.Copy);
 
-        public void Paste() => WebView.EditCommands.Paste();
+        public void Paste() => Transport.ExecuteEditCommand(EditCommand.Paste);
 
-        public void SelectAll() => WebView.EditCommands.SelectAll();
+        public void SelectAll() => Transport.ExecuteEditCommand(EditCommand.SelectAll);
 
-        public void Undo() => WebView.EditCommands.Undo();
+        public void Undo() => Transport.ExecuteEditCommand(EditCommand.Undo);
 
-        public void Redo() => WebView.EditCommands.Redo();
+        public void Redo() => Transport.ExecuteEditCommand(EditCommand.Redo);
 
-        public void Delete() => WebView.EditCommands.Delete();
+        public void Delete() => Transport.ExecuteEditCommand(EditCommand.Delete);
     }
 }
