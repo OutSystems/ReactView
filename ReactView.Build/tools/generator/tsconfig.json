@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES2016",
+        "sourceMap": false,
+        "moduleResolution": "node",
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "skipLibCheck": true,
+        "types": ["node"],
+        "typeRoots": ["../node_modules/@types"]
+    },
+    "include": ["./*.ts"]
+}

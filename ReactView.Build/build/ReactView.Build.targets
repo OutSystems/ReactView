@@ -1,0 +1,234 @@
+<Project>
+
+  <!--
+    Two things happen on every build of a project that references this package:
+
+      1. RV_GenerateViews   generates the C# bindings (ts2lang + tools/generator/ViewGenerator.js) for the
+                            TypeScript files selected by the project's ts2lang.json, into $(ViewGeneratorGeneratedFolder).
+      2. RV_GenerateBundle  bundles the views, the default stylesheets and the workers with webpack and embeds the
+                            resulting .js, .css and .entry files as resources.
+
+    Both run the Node tooling from $(ReactViewToolsPath), which RV_PrepareTools installs on first use from the
+    lockfile shipped with the package. NODE_PATH points the compiled webpack configurations at that install.
+  -->
+
+  <PropertyGroup>
+    <CleanDependsOn>
+      RV_CleanEntryFiles;
+      RV_CleanJSFiles;
+      RV_CleanCSSFiles;
+      RV_CleanGenerated;
+      RV_Clean;
+      $(CleanDependsOn);
+    </CleanDependsOn>
+  </PropertyGroup>
+
+  <!-- /// -->
+  <!-- Webpack options -->
+  <!-- /// -->
+  <PropertyGroup Condition="'$(WP_OptimizeBundle)' == ''">
+    <WP_OptimizeBundle>false</WP_OptimizeBundle>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(WP_ConfigFileName)' == ''">
+    <WP_ConfigFileName>webpack_views</WP_ConfigFileName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(Configuration.Split(&quot;_&quot;)[0].StartsWith('Debug'))">
+    <WP_Mode>development</WP_Mode>
+    <WP_DevTool>inline-source-map</WP_DevTool>
+    <WP_UseCache>true</WP_UseCache>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(Configuration.Split(&quot;_&quot;)[0].StartsWith('Release'))">
+    <WP_Mode>production</WP_Mode>
+    <WP_DevTool>source-map</WP_DevTool>
+    <WP_UseCache>false</WP_UseCache>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <VG_Inputs Include="**\*.tsx" Exclude="node_modules\**\*.tsx" />
+    <VG_Inputs Include="**\*.ts" Exclude="node_modules\**\*.ts;**\*.d.ts" />
+    <VG_Inputs Include="**\*.scss" Exclude="node_modules\**\*.scss" />
+    <VG_Inputs Condition="'$(PluginsRelativePath)' != ''" Include="$(PluginsRelativePath)VG_Build.cache" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_StyleSheet_Inputs Include="@(DefaultStyleSheet)"/>
+    <VG_StyleSheet_Inputs Condition="'@(DefaultStyleSheet)' != ''" Include="**\*.scss" Exclude="node_modules\**\*.scss" />
+    <VG_Workers_Inputs Include="@(Workers)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Include="@(VG_Inputs)" Exclude="@(UpToDateCheckInput)" />
+    <UpToDateCheckInput Include="@(DefaultStyleSheet)" Exclude="@(UpToDateCheckInput)" />
+    <UpToDateCheckInput Include="@(VG_Workers)" Exclude="@(UpToDateCheckInput)" />
+  </ItemGroup>
+
+  <!-- /// -->
+  <!-- Tooling setup -->
+  <!-- /// -->
+  <Target Name="RV_SetVariables">
+    <PropertyGroup>
+      <ReactViewIntermediatePath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'reactview'))</ReactViewIntermediatePath>
+      <RV_ViewsStamp>$(ReactViewIntermediatePath)views.stamp</RV_ViewsStamp>
+      <RV_BundleStamp>$(ReactViewIntermediatePath)bundle.stamp</RV_BundleStamp>
+
+      <RV_ToolsEnvironment>NODE_PATH=$(ReactViewToolsNodeModules)</RV_ToolsEnvironment>
+      <RV_Ts2LangScript>$(ReactViewToolsNodeModules)/@outsystems/ts2lang/ts2lang-main.js</RV_Ts2LangScript>
+      <RV_GeneratorTemplate>$(ReactViewBuildToolsSourcePath)generator/ViewGenerator.js</RV_GeneratorTemplate>
+      <RV_WebpackScript>$(ReactViewToolsNodeModules)/webpack/bin/webpack.js</RV_WebpackScript>
+      <RV_WebpackConfigPath>$(ReactViewBuildToolsSourcePath)webpack/</RV_WebpackConfigPath>
+      <RV_InstallScript>$(ReactViewBuildToolsSourcePath)install.js</RV_InstallScript>
+    </PropertyGroup>
+    <MakeDir Directories="$(ReactViewIntermediatePath)" />
+  </Target>
+
+  <Target Name="RV_CheckNode" DependsOnTargets="RV_SetVariables">
+    <Exec Command="&quot;$(ReactViewNodeExe)&quot; --version" ContinueOnError="true" IgnoreExitCode="true" StandardOutputImportance="low" ConsoleToMSBuild="true">
+      <Output TaskParameter="ExitCode" PropertyName="RV_NodeExitCode" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="RV_NodeVersion" />
+    </Exec>
+    <Error Condition="'$(RV_NodeExitCode)' != '0'" Text="ReactView.Build requires Node.js $(ReactViewMinimumNodeMajor) or later on the PATH (or set ReactViewNodeExe). '$(ReactViewNodeExe)' could not be run." />
+    <PropertyGroup>
+      <RV_NodeMajor>$(RV_NodeVersion.Trim().TrimStart('v').Split('.')[0])</RV_NodeMajor>
+    </PropertyGroup>
+    <Error Condition="$([System.Int32]::Parse('$(RV_NodeMajor)')) &lt; $([System.Int32]::Parse('$(ReactViewMinimumNodeMajor)'))" Text="ReactView.Build requires Node.js $(ReactViewMinimumNodeMajor) or later, found $(RV_NodeVersion) ('$(ReactViewNodeExe)'). Set ReactViewNodeExe to a newer Node.js executable or update the one on the PATH." />
+  </Target>
+
+  <!-- Installs the Node dependencies of the tooling into $(ReactViewToolsPath) when they are not there yet -->
+  <Target Name="RV_PrepareTools" DependsOnTargets="RV_CheckNode" Condition="'$(ReactViewSkipToolsInstall)' != 'true' And !Exists('$(ReactViewToolsNodeModules)/.reactview-installed')">
+    <Error Condition="'$(ReactViewToolsId)' == ''" Text="ReactView.Build: tools id not found in the package ($(ReactViewBuildToolsSourcePath)toolsid.txt)." />
+    <Message Importance="high" Text="Installing ReactView build tools ($(ReactViewToolsId)) into $(ReactViewToolsPath)" />
+    <Exec Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_InstallScript)&quot; --source &quot;$(ReactViewBuildToolsSourcePath).&quot; --target &quot;$(ReactViewToolsPath)&quot; --min-node $(ReactViewMinimumNodeMajor)" />
+  </Target>
+
+  <!-- Copies the project templates (once) and the ambient type declarations (whenever they change) into the project -->
+  <Target Name="RV_SetupProject" DependsOnTargets="RV_SetVariables">
+    <ItemGroup>
+      <_RVTemplates Include="$(ReactViewBuildContentPath)*.json" />
+      <_RVDeclarations Include="$(ReactViewBuildContentPath)**\*.d.ts" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_RVTemplates)" DestinationFolder="$(ProjectDir)%(_RVTemplates.RecursiveDir)" Condition="!Exists('$(ProjectDir)%(_RVTemplates.RecursiveDir)%(_RVTemplates.Filename)%(_RVTemplates.Extension)')" />
+    <Copy SourceFiles="@(_RVDeclarations)" DestinationFolder="$(ProjectDir)%(_RVDeclarations.RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- /// -->
+  <!-- View bindings generation -->
+  <!-- /// -->
+  <Target Name="RV_GetViewInputs" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
+    <Exec ConsoleToMSBuild="True" EnvironmentVariables="$(RV_ToolsEnvironment)" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;">
+      <Output TaskParameter="ConsoleOutput" ItemName="VGC_Inputs"/>
+    </Exec>
+    <ItemGroup>
+      <UpToDateCheckInput Include="@(VGC_Inputs)" Exclude="@(UpToDateCheckInput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RV_GenerateViews" Inputs="@(VGC_Inputs);$(ProjectDir)ts2lang.json;$(RV_GeneratorTemplate);$(MSBuildThisFileFullPath)" Outputs="$(RV_ViewsStamp)" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" BeforeTargets="CustomTransformDuringBuild;TransformDuringBuild;AfterResolveReferences" DependsOnTargets="RV_GetViewInputs">
+    <CallTarget Targets="RV_GenerateViewsInner" />
+  </Target>
+
+  <Target Name="RV_GenerateViewsInner" DependsOnTargets="RV_CleanGenerated">
+    <Message Importance="High" Text="Generating View files" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;" />
+    <Touch Files="$(RV_ViewsStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <!-- old-format and new-format projects have different built-in targets. In order to support both we need to have two
+       different alternative ways of adding the generated code to the target project -->
+  <Target Name="RV_IncludeGeneratedFiles_NonSdk" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Compile Include="$(ViewGeneratorGeneratedFolder)\**\*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RV_IncludeGeneratedFiles_Sdk" AfterTargets="RV_GenerateViews">
+    <ItemGroup>
+      <Compile Include="$(ViewGeneratorGeneratedFolder)\**\*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- /// -->
+  <!-- Webpack bundle generation -->
+  <!-- /// -->
+  <Target Name="RV_GenerateBundle" Inputs="@(VG_Inputs);@(VG_Workers_Inputs);$(MSBuildThisFileFullPath);$(ReactViewBuildToolsSourcePath)toolsid.txt" Outputs="$(RV_BundleStamp)" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" AfterTargets="AfterResolveReferences" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
+    <CallTarget Targets="RV_GenerateBundleInner" />
+  </Target>
+
+  <Target Name="RV_GenerateBundleInner" DependsOnTargets="RV_CleanEntryFiles;RV_CleanJSFiles;RV_CleanCSSFiles">
+    <Message Text="Generating bundle" Importance="high" />
+
+    <!-- Default stylesheets bundle generation -->
+    <CallTarget Condition="'@(VG_StyleSheet_Inputs)' != ''" Targets="RV_GenerateDefaultStyleSheet" />
+
+    <!-- Workers bundle generation -->
+    <CallTarget Condition="'@(VG_Workers_Inputs)' != ''" Targets="RV_GenerateWorkersBundle" />
+
+    <!-- Main bundle generation -->
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=$(WP_OptimizeBundle)" />
+
+    <Touch Files="$(RV_BundleStamp)" AlwaysCreate="true" />
+    <!-- plugin projects are referenced by consumers through this file (see VG_Inputs) -->
+    <Touch Files="VG_Build.cache" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="RV_GenerateDefaultStyleSheet">
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
+  </Target>
+
+  <Target Name="RV_GenerateWorkersBundle">
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env entryPath='@(Workers)'" />
+  </Target>
+
+  <Target Name="RV_IncludeGeneratedResources" AfterTargets="RV_GenerateBundle">
+    <ItemGroup>
+      <EmbeddedResource Include="**\*.js" Exclude="node_modules\**\*.js;.bootstrap\**\*.js;@(EmbeddedResource)" />
+      <EmbeddedResource Include="**\*.css" Exclude="node_modules\**\*.css;**\*.min.css;@(EmbeddedResource)" />
+      <EmbeddedResource Include="**\*.entry" Exclude="@(EmbeddedResource)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- /// -->
+  <!-- Clean -->
+  <!-- /// -->
+  <Target Name="RV_CleanEntryFiles">
+    <ItemGroup>
+      <EntryFilesToDelete Include="**\*.entry" Exclude="node_modules\**\*.entry" />
+    </ItemGroup>
+    <Message Condition="'@(EntryFilesToDelete)' != ''" Text="Deleting old files: @(EntryFilesToDelete)" Importance="high" />
+    <Delete Files="@(EntryFilesToDelete)"/>
+  </Target>
+
+  <Target Name="RV_CleanJSFiles">
+    <ItemGroup>
+      <JSFilesToDelete Include="**\*.js" Exclude="node_modules\**\*.js;**\*.eslintrc.js"/>
+      <JSFilesToDelete Condition="$(CleanFilesExcludePath) != ''" Remove="$(CleanFilesExcludePath)\**\*.js"/>
+    </ItemGroup>
+    <Message Condition="'@(JSFilesToDelete)' != ''" Text="Deleting old files: @(JSFilesToDelete)" Importance="high" />
+    <Delete Files="@(JSFilesToDelete)"/>
+    <RemoveDir Directories=".bootstrap" />
+  </Target>
+
+  <Target Name="RV_CleanCSSFiles">
+    <ItemGroup>
+      <CSSFilesToDelete Include="**\*.css" Exclude="node_modules\**\*.css;**\*.min.css"/>
+      <CSSFilesToDelete Condition="$(CleanFilesExcludePath) != ''" Remove="$(CleanFilesExcludePath)\**\*.css"/>
+    </ItemGroup>
+    <Message Condition="'@(CSSFilesToDelete)' != ''" Text="Deleting old files: @(CSSFilesToDelete)" Importance="high" />
+    <Delete Files="@(CSSFilesToDelete)"/>
+  </Target>
+
+  <Target Name="RV_CleanGenerated" DependsOnTargets="RV_SetVariables" BeforeTargets="Clean">
+    <Error Condition="'$(ViewGeneratorGeneratedFolder)' == ''" Text="Generated folder is not set." />
+    <ItemGroup>
+      <GeneratedTs2LangFiles Include="$(ViewGeneratorGeneratedFolder)\**\*.cs" />
+    </ItemGroup>
+    <Delete Files="@(GeneratedTs2LangFiles);$(RV_ViewsStamp)" />
+  </Target>
+
+  <Target Name="RV_Clean" DependsOnTargets="RV_SetVariables" BeforeTargets="Clean">
+    <Delete Files="$(RV_BundleStamp);VG_Build.cache" />
+  </Target>
+
+</Project>

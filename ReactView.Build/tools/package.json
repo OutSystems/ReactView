@@ -1,0 +1,34 @@
+{
+    "name": "reactview-build-tools",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Node tooling used by the ReactView.Build MSBuild package: view bindings generator and webpack bundler",
+    "license": "ISC",
+    "dependencies": {
+        "@outsystems/ts2lang": "1.0.21",
+        "css-loader": "6.10.0",
+        "dts-generator": "3.0.0",
+        "fork-ts-checker-webpack-plugin": "9.0.2",
+        "fs-extra": "11.2.0",
+        "glob": "10.3.10",
+        "mini-css-extract-plugin": "2.8.1",
+        "resolve-url-loader": "5.0.0",
+        "sass": "1.62.0",
+        "sass-loader": "14.1.1",
+        "terser-webpack-plugin": "5.3.10",
+        "thread-loader": "4.0.2",
+        "ts-loader": "9.5.1",
+        "typescript": "5.4.3",
+        "webpack": "5.91.0",
+        "webpack-cli": "5.1.4",
+        "webpack-dev-server": "5.0.4",
+        "webpack-manifest-plugin": "5.0.0"
+    },
+    "devDependencies": {
+        "@types/dts-generator": "2.1.11",
+        "@types/fs-extra": "11.0.4",
+        "@types/glob": "8.1.0",
+        "@types/node": "20.11.30",
+        "@types/webpack": "5.28.5"
+    }
+}

@@ -1,0 +1,73 @@
+<Project Sdk="Microsoft.Build.NoTargets/3.7.134">
+
+  <!--
+    ReactView.Build is an MSBuild-only package. It compiles nothing on its own: it ships the targets that
+    generate the .NET view bindings from TypeScript and bundle the view assets with webpack, together with
+    the TypeScript sources of that tooling compiled to JavaScript and a lockfile describing the Node
+    dependencies. The dependencies themselves are not part of the package; the targets install them once
+    per machine from the lockfile (see build/ReactView.Build.targets).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>ReactView.Build</PackageId>
+    <Version>1.0.0</Version>
+    <Description>MSBuild integration for ReactView: generates .NET view bindings from TypeScript declarations and bundles view assets with webpack.</Description>
+    <PackageTags>ReactView;MSBuild;webpack;TypeScript;React</PackageTags>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);RV_CollectPackageFiles</TargetsForTfmSpecificContentInPackage>
+
+    <ToolsDir>$(MSBuildProjectDirectory)/tools</ToolsDir>
+    <NodeExe Condition="'$(NodeExe)' == ''">node</NodeExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Directory.Build.targets runs "npm install" for every package.json it finds; this project installs from the lockfile instead -->
+    <PackageJsons Remove="@(PackageJsons)" />
+    <None Include="readme.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <Target Name="RV_InstallToolDependencies" Inputs="$(ToolsDir)/package-lock.json" Outputs="$(ToolsDir)/node_modules/.package-lock.json">
+    <Exec Command="npm ci --no-audit --no-fund" WorkingDirectory="$(ToolsDir)" />
+  </Target>
+
+  <Target Name="RV_CompileTools" DependsOnTargets="RV_InstallToolDependencies" BeforeTargets="Build">
+    <Exec Command="&quot;$(NodeExe)&quot; node_modules/typescript/bin/tsc -p webpack" WorkingDirectory="$(ToolsDir)" />
+    <Exec Command="&quot;$(NodeExe)&quot; node_modules/typescript/bin/tsc -p generator" WorkingDirectory="$(ToolsDir)" />
+  </Target>
+
+  <!--
+    The tools id names the per machine folder the dependencies are installed into. It changes with the package
+    version and with the lockfile, so two package versions never share an install and a lockfile change
+    triggers a fresh one.
+  -->
+  <Target Name="RV_WriteToolsId" DependsOnTargets="RV_CompileTools" BeforeTargets="Build">
+    <PropertyGroup>
+      <_RVLockHash>$([MSBuild]::StableStringHash($([System.IO.File]::ReadAllText('$(ToolsDir)/package-lock.json'))))</_RVLockHash>
+      <_RVToolsId>$(Version)-$(_RVLockHash.Replace('-', 'n'))</_RVToolsId>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(ToolsDir)/toolsid.txt" Lines="$(_RVToolsId)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <Target Name="RV_CollectPackageFiles" DependsOnTargets="RV_WriteToolsId">
+    <ItemGroup>
+      <_RVBuildFiles Include="build/**" />
+      <_RVWebpackFiles Include="tools/webpack/**/*.js" />
+      <_RVGeneratorFiles Include="tools/generator/*.js" />
+      <_RVToolRootFiles Include="tools/install.js;tools/package.json;tools/package-lock.json;tools/toolsid.txt" />
+      <_RVContentFiles Include="content/**" />
+
+      <TfmSpecificPackageFile Include="@(_RVBuildFiles)" PackagePath="build/%(RecursiveDir)%(Filename)%(Extension)" />
+      <TfmSpecificPackageFile Include="@(_RVWebpackFiles)" PackagePath="tools/webpack/%(RecursiveDir)%(Filename)%(Extension)" />
+      <TfmSpecificPackageFile Include="@(_RVGeneratorFiles)" PackagePath="tools/generator/%(Filename)%(Extension)" />
+      <TfmSpecificPackageFile Include="@(_RVToolRootFiles)" PackagePath="tools/%(Filename)%(Extension)" />
+      <TfmSpecificPackageFile Include="@(_RVContentFiles)" PackagePath="content/%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,4 +1,4 @@
-﻿/// <reference path="./../../ViewGenerator/contentFiles/global.d.ts"/>
+﻿/// <reference path="./../../ReactView.Build/content/global.d.ts"/>
 
 import { getPluginModule, getViewModule, waitForNextPaint } from "./Internal/Common";
 import { renderCachedView, storeViewRenderInCache } from "./Internal/ComponentsRenderCache";

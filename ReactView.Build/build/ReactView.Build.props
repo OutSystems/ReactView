@@ -1,0 +1,41 @@
+<Project>
+
+  <!--
+    Paths of the ReactView build tooling.
+
+    The package ships the compiled tooling under tools/ and a lockfile of its Node dependencies. The dependencies are
+    installed once per machine, outside the package cache, into a folder named after the package version and the
+    lockfile (the tools id). Override ReactViewToolsRoot to relocate that folder, for example to a directory a CI
+    agent caches between runs.
+  -->
+  <PropertyGroup>
+    <ReactViewBuildPath>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</ReactViewBuildPath>
+    <ReactViewBuildToolsSourcePath>$(ReactViewBuildPath)tools/</ReactViewBuildToolsSourcePath>
+    <ReactViewBuildContentPath>$(ReactViewBuildPath)content/</ReactViewBuildContentPath>
+
+    <ReactViewToolsId Condition="Exists('$(ReactViewBuildToolsSourcePath)toolsid.txt')">$([System.IO.File]::ReadAllText('$(ReactViewBuildToolsSourcePath)toolsid.txt').Trim())</ReactViewToolsId>
+    <ReactViewToolsRoot Condition="'$(ReactViewToolsRoot)' == ''">$([MSBuild]::NormalizeDirectory('$([System.Environment]::GetFolderPath(SpecialFolder.LocalApplicationData))', 'ReactView', 'tools'))</ReactViewToolsRoot>
+    <ReactViewToolsPath>$([MSBuild]::NormalizePath('$(ReactViewToolsRoot)', '$(ReactViewToolsId)'))</ReactViewToolsPath>
+    <ReactViewToolsNodeModules>$(ReactViewToolsPath)/node_modules</ReactViewToolsNodeModules>
+
+    <!-- Node.js executable and the lowest major version accepted -->
+    <ReactViewNodeExe Condition="'$(ReactViewNodeExe)' == ''">node</ReactViewNodeExe>
+    <ReactViewMinimumNodeMajor Condition="'$(ReactViewMinimumNodeMajor)' == ''">20</ReactViewMinimumNodeMajor>
+
+    <!-- Folder, relative to the project, where the generated C# bindings are written -->
+    <ViewGeneratorGeneratedFolder Condition="'$(ViewGeneratorGeneratedFolder)' == ''">Generated</ViewGeneratorGeneratedFolder>
+
+    <!-- TypeScript is compiled by webpack, never by the TypeScript MSBuild integration -->
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="tsconfig.json">
+      <Visible>True</Visible>
+    </Content>
+    <None Include="ts2lang.json">
+      <Visible>True</Visible>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,32 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReactView.Build", "ReactView.Build\ReactView.Build.csproj", "{299F2F08-1E86-401B-B32C-99384AD3326A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{51A18A04-276C-4AD4-8607-C9A96E8C34B3}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		Directory.Build.targets = Directory.Build.targets
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{299F2F08-1E86-401B-B32C-99384AD3326A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{299F2F08-1E86-401B-B32C-99384AD3326A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{299F2F08-1E86-401B-B32C-99384AD3326A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{299F2F08-1E86-401B-B32C-99384AD3326A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4746255-1488-4484-9A8F-B9783228E510}
+	EndGlobalSection
+EndGlobal
