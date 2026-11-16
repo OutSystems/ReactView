@@ -52,7 +52,7 @@ namespace ReactViewControl {
                     JavascriptSerializer.Serialize(mainSource),
                     JavascriptSerializer.Serialize(dependencySources),
                     JavascriptSerializer.Serialize(cssSources),
-                    JavascriptSerializer.Serialize(ReactView.PreloadedCacheEntriesSize),
+                    JavascriptSerializer.Serialize(ViewRender.DevServerUri != null ? 0 : ReactView.PreloadedCacheEntriesSize), // no stale pre-rendered html in dev mode
                     JavascriptSerializer.Serialize(hasStyleSheet),
                     JavascriptSerializer.Serialize(hasPlugins),
                     componentSerialization,

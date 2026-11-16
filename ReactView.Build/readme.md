@@ -39,6 +39,26 @@ Nothing is written into the project folder. Everything the build produces goes u
 
 The embedded resources keep the names given by the `output` paths in `ts2lang.json`, for example `Generated/MainView.js` becomes the resource `<RootNamespace>.Generated.MainView.js`, exactly as when the files lived in the project folder. The paths in `ts2lang.json` are therefore resource paths, not folders on disk.
 
+## Hot reload
+
+Run the dev server for the project that owns the views:
+
+```
+dotnet msbuild MyApp.csproj -t:ReactViewDevServer
+```
+
+It bundles the views from the sources with webpack-dev-server and react-refresh, listens on `ReactViewDevServerUrl` (default `http://localhost:8080`), serves the project folder for assets, and publishes its build state:
+
+- `GET /__reactview/status` returns `{ state: "building" | "ok" | "error", hash, builtAt, durationMs, errors, warnings }`
+- `GET /__reactview/events` is a server-sent events stream with one `status` event per state change
+
+Point the application at it by returning the same url from `ReactViewFactory.DevServerUri`, typically from an environment variable in Debug builds. While it is set:
+
+- views, stylesheets and assets are loaded from the dev server instead of the embedded resources;
+- the development build of React is used, and react-refresh updates edited components in place (function components keep their state, class components remount);
+- the pre-rendered views cache is disabled;
+- an update that cannot be applied in place is logged in the webview console, never turned into a page reload.
+
 ## Project setup
 
 1. Reference the package with `PrivateAssets="all"`.

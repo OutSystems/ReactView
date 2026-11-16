@@ -7,11 +7,11 @@ namespace ReactViewControl {
         private IFrame frame;
         private IChildViewHost childViewHost;
 
-        private Lazy<IModuleDependenciesProvider> DependenciesProvider => new(() =>
-            ModuleDependenciesProviderFactory.Instance.CreateModuleDependenciesProvider(MainJsSource));
+        private readonly Lazy<IModuleDependenciesProvider> dependenciesProvider;
 
         protected ViewModuleContainer() {
             frame = new FrameInfo("dummy");
+            dependenciesProvider = new Lazy<IModuleDependenciesProvider>(() => ModuleDependenciesProviderFactory.Instance.CreateModuleDependenciesProvider(MainJsSource));
         }
 
         protected virtual string MainJsSource => null;
@@ -37,9 +37,9 @@ namespace ReactViewControl {
 
         string[] IViewModule.Events => Events;
 
-        string[] IViewModule.DependencyJsSources => DependenciesProvider.Value.GetJsDependencies();
+        string[] IViewModule.DependencyJsSources => dependenciesProvider.Value.GetJsDependencies();
 
-        string[] IViewModule.CssSources => DependenciesProvider.Value.GetCssDependencies();
+        string[] IViewModule.CssSources => dependenciesProvider.Value.GetCssDependencies();
 
         KeyValuePair<string, object>[] IViewModule.PropertiesValues => PropertiesValues;
 

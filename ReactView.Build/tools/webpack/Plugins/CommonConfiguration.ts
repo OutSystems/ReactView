@@ -1,6 +1,7 @@
 ﻿import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { sync } from "glob";
-import { parse, resolve } from "path";
+import { join, parse, resolve } from "path";
+import ReactRefreshWebpackPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import TerserPlugin from "terser-webpack-plugin";
 import Webpack from "webpack";
 import { Configuration } from "webpack";
@@ -15,7 +16,8 @@ import {
     JsChunkPlaceholder,
     NamePlaceholder,
     IdPlaceholder,
-    CssExtension
+    CssExtension,
+    RefreshEntryName
 } from "./Resources";
 import { Dictionary, generateManifest, getCachePath, getCacheVersion, getFileName, getLoaderDirectories } from "./Utils";
 
@@ -25,7 +27,7 @@ import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, libraryName: string, outputPath: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
+let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, libraryName: string, outputPath: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean, devServerUrl?: string): Configuration => {
 
     const entryMap: Dictionary<string> = {}
     const outputMap: Dictionary<string> = {};
@@ -48,6 +50,16 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
 
     // Gets input and output entries from ts2lang file
     require(resolve("./ts2lang.json")).tasks.forEach(t => getConfiguration(t.input, t.output, t.parameters.namespace));
+
+    if (forHotReload) {
+        // entry the loader runs before React in dev mode, see hot/RefreshSetup.ts
+        entryMap[RefreshEntryName] = join(__dirname, "..", "hot", "RefreshSetup.js");
+        outputMap[RefreshEntryName] = OutputDirectoryDefault;
+        namespaceMap[RefreshEntryName] = assemblyName;
+    }
+
+    // in dev mode the bundles, and therefore the hot updates, are fetched straight from the dev server
+    const publicPath: string = (devServerUrl ? devServerUrl.replace(/\/+$/, "") : "") + "/" + assemblyName + "/";
 
     let pluginsAssembly: string;
     if (pluginsRelativePath) {
@@ -83,7 +95,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
             libraryTarget: "window",
             globalObject: "window",
             devtoolNamespace: libraryName,
-            publicPath: "/" + assemblyName + "/"
+            publicPath: publicPath
         },
 
         node: false,
@@ -93,7 +105,9 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
         },
 
         resolve: {
-            extensions: [".ts", ".tsx", ".js"]
+            extensions: [".ts", ".tsx", ".js"],
+            // the hot entry and the react-refresh runtime live in the tools install, not next to the project
+            modules: ["node_modules", ...getLoaderDirectories()]
         },
 
         module: {
@@ -133,6 +147,10 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
         ]
     };
     
+    if (forHotReload) {
+        Configuration.plugins.push(new ReactRefreshWebpackPlugin({ overlay: false }));
+    }
+
     if (isProductionBuild) {
         Configuration.optimization = {
             flagIncludedChunks: false,

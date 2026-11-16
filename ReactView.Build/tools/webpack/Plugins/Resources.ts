@@ -10,6 +10,9 @@ export const OutputDirectoryDefault: string = "Generated/";
 // Filenames
 export const DtsFileName: string = "@types/Plugins.d.ts";
 
+// Entry the loader runs before React in dev mode (hot/RefreshSetup.ts)
+export const RefreshEntryName: string = "ReactViewRefresh";
+
 // Placeholders
 export const CssPlaceholder: string = "[name].css";
 export const CssChunkPlaceholder: string = "chunk_[contenthash].css";

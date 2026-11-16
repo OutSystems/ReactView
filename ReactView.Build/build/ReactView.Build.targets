@@ -200,6 +200,25 @@
   </Target>
 
   <!-- /// -->
+  <!-- Dev server (hot reload) -->
+  <!-- /// -->
+  <!--
+    dotnet msbuild <project> -t:ReactViewDevServer
+
+    Runs webpack-dev-server in the foreground, bundling the views from the sources with react-refresh. An application
+    whose ReactViewFactory.DevServerUri points at $(ReactViewDevServerUrl) loads its views from it and hot reloads them
+    as the sources change. Build status: $(ReactViewDevServerUrl)/__reactview/status (and /__reactview/events).
+  -->
+  <Target Name="ReactViewDevServer" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
+    <PropertyGroup>
+      <RV_DevOutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'dev'))</RV_DevOutputPath>
+      <RV_DevServerScript>$(ReactViewToolsNodeModules)/webpack-dev-server/bin/webpack-dev-server.js</RV_DevServerScript>
+    </PropertyGroup>
+    <Message Importance="high" Text="ReactView dev server for $(AssemblyName) at $(ReactViewDevServerUrl)" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_views.config.js&quot; --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env outputPath=&quot;$(RV_DevOutputPath)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=false" />
+  </Target>
+
+  <!-- /// -->
   <!-- Clean -->
   <!-- /// -->
   <Target Name="RV_Clean" DependsOnTargets="RV_SetVariables" BeforeTargets="Clean">

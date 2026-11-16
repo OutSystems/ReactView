@@ -3,7 +3,8 @@
     isDebugModeEnabled,
     modulesFunctionName,
     nativeAPIObjectName,
-    customResourceBaseUrl
+    customResourceBaseUrl,
+    devServerBaseUrl // set when the host runs against the ReactView dev server, e.g. http://localhost:8080/Sample.Avalonia/
 ] = (() => {
     const params = Array.from(new URLSearchParams(location.search).keys());
     return params.map(v => v === "false" ? "" : v);

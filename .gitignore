@@ -36,5 +36,3 @@ Sample.Avalonia/global.d.ts
 Sample.Avalonia/node_modules/
 **/*.DS_Store
 **/*.idea
-**/RunWebpackDevServer.sh
-**/RunWebpackDevServer.bat

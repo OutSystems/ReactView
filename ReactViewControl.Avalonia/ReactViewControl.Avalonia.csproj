@@ -38,6 +38,7 @@
     <Compile Include="..\ReactViewControl\ModuleDependenciesProviderFactory.cs" Link="ModuleDependenciesProviderFactory.cs" />
     <Compile Include="..\ReactViewControl\IModuleDependenciesProvider.cs" Link="IModuleDependenciesProvider.cs" />
     <Compile Include="..\ReactViewControl\FileDependenciesProvider.cs" Link="FileDependenciesProvider.cs" />
+    <Compile Include="..\ReactViewControl\DevServerDependenciesProvider.cs" Link="DevServerDependenciesProvider.cs" />
   </ItemGroup>
 
   <ItemGroup>

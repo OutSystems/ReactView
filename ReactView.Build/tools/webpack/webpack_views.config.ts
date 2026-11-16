@@ -3,7 +3,8 @@ import { resolve } from "path";
 import { Configuration } from "webpack";
 
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
-import { Dictionary, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
+import { Dictionary, getCurrentDirectory, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
+import { statusMiddleware, watchCompiler } from "./Plugins/DevServerStatus";
 import { FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder } from "./Plugins/Resources";
 
 const config = (env, argv) => {
@@ -37,15 +38,19 @@ const config = (env, argv) => {
     };
 
     const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
+    const assemblyName: string = sanitizeCommandLineParam(env.assemblyName);
+    const forHotReload: boolean = env.forHotReload === "true";
+    const devServerUrl: string = sanitizeCommandLineParam(env.devServerUrl) || "http://localhost:8080";
 
     const standardConfig: Configuration = getCommonConfiguration(
         argv.mode === "production", 
         env.useCache === "true" ? "viewsCache" : "", 
         "Views",
         getOutputPath(env),
-        sanitizeCommandLineParam(env.assemblyName),
+        assemblyName,
         sanitizedPluginsRelativePath,
-        env.forHotReload === "true");
+        forHotReload,
+        forHotReload ? devServerUrl : undefined);
 
     if (!standardConfig.optimization) {
         standardConfig.optimization = {};
@@ -86,19 +91,44 @@ const config = (env, argv) => {
         ];
     }
 
-    if (env.forHotReload === "true") {
+    if (forHotReload) {
         standardConfig.output.hotUpdateChunkFilename = OutputDirectoryDefault + IdPlaceholder + "." + FullHashPlaceholder + ".hot-update.js";
         standardConfig.output.hotUpdateMainFilename = OutputDirectoryDefault + RuntimePlaceholder + "." + FullHashPlaceholder + ".hot-update.json";
 
+        const url = new URL(devServerUrl);
+        const servedPath: string = "/" + assemblyName + "/";
+
         // @ts-ignore
         standardConfig.devServer = {
+            host: url.hostname,
+            port: Number(url.port) || 80,
+            // the page is not served by this server, so the client cannot derive the socket url from its location
             client: {
-                overlay: false
+                overlay: false,
+                logging: "warn",
+                webSocketURL: { protocol: "ws", hostname: url.hostname, port: Number(url.port) || 80, pathname: "/ws" }
             },
+            // an update that cannot be applied in place is reported, never turned into a page reload the host does not expect
+            hot: "only",
+            liveReload: false,
             allowedHosts: "all",
             headers: {
                 "Access-Control-Allow-Origin": "*",
                 "Cache-Control": "no-store"
+            },
+            devMiddleware: {
+                publicPath: servedPath
+            },
+            // project assets (images referenced by the views) are served from the project folder
+            static: {
+                directory: getCurrentDirectory(),
+                publicPath: servedPath,
+                watch: false
+            },
+            setupMiddlewares: (middlewares, devServer) => {
+                watchCompiler(devServer.compiler);
+                middlewares.unshift({ name: "reactview-status", middleware: statusMiddleware });
+                return middlewares;
             }
         };
     }

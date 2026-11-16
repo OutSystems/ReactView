@@ -20,11 +20,19 @@ const getTypeScriptRuleSet = (forHotReload: boolean, isProductionBuild: boolean)
         }
     };
 
+    // production strips data-test-id attributes; the dev server build registers components with react-refresh
+    let customTransformers: string | null = null;
+    if (isProductionBuild) {
+        customTransformers = join(__dirname, "../Plugins/DataTestIdTransformerPlugin.js");
+    } else if (forHotReload) {
+        customTransformers = join(__dirname, "../Plugins/ReactRefreshTransformer.js");
+    }
+
     let tsLoaderRule: RuleSetUseItem = {
         loader: "ts-loader",
         options: {
             happyPackMode: true,
-            getCustomTransformers: isProductionBuild ? join(__dirname, "../Plugins/DataTestIdTransformerPlugin.js") : null
+            getCustomTransformers: customTransformers
         }
     };
 

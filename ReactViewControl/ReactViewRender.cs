@@ -39,9 +39,10 @@ namespace ReactViewControl {
         private readonly bool loadScriptsOncePerDocument;
         private readonly bool ensureViewPluginsAreDisposed;
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true, Uri devServerUri = null) {
             this.loadScriptsOncePerDocument = loadScriptsOncePerDocument;
             this.ensureViewPluginsAreDisposed = ensureViewPluginsAreDisposed;
+            DevServerUri = devServerUri;
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -79,6 +80,7 @@ namespace ReactViewControl {
                 ExecutionEngine.ModulesObjectName,
                 NativeAPI.NativeObjectName,
                 ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl,
+                DevServerUri != null ? Uri.EscapeDataString(new Uri(DevServerUri, UserCallingAssembly.GetName().Name + "/").ToString()) : "false",
             };
 
             WebView.LoadResource(new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams)));
@@ -95,6 +97,11 @@ namespace ReactViewControl {
         partial void PreloadWebView();
 
         public ReactView Host { get; set; }
+
+        /// <summary>
+        /// Root url of the dev server the views are loaded from, null outside dev mode.
+        /// </summary>
+        public Uri DevServerUri { get; }
 
         public bool IsDisposing => WebView.IsDisposing;
 
@@ -441,6 +448,9 @@ namespace ReactViewControl {
                     break;
 
                 case ResourceUrl.EmbeddedScheme:
+                    if (DevServerUri != null && TryRedirectToDevServer(resourceHandler)) {
+                        break;
+                    }
                     // webview already started BeginAsyncResponse
                     EmbeddedResourceRequested?.Invoke(resourceHandler);
                     break;
@@ -543,6 +553,22 @@ namespace ReactViewControl {
         private void UnregisterNativeObject(IViewModule module, FrameInfo frame) {
             var nativeObjectName = module.GetNativeObjectFullName(frame.Name);
             WebView.UnregisterJavascriptObject(nativeObjectName);
+        }
+
+        /// <summary>
+        /// Dev mode: embedded resources of the application (bundles, stylesheets, images) are served by the dev server,
+        /// which bundles the views from the sources and serves the project folder. The loader's own resources stay embedded.
+        /// </summary>
+        private bool TryRedirectToDevServer(ResourceHandler resourceHandler) {
+            if (!Uri.TryCreate(resourceHandler.Url, UriKind.Absolute, out var uri)) {
+                return false;
+            }
+            var firstSegment = uri.Segments.Skip(1).FirstOrDefault()?.TrimEnd('/');
+            if (string.Equals(firstSegment, ResourcesAssembly.GetName().Name, StringComparison.OrdinalIgnoreCase)) {
+                return false;
+            }
+            resourceHandler.Redirect(new Uri(DevServerUri, uri.PathAndQuery).ToString());
+            return true;
         }
 
         /// <summary>

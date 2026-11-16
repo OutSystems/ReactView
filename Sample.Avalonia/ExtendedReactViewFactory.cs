@@ -1,4 +1,5 @@
-﻿using ReactViewControl;
+﻿using System;
+using ReactViewControl;
 using WebViewControl;
 
 namespace Sample.Avalonia {
@@ -22,6 +23,11 @@ namespace Sample.Avalonia {
 
 #if DEBUG
             public override bool EnableDebugMode => true;
+
+            // hot reload: run "dotnet msbuild Sample.Avalonia.csproj -t:ReactViewDevServer" and start the app with
+            // DEV_SERVER_URI=http://localhost:8080
+            public override Uri DevServerUri =>
+                Uri.TryCreate(Environment.GetEnvironmentVariable("DEV_SERVER_URI"), UriKind.Absolute, out var uri) ? uri : null;
 #endif
         }
     }

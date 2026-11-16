@@ -102,10 +102,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="node_modules\react\umd\react.production.min.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="node_modules\react-dom\umd\react-dom.production.min.js" />
+    <!-- development builds, loaded instead of the above when the host runs against the dev server (hot reload) -->
+    <EmbeddedResource Include="node_modules\react\umd\react.development.js" />
+    <EmbeddedResource Include="node_modules\react-dom\umd\react-dom.development.js" />
   </ItemGroup>
 
   <ItemGroup>

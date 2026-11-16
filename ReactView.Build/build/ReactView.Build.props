@@ -22,6 +22,9 @@
     <ReactViewNodeExe Condition="'$(ReactViewNodeExe)' == ''">node</ReactViewNodeExe>
     <ReactViewMinimumNodeMajor Condition="'$(ReactViewMinimumNodeMajor)' == ''">20</ReactViewMinimumNodeMajor>
 
+    <!-- Url the dev server (dotnet msbuild -t:ReactViewDevServer) listens on; the application's ReactViewFactory.DevServerUri must match -->
+    <ReactViewDevServerUrl Condition="'$(ReactViewDevServerUrl)' == ''">http://localhost:8080</ReactViewDevServerUrl>
+
     <!-- TypeScript is compiled by webpack, never by the TypeScript MSBuild integration -->
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
