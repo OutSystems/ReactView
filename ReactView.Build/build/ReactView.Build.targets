@@ -125,8 +125,10 @@
   <!-- Copies the project templates (once) and the ambient type declarations (whenever they change) into the project -->
   <Target Name="RV_SetupProject" DependsOnTargets="RV_SetVariables">
     <ItemGroup>
-      <_RVTemplates Include="$(ReactViewBuildContentPath)*.json" />
-      <_RVDeclarations Include="$(ReactViewBuildContentPath)**\*.d.ts" />
+      <_RVTemplates Include="$(ReactViewBuildContentPath)ts2lang.json" />
+      <!-- the TypeScript side only matters to a project that bundles views -->
+      <_RVTemplates Include="$(ReactViewBuildContentPath)tsconfig.json" Condition="'$(ReactViewBundle)' == 'true'" />
+      <_RVDeclarations Include="$(ReactViewBuildContentPath)**\*.d.ts" Condition="'$(ReactViewBundle)' == 'true'" />
     </ItemGroup>
     <Copy SourceFiles="@(_RVTemplates)" DestinationFolder="$(ProjectDir)%(_RVTemplates.RecursiveDir)" Condition="!Exists('$(ProjectDir)%(_RVTemplates.RecursiveDir)%(_RVTemplates.Filename)%(_RVTemplates.Extension)')" />
     <Copy SourceFiles="@(_RVDeclarations)" DestinationFolder="$(ProjectDir)%(_RVDeclarations.RecursiveDir)" SkipUnchangedFiles="true" />
