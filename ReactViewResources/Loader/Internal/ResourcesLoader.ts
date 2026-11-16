@@ -3,7 +3,7 @@ import { showWarningMessage } from "./MessagesProvider";
 import { Task } from "./Task";
 import { ViewMetadata } from "./ViewMetadata";
 import { getLoadScriptsOncePerDocumentFlag } from "./Flags";
-import { getView } from "./ViewsCollection";
+import { getView, tryGetView } from "./ViewsCollection";
 
 // inner views are shadow roots rather than frames, and shadow dom encapsulates styles but not scripts, so
 // a script that has been appended for one view has executed for every other one as well. tracking these
@@ -17,7 +17,9 @@ export function loadScript(scriptSrc: string, view: ViewMetadata): Promise<void>
         return loadScriptPerView(scriptSrc, view);
     }
 
-    const pendingLoad = scriptLoadTasks.get(scriptSrc);
+    // scripts appended by the bootstrap (before the flag is set) only exist in the main view's map; loading them a
+    // second time would run their bundle again (a webpack runtime loaded twice breaks hot updates, for one)
+    const pendingLoad = scriptLoadTasks.get(scriptSrc) || tryGetView(mainFrameName)?.scriptsLoadTasks.get(scriptSrc);
     if (pendingLoad) {
         return pendingLoad.promise;
     }

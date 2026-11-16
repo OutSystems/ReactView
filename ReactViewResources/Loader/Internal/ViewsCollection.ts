@@ -15,6 +15,10 @@ export function tryGetView(viewName: string): ViewMetadata | null {
     return views.get(viewName) || null;
 }
 
+export function getViews(): ViewMetadata[] {
+    return Array.from(views.values());
+}
+
 export function getView(viewName: string): ViewMetadata {
     const view = tryGetView(viewName);
     if (!view) {

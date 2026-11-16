@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -19,6 +20,12 @@ namespace ReactViewControl {
 
         private static ReactViewRender CreateReactViewInstance(ReactViewFactory factory) {
             ReactViewRender InnerCreateView() {
+                if (factory.RemoteDebuggingPort > 0) {
+                    // read by the webview at initialization (chromium's --remote-debugging-port)
+                    if (!ExtendedWebView.Settings.CommandLineSwitches.Any(s => s.Key == "remote-debugging-port")) {
+                        ExtendedWebView.Settings.AddCommandLineSwitch("remote-debugging-port", factory.RemoteDebuggingPort.ToString());
+                    }
+                }
                 var devServerUri = factory.DevServerUri;
                 if (devServerUri != null && !(ModuleDependenciesProviderFactory.Instance is DevServerDependenciesProviderFactory existing && existing.DevServerUri == devServerUri)) {
                     // modules resolve their scripts from the dev server manifest instead of the embedded .entry files

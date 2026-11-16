@@ -52,5 +52,11 @@ namespace ReactViewControl {
         /// as their sources change. Development only; the pre-rendered views cache is disabled while it is set.
         /// </summary>
         public virtual Uri DevServerUri => null;
+
+        /// <summary>
+        /// Port the Chrome DevTools Protocol listens on (http://localhost:port/json lists the views), 0 to keep it closed.
+        /// Lets tools inspect, drive and screenshot the views. Development only; applies to the first view created.
+        /// </summary>
+        public virtual int RemoteDebuggingPort => 0;
     }
 }

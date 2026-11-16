@@ -20,6 +20,7 @@ export type ViewMetadata = {
     parentView: ViewMetadata;
     context: any;
     renderHandler?: (component: React.ReactElement) => Promise<void>;
+    componentRender?: { componentName: string, properties: {} }; // what the view currently renders, re-rendered on hot updates
 }
 
 export function newView(id: number, name: string, isMain: boolean, placeholder: Element): ViewMetadata {

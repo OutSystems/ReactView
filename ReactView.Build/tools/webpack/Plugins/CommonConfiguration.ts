@@ -32,6 +32,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
     const entryMap: Dictionary<string> = {}
     const outputMap: Dictionary<string> = {};
     const namespaceMap: Dictionary<string> = {};
+    const entryFiles: string[] = [];
 
     // Build entry, output, and namespace mappings for webpack config
     let getConfiguration = (input: string, output: string, namespace: string): void => {
@@ -42,6 +43,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
 
                 let entryName: string = parse(f).name;
                 entryMap[entryName] = "./" + f;
+                entryFiles.push(resolve(f));
                 outputMap[entryName] = output;
                 namespaceMap[entryName] = namespace;
             }
@@ -114,7 +116,9 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
             rules: [
                 SassRuleSet,
                 getResourcesRuleSet(assemblyName, pluginsAssembly),
-                getTypeScriptRuleSet(forHotReload, !cacheName)
+                getTypeScriptRuleSet(forHotReload, !cacheName),
+                // dev server build: the view entries accept the updates react-refresh cannot apply in place (see hot/HotEntryLoader.ts)
+                ...(forHotReload ? [{ test: entryFiles, enforce: "post" as const, loader: join(__dirname, "..", "hot", "HotEntryLoader.js") }] : [])
             ]
         },
 

@@ -10,5 +10,7 @@ declare const window: any;
 const RefreshRuntime = require("react-refresh/runtime");
 
 RefreshRuntime.injectIntoGlobalHook(window);
+// for tooling: lets a debugger or an agent inspect and trigger refreshes (performReactRefresh, hasUnrecoverableErrors)
+window.__REACTVIEW_REFRESH_RUNTIME__ = RefreshRuntime;
 window.$RefreshReg$ = () => {};
 window.$RefreshSig$ = () => (type: any) => type;

@@ -105,7 +105,7 @@ const config = (env, argv) => {
             // the page is not served by this server, so the client cannot derive the socket url from its location
             client: {
                 overlay: false,
-                logging: "warn",
+                logging: "info",
                 webSocketURL: { protocol: "ws", hostname: url.hostname, port: Number(url.port) || 80, pathname: "/ws" }
             },
             // an update that cannot be applied in place is reported, never turned into a page reload the host does not expect

@@ -2,7 +2,7 @@
 
 import { getPluginModule, getViewModule, waitForNextPaint } from "./Internal/Common";
 import { renderCachedView, storeViewRenderInCache } from "./Internal/ComponentsRenderCache";
-import { mainFrameName } from "./Internal/Environment";
+import { devServerBaseUrl, mainFrameName } from "./Internal/Environment";
 import { handleError } from "./Internal/ErrorHandler";
 import { renderMainView } from "./Internal/Loader.View";
 import { bindNativeObject, notifyViewInitialized, notifyViewLoaded } from "./Internal/NativeAPI";
@@ -10,7 +10,7 @@ import { loadScript, loadStyleSheet } from "./Internal/ResourcesLoader";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
-import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
+import { addView, getView, getViews, tryGetView } from "./Internal/ViewsCollection";
 import { setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
@@ -199,6 +199,7 @@ export function loadComponent(
 
             const { createView } = await import("./Internal/Loader.View");
 
+            view.componentRender = { componentName, properties };
             const viewElement = createView(componentClass, properties, view, componentName);
             const render = view.renderHandler;
             if (!render) {
@@ -227,6 +228,40 @@ export function loadComponent(
     innerLoad();
 }
 
+/*
+ * Dev mode. The dev server build makes each view entry accept the hot updates react-refresh cannot apply in place
+ * (class components, modules exporting more than components) and hand its fresh exports here. Every view showing
+ * that component is re-rendered with the new class: it remounts, keeping its native object and properties.
+ * */
+function installHotReload(): void {
+    window["__reactview_hot__"] = {
+        moduleUpdated: async (moduleName: string, moduleExports: any) => {
+            const componentClass = (moduleExports || {}).default;
+            if (!componentClass) {
+                return;
+            }
+            // later loads (new frames) get the fresh module
+            const bundle = window["Views"];
+            if (bundle) {
+                bundle[moduleName] = moduleExports;
+            }
+            const { createView } = await import("./Internal/Loader.View");
+            for (const view of getViews()) {
+                const current = view.componentRender;
+                if (!current || current.componentName !== moduleName || !view.renderHandler || view.isReleased) {
+                    continue;
+                }
+                try {
+                    await view.renderHandler(createView(componentClass, current.properties, view, moduleName));
+                    window.console.info(`[ReactView] Hot reloaded '${moduleName}' in view '${view.name || "main"}'`);
+                } catch (error) {
+                    handleError(error, view);
+                }
+            }
+        }
+    };
+}
+
 export function initialize(mainView: ViewMetadata) {
     function preventDroppingFiles(event: DragEvent): void {
         const containsDraggedFiles = event.dataTransfer && event.dataTransfer.types.includes("Files");
@@ -240,6 +275,10 @@ export function initialize(mainView: ViewMetadata) {
 
     addView(mainFrameName, mainView);
     mainView.renderHandler = component => renderMainView(component, mainView.root!);
+
+    if (devServerBaseUrl) {
+        installHotReload();
+    }
 
     notifyViewInitialized(mainFrameName);
 

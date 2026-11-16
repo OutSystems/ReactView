@@ -28,6 +28,9 @@ namespace Sample.Avalonia {
             // DEV_SERVER_URI=http://localhost:8080
             public override Uri DevServerUri =>
                 Uri.TryCreate(Environment.GetEnvironmentVariable("DEV_SERVER_URI"), UriKind.Absolute, out var uri) ? uri : null;
+
+            // DevTools protocol for tooling while developing against the dev server
+            public override int RemoteDebuggingPort => DevServerUri != null ? 9222 : 0;
 #endif
         }
     }

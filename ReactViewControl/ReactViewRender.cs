@@ -560,14 +560,22 @@ namespace ReactViewControl {
         /// which bundles the views from the sources and serves the project folder. The loader's own resources stay embedded.
         /// </summary>
         private bool TryRedirectToDevServer(ResourceHandler resourceHandler) {
-            if (!Uri.TryCreate(resourceHandler.Url, UriKind.Absolute, out var uri)) {
+            // embedded://webview/<assembly>[-<version>]/<path>: urls built from an assembly carry its version, urls built
+            // from a resource path (module sources, assets) do not. The dev server serves everything under /<assembly>/.
+            if (!Uri.TryCreate(resourceHandler.Url, UriKind.Absolute, out var uri) || uri.Segments.Length < 3) {
                 return false;
             }
-            var firstSegment = uri.Segments.Skip(1).FirstOrDefault()?.TrimEnd('/');
-            if (string.Equals(firstSegment, ResourcesAssembly.GetName().Name, StringComparison.OrdinalIgnoreCase)) {
+            var assemblySegment = uri.Segments[1].TrimEnd('/');
+            var assemblyName = assemblySegment;
+            var versionSeparator = assemblySegment.LastIndexOf('-');
+            if (versionSeparator > 0 && Version.TryParse(assemblySegment.Substring(versionSeparator + 1), out _)) {
+                assemblyName = assemblySegment.Substring(0, versionSeparator);
+            }
+            if (string.Equals(assemblyName, ResourcesAssembly.GetName().Name, StringComparison.OrdinalIgnoreCase)) {
                 return false;
             }
-            resourceHandler.Redirect(new Uri(DevServerUri, uri.PathAndQuery).ToString());
+            var path = assemblyName + "/" + string.Concat(uri.Segments.Skip(2)) + uri.Query;
+            resourceHandler.Redirect(new Uri(DevServerUri, path).ToString());
             return true;
         }
 
