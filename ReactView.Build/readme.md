@@ -22,6 +22,9 @@ The package itself ships no `node_modules`. The dependencies are described by th
 | `ReactViewNodeExe` | `node` | Node.js executable used for generation and bundling. |
 | `ReactViewMinimumNodeMajor` | `20` | Lowest Node.js major version accepted. |
 | `ReactViewSkipToolsInstall` | `false` | Skip the install step; the tools are expected to be present already. |
+| `ReactViewBundle` | `true` | Set to `false` in a project that only needs the C# bindings of views that another project bundles. |
+| `ReactViewGenerateBindings` | `true` | Set to `false` in a project that only bundles. |
+| `ReactViewGeneratedPath`, `ReactViewOutputPath` | under `obj/` | Read-only: where the generated C# and the bundles are, for other targets of the project that consume them. |
 | `WP_OptimizeBundle` | `false` | Split the views bundle into shared chunks. |
 | `PluginsRelativePath` | | Relative path to a plugins project whose bundle this project consumes. Its sources are inputs of this project's bundle. |
 

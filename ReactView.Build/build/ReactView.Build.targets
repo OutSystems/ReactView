@@ -25,6 +25,15 @@
       RV_Clean;
       $(CleanDependsOn);
     </CleanDependsOn>
+
+    <!-- what the build produces, for other targets of the project that consume it -->
+    <ReactViewIntermediatePath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'reactview'))</ReactViewIntermediatePath>
+    <ReactViewGeneratedPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'cs'))</ReactViewGeneratedPath>
+    <ReactViewOutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'out'))</ReactViewOutputPath>
+
+    <!-- a project may only generate bindings (ReactViewBundle=false) or only bundle (ReactViewGenerateBindings=false) -->
+    <ReactViewBundle Condition="'$(ReactViewBundle)' == ''">true</ReactViewBundle>
+    <ReactViewGenerateBindings Condition="'$(ReactViewGenerateBindings)' == ''">true</ReactViewGenerateBindings>
   </PropertyGroup>
 
   <!-- /// -->
@@ -75,9 +84,8 @@
   <!-- /// -->
   <Target Name="RV_SetVariables">
     <PropertyGroup>
-      <ReactViewIntermediatePath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'reactview'))</ReactViewIntermediatePath>
-      <RV_GeneratedPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'cs'))</RV_GeneratedPath>
-      <RV_OutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'out'))</RV_OutputPath>
+      <RV_GeneratedPath>$(ReactViewGeneratedPath)</RV_GeneratedPath>
+      <RV_OutputPath>$(ReactViewOutputPath)</RV_OutputPath>
       <RV_ViewsStamp>$(ReactViewIntermediatePath)views.stamp</RV_ViewsStamp>
       <RV_BundleStamp>$(ReactViewIntermediatePath)bundle.stamp</RV_BundleStamp>
 
@@ -136,7 +144,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="RV_GenerateViews" Inputs="@(VGC_Inputs);$(ProjectDir)ts2lang.json;$(RV_GeneratorTemplate);$(MSBuildThisFileFullPath)" Outputs="$(RV_ViewsStamp)" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" BeforeTargets="CustomTransformDuringBuild;TransformDuringBuild;AfterResolveReferences" DependsOnTargets="RV_GetViewInputs">
+  <Target Name="RV_GenerateViews" Inputs="@(VGC_Inputs);$(ProjectDir)ts2lang.json;$(RV_GeneratorTemplate);$(MSBuildThisFileFullPath)" Outputs="$(RV_ViewsStamp)" Condition="'$(ReactViewGenerateBindings)' == 'true' And ('$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true')" BeforeTargets="CustomTransformDuringBuild;TransformDuringBuild;AfterResolveReferences" DependsOnTargets="RV_GetViewInputs">
     <CallTarget Targets="RV_GenerateViewsInner" />
   </Target>
 
@@ -166,7 +174,7 @@
   <!-- /// -->
   <!-- Webpack bundle generation -->
   <!-- /// -->
-  <Target Name="RV_GenerateBundle" Inputs="@(VG_Inputs);@(VG_Workers_Inputs);$(MSBuildThisFileFullPath);$(ReactViewBuildToolsSourcePath)toolsid.txt" Outputs="$(RV_BundleStamp)" Condition="'$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true'" AfterTargets="AfterResolveReferences" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
+  <Target Name="RV_GenerateBundle" Inputs="@(VG_Inputs);@(VG_Workers_Inputs);$(MSBuildThisFileFullPath);$(ReactViewBuildToolsSourcePath)toolsid.txt" Outputs="$(RV_BundleStamp)" Condition="'$(ReactViewBundle)' == 'true' And ('$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true')" AfterTargets="AfterResolveReferences" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
     <CallTarget Targets="RV_GenerateBundleInner" />
   </Target>
 
