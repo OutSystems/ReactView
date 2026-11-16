@@ -136,12 +136,12 @@ export function getCurrentDirectory() {
 /*
  * Gets the filename from an array.
  * */
-export function getFileName(relativePaths: Dictionary<string>, chunkData: any): string {
+export function getFileName(relativePaths: Dictionary<string>, chunkData: any, chunkPlaceholder: string = JsChunkPlaceholder): string {
     const directory: string = relativePaths[chunkData.chunk.name];
     if (directory) {
         return directory + JsPlaceholder;
     }
-    return OutputDirectoryDefault + JsChunkPlaceholder;
+    return OutputDirectoryDefault + chunkPlaceholder;
 }
 
 /*

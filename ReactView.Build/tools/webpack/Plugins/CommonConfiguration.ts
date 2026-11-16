@@ -17,6 +17,7 @@ import {
     NamePlaceholder,
     IdPlaceholder,
     CssExtension,
+    JsExtension,
     RefreshEntryName
 } from "./Resources";
 import { Dictionary, generateManifest, getCachePath, getCacheVersion, getFileName, getLoaderDirectories } from "./Utils";
@@ -60,6 +61,10 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
         namespaceMap[RefreshEntryName] = assemblyName;
     }
 
+    // in dev mode the shared chunks (the webpack runtime above all) keep a stable name: a view created after a rebuild
+    // must load the very same urls as the views before it, or the document ends up with two webpack runtimes
+    const jsChunkPlaceholder: string = forHotReload ? NamePlaceholder + JsExtension : JsChunkPlaceholder;
+
     // in dev mode the bundles, and therefore the hot updates, are fetched straight from the dev server
     const publicPath: string = (devServerUrl ? devServerUrl.replace(/\/+$/, "") : "") + "/" + assemblyName + "/";
 
@@ -90,8 +95,8 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
 
         output: {
             path: outputPath,
-            filename: (chunkData) => getFileName(outputMap, chunkData),
-            chunkFilename: OutputDirectoryDefault + JsChunkPlaceholder,
+            filename: (chunkData) => getFileName(outputMap, chunkData, jsChunkPlaceholder),
+            chunkFilename: OutputDirectoryDefault + jsChunkPlaceholder,
             library: [libraryName, NamePlaceholder],
             assetModuleFilename: ".bootstrap/[hash][ext][query]",
             libraryTarget: "window",

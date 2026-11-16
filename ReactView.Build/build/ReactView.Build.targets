@@ -91,14 +91,18 @@
     <MakeDir Directories="$(ReactViewIntermediatePath)" />
   </Target>
 
+  <!-- Resolves the Node.js executable once. Version managers (nodenv, nvm, volta) install shims that pick a version from
+       the directory of the script being run, so the tools must be run through the real executable the check saw. -->
   <Target Name="RV_CheckNode" DependsOnTargets="RV_SetVariables">
-    <Exec Command="&quot;$(ReactViewNodeExe)&quot; --version" ContinueOnError="true" IgnoreExitCode="true" StandardOutputImportance="low" ConsoleToMSBuild="true">
+    <Exec Command="&quot;$(ReactViewNodeExe)&quot; -p &quot;process.versions.node + ';' + process.execPath&quot;" ContinueOnError="true" IgnoreExitCode="true" StandardOutputImportance="low" ConsoleToMSBuild="true">
       <Output TaskParameter="ExitCode" PropertyName="RV_NodeExitCode" />
-      <Output TaskParameter="ConsoleOutput" PropertyName="RV_NodeVersion" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="RV_NodeInfo" />
     </Exec>
     <Error Condition="'$(RV_NodeExitCode)' != '0'" Text="ReactView.Build requires Node.js $(ReactViewMinimumNodeMajor) or later on the PATH (or set ReactViewNodeExe). '$(ReactViewNodeExe)' could not be run." />
     <PropertyGroup>
-      <RV_NodeMajor>$(RV_NodeVersion.Trim().TrimStart('v').Split('.')[0])</RV_NodeMajor>
+      <RV_NodeVersion>$(RV_NodeInfo.Trim().Split(';')[0])</RV_NodeVersion>
+      <RV_NodeExe>$(RV_NodeInfo.Trim().Split(';')[1])</RV_NodeExe>
+      <RV_NodeMajor>$(RV_NodeVersion.Split('.')[0])</RV_NodeMajor>
     </PropertyGroup>
     <Error Condition="$([System.Int32]::Parse('$(RV_NodeMajor)')) &lt; $([System.Int32]::Parse('$(ReactViewMinimumNodeMajor)'))" Text="ReactView.Build requires Node.js $(ReactViewMinimumNodeMajor) or later, found $(RV_NodeVersion) ('$(ReactViewNodeExe)'). Set ReactViewNodeExe to a newer Node.js executable or update the one on the PATH." />
   </Target>
@@ -107,7 +111,7 @@
   <Target Name="RV_PrepareTools" DependsOnTargets="RV_CheckNode" Condition="'$(ReactViewSkipToolsInstall)' != 'true' And !Exists('$(ReactViewToolsNodeModules)/.reactview-installed')">
     <Error Condition="'$(ReactViewToolsId)' == ''" Text="ReactView.Build: tools id not found in the package ($(ReactViewBuildToolsSourcePath)toolsid.txt)." />
     <Message Importance="high" Text="Installing ReactView build tools ($(ReactViewToolsId)) into $(ReactViewToolsPath)" />
-    <Exec Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_InstallScript)&quot; --source &quot;$(ReactViewBuildToolsSourcePath).&quot; --target &quot;$(ReactViewToolsPath)&quot; --min-node $(ReactViewMinimumNodeMajor)" />
+    <Exec Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_InstallScript)&quot; --source &quot;$(ReactViewBuildToolsSourcePath).&quot; --target &quot;$(ReactViewToolsPath)&quot; --min-node $(ReactViewMinimumNodeMajor)" />
   </Target>
 
   <!-- Copies the project templates (once) and the ambient type declarations (whenever they change) into the project -->
@@ -124,7 +128,7 @@
   <!-- View bindings generation -->
   <!-- /// -->
   <Target Name="RV_GetViewInputs" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
-    <Exec ConsoleToMSBuild="True" EnvironmentVariables="$(RV_ToolsEnvironment)" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;">
+    <Exec ConsoleToMSBuild="True" EnvironmentVariables="$(RV_ToolsEnvironment)" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;">
       <Output TaskParameter="ConsoleOutput" ItemName="VGC_Inputs"/>
     </Exec>
     <ItemGroup>
@@ -139,7 +143,7 @@
   <Target Name="RV_GenerateViewsInner">
     <Message Importance="High" Text="Generating View files" />
     <RemoveDir Directories="$(RV_GeneratedPath)" />
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment);REACTVIEW_GENERATED_PATH=$(RV_GeneratedPath)" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment);REACTVIEW_GENERATED_PATH=$(RV_GeneratedPath)" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;" />
     <Touch Files="$(RV_ViewsStamp)" AlwaysCreate="true" />
   </Target>
 
@@ -177,17 +181,17 @@
     <CallTarget Condition="'@(VG_Workers_Inputs)' != ''" Targets="RV_GenerateWorkersBundle" />
 
     <!-- Main bundle generation -->
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=$(WP_OptimizeBundle)" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=$(WP_OptimizeBundle)" />
 
     <Touch Files="$(RV_BundleStamp)" AlwaysCreate="true" />
   </Target>
 
   <Target Name="RV_GenerateDefaultStyleSheet">
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
   </Target>
 
   <Target Name="RV_GenerateWorkersBundle">
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(Workers)'" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(Workers)'" />
   </Target>
 
   <!-- The bundles keep the resource names they had when they were written into the project folder: Link is the path
@@ -215,7 +219,7 @@
       <RV_DevServerScript>$(ReactViewToolsNodeModules)/webpack-dev-server/bin/webpack-dev-server.js</RV_DevServerScript>
     </PropertyGroup>
     <Message Importance="high" Text="ReactView dev server for $(AssemblyName) at $(ReactViewDevServerUrl)" />
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_views.config.js&quot; --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env outputPath=&quot;$(RV_DevOutputPath)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=false" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_views.config.js&quot; --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env outputPath=&quot;$(RV_DevOutputPath)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=false" />
   </Target>
 
   <!-- /// -->
