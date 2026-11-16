@@ -57,7 +57,7 @@ Point the application at it by returning the same url from `ReactViewFactory.Dev
 - views, stylesheets and assets are loaded from the dev server instead of the embedded resources;
 - the development build of React is used, and react-refresh updates edited components in place (function components keep their state, class components remount);
 - the pre-rendered views cache is disabled;
-- an update that cannot be applied in place is logged in the webview console, never turned into a page reload.
+- an update that cannot be applied in place reloads the view: the component and its inner views are recreated from the current sources, the native objects and properties are kept. `ReactView.ReloadView()` does the same on demand (also `window.__reactview_hot__.reload()` and the MCP tool `reactview_reload`).
 
 The dev server also regenerates the C# bindings after every build, into the same `obj/.../reactview/cs` folder the regular build uses, touching only the files whose content changed. Run the application under `dotnet watch` (same configuration and platform as the dev server) and a changed `IViewProperties`/`IViewBehaviors` interface reaches the C# side as a hot reload too:
 
@@ -76,7 +76,7 @@ dotnet msbuild MyApp.csproj -t:ReactViewMcpConfig -p:Platform=ARM64
 
 This writes `reactview.mcp.json` next to the project, an `mcpServers` entry to merge into the project's `.mcp.json` (Claude Code) or any MCP client configuration. The application must open the DevTools protocol port in dev mode (`ReactViewFactory.RemoteDebuggingPort`, 9222 by default for the server).
 
-Tools: `reactview_start`, `reactview_stop`, `reactview_status`, `reactview_wait_for_build`, `reactview_logs`, `reactview_views`, `reactview_screenshot`, `reactview_dom`, `reactview_evaluate`, `reactview_click`, `reactview_type`, `reactview_console`. Selectors search inner views (shadow roots) too.
+Tools: `reactview_start`, `reactview_stop`, `reactview_status`, `reactview_wait_for_build`, `reactview_logs`, `reactview_views`, `reactview_screenshot`, `reactview_dom`, `reactview_evaluate`, `reactview_click`, `reactview_type`, `reactview_console`, `reactview_reload`. Selectors search inner views (shadow roots) too.
 
 ## Project setup
 

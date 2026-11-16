@@ -28,7 +28,7 @@ After changing anything under `ReactView.Build/`, repack and rebuild the sample:
 - Properties interface `I<Name>Properties`, behaviors interface `I<Name>Behaviors`, optional `IChildViews`; the component is the default export.
 - Every type used by those interfaces is exported from the same file; behavior methods return `void`.
 - Generated C# goes to `obj/<platform>/<config>/<tfm>/reactview/cs`, bundles to `.../out`; nothing is written into the source tree.
-- Hot reload: function components refresh in place, class components and modules exporting enums remount. New interface members restart the application under `dotnet watch`.
+- Hot reload: function components refresh in place, class components and modules exporting enums remount. New interface members restart the application under `dotnet watch`. `ReactView.ReloadView()` (MCP: `reactview_reload`) recreates the views from the current sources when an update could not be applied, e.g. plugin modules.
 
 ## Verifying changes
 

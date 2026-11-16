@@ -241,6 +241,15 @@ namespace ReactViewControl {
         /// <summary>
         /// Opens the developer tools.
         /// </summary>
+        /// <summary>
+        /// Loads the view again from its current sources: the component and its inner views are recreated, the native
+        /// objects, properties and plugins are kept, the javascript state is lost. In dev mode this picks up changes hot
+        /// reload could not apply in place.
+        /// </summary>
+        public void ReloadView() {
+            View.Reload();
+        }
+
         public void ShowDeveloperTools() {
             View.ShowDeveloperTools();
         }

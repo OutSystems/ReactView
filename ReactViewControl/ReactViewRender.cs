@@ -34,6 +34,7 @@ namespace ReactViewControl {
         private Func<IViewModule[]> PluginsFactory { get; }
 
         private bool enableDebugMode;
+        private ResourceUrl loaderUrl;
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
         private readonly bool loadScriptsOncePerDocument;
@@ -83,7 +84,8 @@ namespace ReactViewControl {
                 DevServerUri != null ? Uri.EscapeDataString(new Uri(DevServerUri, UserCallingAssembly.GetName().Name + "/").ToString()) : "false",
             };
 
-            WebView.LoadResource(new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams)));
+            loaderUrl = new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams));
+            WebView.LoadResource(loaderUrl);
 
             if (preloadWebView) {
                 PreloadWebView();
@@ -224,6 +226,17 @@ namespace ReactViewControl {
 
         public void Dispose() {
             WebView.Dispose();
+        }
+
+        /// <summary>
+        /// Loads the page again: the main component and its inner views are recreated from their current sources
+        /// (the native objects, properties and plugins are kept). The javascript state of the views is lost.
+        /// </summary>
+        public void Reload() {
+            lock (devServerDependencies) {
+                devServerDependencies.Clear(); // dev mode: the dev server manifest may list other files now
+            }
+            WebView.LoadResource(loaderUrl);
         }
 
         /// <summary>

@@ -5,7 +5,7 @@ import { renderCachedView, storeViewRenderInCache } from "./Internal/ComponentsR
 import { devServerBaseUrl, mainFrameName } from "./Internal/Environment";
 import { handleError } from "./Internal/ErrorHandler";
 import { renderMainView } from "./Internal/Loader.View";
-import { bindNativeObject, notifyViewInitialized, notifyViewLoaded } from "./Internal/NativeAPI";
+import { bindNativeObject, notifyViewInitialized, notifyViewLoaded, requestViewReload } from "./Internal/NativeAPI";
 import { loadScript, loadStyleSheet } from "./Internal/ResourcesLoader";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
@@ -264,6 +264,11 @@ function installHotReload(): void {
     });
 
     window["__reactview_hot__"] = {
+        // loads the page again from the current sources: for updates that cannot be applied in place, and for tooling
+        reload: () => {
+            window.console.info("[ReactView] Reloading the view");
+            requestViewReload();
+        },
         // tooling: the views this page hosts
         views: () => getViews().map(v => ({ name: v.name || "main", id: v.id, isMain: v.isMain, component: v.componentRender ? v.componentRender.componentName : null, rendered: !!v.root && v.root.childElementCount > 0 })),
         moduleUpdated: async (moduleName: string, moduleExports: any) => {

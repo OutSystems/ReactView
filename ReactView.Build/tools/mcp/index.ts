@@ -197,6 +197,31 @@ server.tool("reactview_type",
         }
     });
 
+server.tool("reactview_reload",
+    "Loads the views again from the current sources (component and inner views recreated, native state kept). For changes hot reload could not apply, such as plugin modules. Returns when the page has rendered again.",
+    { target: z.string().optional(), timeoutSeconds: z.number().optional() },
+    async ({ target, timeoutSeconds = 30 }) => {
+        try {
+            await evaluate("window.__reactview_hot__ ? (window.__reactview_hot__.reload(), true) : false", target);
+        } catch (e: any) {
+            return failure(e.message);
+        }
+        cdp.closeAll(); // the page's javascript context is replaced
+        const deadline = Date.now() + timeoutSeconds * 1000;
+        while (Date.now() < deadline) {
+            await new Promise(r => setTimeout(r, 1000));
+            try {
+                const info = await evaluate("({ views: window.__rv.views(), text: window.__rv.text(document.body).slice(0, 120) })", undefined, 5000);
+                if (info.text.length > 0) {
+                    return text(info);
+                }
+            } catch {
+                // not back yet
+            }
+        }
+        return failure("the view did not render again within the timeout; see reactview_console and reactview_logs");
+    });
+
 server.tool("reactview_console",
     "Console messages, exceptions and failed resource loads collected from the pages since the last call (or all kept, with clear=false).",
     { target: z.string().optional(), clear: z.boolean().optional(), levels: z.array(z.string()).optional().describe("e.g. [\"error\", \"exception\", \"warning\"]") },
