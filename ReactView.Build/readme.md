@@ -22,11 +22,22 @@ The package itself ships no `node_modules`. The dependencies are described by th
 | `ReactViewNodeExe` | `node` | Node.js executable used for generation and bundling. |
 | `ReactViewMinimumNodeMajor` | `20` | Lowest Node.js major version accepted. |
 | `ReactViewSkipToolsInstall` | `false` | Skip the install step; the tools are expected to be present already. |
-| `ViewGeneratorGeneratedFolder` | `Generated` | Folder, relative to the project, that receives the generated C# files. |
 | `WP_OptimizeBundle` | `false` | Split the views bundle into shared chunks. |
-| `PluginsRelativePath` | | Relative path to a plugins project whose bundle this project consumes. |
+| `PluginsRelativePath` | | Relative path to a plugins project whose bundle this project consumes. Its sources are inputs of this project's bundle. |
 
 Items: `DefaultStyleSheet` (scss files bundled as the default stylesheets) and `Workers` (web worker entry points).
+
+## Outputs
+
+Nothing is written into the project folder. Everything the build produces goes under `obj/<platform>/<configuration>/<tfm>/reactview/`:
+
+| Folder | Content |
+|---|---|
+| `cs/` | the generated C# bindings, compiled into the assembly |
+| `out/` | the bundles, their `.entry` files and `manifest.json`, embedded as resources |
+| `cache/` | the webpack filesystem cache used by Debug builds |
+
+The embedded resources keep the names given by the `output` paths in `ts2lang.json`, for example `Generated/MainView.js` becomes the resource `<RootNamespace>.Generated.MainView.js`, exactly as when the files lived in the project folder. The paths in `ts2lang.json` are therefore resource paths, not folders on disk.
 
 ## Project setup
 

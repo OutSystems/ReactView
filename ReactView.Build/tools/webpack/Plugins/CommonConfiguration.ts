@@ -17,7 +17,7 @@ import {
     IdPlaceholder,
     CssExtension
 } from "./Resources";
-import { Dictionary, generateManifest, getCurrentDirectory, getCacheVersion, getFileName, getLoaderDirectories } from "./Utils";
+import { Dictionary, generateManifest, getCachePath, getCacheVersion, getFileName, getLoaderDirectories } from "./Utils";
 
 // Rules
 import getResourcesRuleSet from "../Rules/Files";
@@ -25,7 +25,7 @@ import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, libraryName: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
+let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, libraryName: string, outputPath: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean): Configuration => {
 
     const entryMap: Dictionary<string> = {}
     const outputMap: Dictionary<string> = {};
@@ -48,8 +48,6 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
 
     // Gets input and output entries from ts2lang file
     require(resolve("./ts2lang.json")).tasks.forEach(t => getConfiguration(t.input, t.output, t.parameters.namespace));
-
-    let currentDirectory: string = getCurrentDirectory();
 
     let pluginsAssembly: string;
     if (pluginsRelativePath) {
@@ -77,7 +75,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
         },
 
         output: {
-            path: currentDirectory,
+            path: outputPath,
             filename: (chunkData) => getFileName(outputMap, chunkData),
             chunkFilename: OutputDirectoryDefault + JsChunkPlaceholder,
             library: [libraryName, NamePlaceholder],
@@ -130,7 +128,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
 
             new WebpackManifestPlugin({
                 fileName: "manifest.json",
-                generate: (seed, files) => generateManifest(seed, files, outputMap, namespaceMap)
+                generate: (seed, files) => generateManifest(seed, files, outputPath, outputMap, namespaceMap)
             }),
         ]
     };
@@ -154,7 +152,8 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
             type: 'filesystem',
             allowCollectingMemory: true,
             name: cacheName,
-            version: getCacheVersion()
+            version: getCacheVersion(),
+            cacheDirectory: getCachePath(outputPath)
         };
     }
 

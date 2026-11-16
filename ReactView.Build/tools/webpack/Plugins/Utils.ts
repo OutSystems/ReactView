@@ -1,5 +1,5 @@
 ﻿import { outputFileSync } from "fs-extra";
-import { delimiter, join, resolve } from "path";
+import { delimiter, dirname, join, resolve } from "path";
 import TypeScript from 'typescript';
 import { FileDescriptor } from "webpack-manifest-plugin/dist/helpers";
 import {
@@ -21,12 +21,13 @@ function generateEntryFile(
     files: string[],
     entryName: string,
     extension: string,
+    outputPath: string,
     relativePath: string,
     namespace: string,
     entryFilter: (file: string) => boolean) {
 
     let fileEntries = files.filter(entryFilter).map(f => "/" + namespace + "/" + f).join("\n");
-    outputFileSync(relativePath + entryName + extension + EntryExtension, (fileEntries || []).length > 0 ? fileEntries : "");
+    outputFileSync(join(outputPath, relativePath + entryName + extension + EntryExtension), (fileEntries || []).length > 0 ? fileEntries : "");
 }
 
 /*
@@ -35,6 +36,7 @@ function generateEntryFile(
 export function generateManifest(
     seed: object,
     files: FileDescriptor[],
+    outputPath: string,
     relativePaths: Dictionary<string>,
     namespaces: Dictionary<string>) {
 
@@ -68,6 +70,7 @@ export function generateManifest(
             generateEntryFile(files,
                 name,
                 CssExtension,
+                outputPath,
                 relativePath,
                 namespace,
                 f => f.endsWith(CssExtension));
@@ -76,6 +79,7 @@ export function generateManifest(
             generateEntryFile(files,
                 name,
                 JsExtension,
+                outputPath,
                 relativePath,
                 namespace,
                 f => f.endsWith(JsExtension) && !f.endsWith("/" + name + JsExtension));
@@ -104,6 +108,22 @@ export function getLoaderDirectories(): string[] {
  * */
 export function getCacheVersion(): string {
     return getLoaderDirectories().join(delimiter);
+}
+
+/*
+ * Gets the directory the bundles are written to: the one the build passes in (under the project's obj folder),
+ * otherwise the current directory.
+ * */
+export function getOutputPath(env: { outputPath?: string }): string {
+    return resolve(sanitizeCommandLineParam(env.outputPath) || ".");
+}
+
+/*
+ * Gets the directory of the filesystem cache, a sibling of the output directory so that cleaning the outputs
+ * keeps the cache.
+ * */
+export function getCachePath(outputPath: string): string {
+    return join(dirname(outputPath), "cache");
 }
 
 /*

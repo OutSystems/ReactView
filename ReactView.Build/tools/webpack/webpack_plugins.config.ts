@@ -4,7 +4,7 @@ import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import DtsCleanupPlugin from "./Plugins/DtsCleanupPlugin";
 import DtsGeneratorPlugin from "./Plugins/DtsGeneratorPlugin";
 import { DtsFileName } from "./Plugins/Resources";
-import { getCurrentDirectory, sanitizeCommandLineParam } from "./Plugins/Utils";
+import { getCurrentDirectory, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
 
 const config = (env, argv) => {
 
@@ -12,6 +12,7 @@ const config = (env, argv) => {
         argv.mode === "production",
         env.useCache === "true" ? "pluginsCache" : "",
         "Plugins",
+        getOutputPath(env),
         sanitizeCommandLineParam(env.assemblyName));
 
     if (!standardConfig.optimization) {

@@ -1,9 +1,11 @@
 ﻿import { resolve } from "path";
-import { getCacheVersion, getCurrentDirectory } from "./Plugins/Utils";
+import { getCachePath, getCacheVersion, getOutputPath } from "./Plugins/Utils";
 import { Configuration } from "webpack";
 import { getEntries } from "./Helpers";
 
 const config = (env) => {
+    const outputPath: string = getOutputPath(env);
+
     const workersConfig: Configuration = {
         entry: getEntries(env.entryPath),
 
@@ -13,7 +15,7 @@ const config = (env) => {
 
         output: {
             globalObject: 'self',
-            path: resolve(getCurrentDirectory(), "Generated")
+            path: resolve(outputPath, "Generated")
         },
     };
 
@@ -22,7 +24,8 @@ const config = (env) => {
             type: 'filesystem',
             allowCollectingMemory: true,
             name: "workersCache",
-            version: getCacheVersion()
+            version: getCacheVersion(),
+            cacheDirectory: getCachePath(outputPath)
         }
     }
 

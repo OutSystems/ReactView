@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { Configuration } from "webpack";
 
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
-import { Dictionary, sanitizeCommandLineParam } from "./Plugins/Utils";
+import { Dictionary, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
 import { FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder } from "./Plugins/Resources";
 
 const config = (env, argv) => {
@@ -42,6 +42,7 @@ const config = (env, argv) => {
         argv.mode === "production", 
         env.useCache === "true" ? "viewsCache" : "", 
         "Views",
+        getOutputPath(env),
         sanitizeCommandLineParam(env.assemblyName),
         sanitizedPluginsRelativePath,
         env.forHotReload === "true");

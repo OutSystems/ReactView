@@ -3,18 +3,20 @@ import { Configuration } from "webpack";
 
 import MiniCssExtractPluginCleanup from "./Plugins/MiniCssExtractPluginCleanup";
 import { CssPlaceholder, JsMapPlaceholder, OutputDirectoryDefault } from "./Plugins/Resources";
-import { getCacheVersion, getCurrentDirectory, getLoaderDirectories, sanitizeCommandLineParam } from "./Plugins/Utils"
+import { getCachePath, getCacheVersion, getLoaderDirectories, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils"
 
 import getResourcesRuleSet from "./Rules/Files";
 import SassRuleSet from "./Rules/Sass";
 import { getEntries } from "./Helpers";
 
 const config = (env) => {
+    const outputPath: string = getOutputPath(env);
+
     const stylesheetsConfig: Configuration = {
         entry: getEntries(env.entryPath),
 
         output: {
-            path: getCurrentDirectory(),
+            path: outputPath,
             filename: JsMapPlaceholder,
             publicPath: "/"
         },
@@ -45,7 +47,8 @@ const config = (env) => {
             type: 'filesystem',
             allowCollectingMemory: true,
             name: "stylesheetsCache",
-            version: getCacheVersion()
+            version: getCacheVersion(),
+            cacheDirectory: getCachePath(outputPath)
         };
     }
 

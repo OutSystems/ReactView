@@ -407,6 +407,12 @@ export function transform(module: Units.TsModule, context: Object): string {
     javascriptRelativePath = "/" + combinePath(namespace, javascriptRelativePath); // add the namespace
 
     output = combinePath(output, filenameWithoutExtension + ".Generated.cs");
+
+    // the build redirects the generated C# out of the source tree; the resource paths above stay relative to the project
+    const generatedPath = process.env["REACTVIEW_GENERATED_PATH"];
+    if (generatedPath) {
+        output = combinePath(normalizePath(generatedPath), output);
+    }
     context["$output"] = output;
 
     let generator = new Generator(

@@ -4,20 +4,24 @@
     Two things happen on every build of a project that references this package:
 
       1. RV_GenerateViews   generates the C# bindings (ts2lang + tools/generator/ViewGenerator.js) for the
-                            TypeScript files selected by the project's ts2lang.json, into $(ViewGeneratorGeneratedFolder).
+                            TypeScript files selected by the project's ts2lang.json.
       2. RV_GenerateBundle  bundles the views, the default stylesheets and the workers with webpack and embeds the
                             resulting .js, .css and .entry files as resources.
 
-    Both run the Node tooling from $(ReactViewToolsPath), which RV_PrepareTools installs on first use from the
-    lockfile shipped with the package. NODE_PATH points the compiled webpack configurations at that install.
+    Nothing is written into the project folder. Everything lands under $(IntermediateOutputPath)reactview/:
+
+      cs/       the generated C# files, added to Compile
+      out/      the bundles, entry files and manifest, embedded with the same resource names they had when they
+                lived in the project folder (the paths in ts2lang.json, e.g. Generated/MainView.js)
+      cache/    the webpack filesystem cache (Debug builds)
+      *.stamp   up-to-date markers of the two steps
+
+    Both steps run the Node tooling from $(ReactViewToolsPath), which RV_PrepareTools installs on first use from
+    the lockfile shipped with the package. NODE_PATH points the compiled webpack configurations at that install.
   -->
 
   <PropertyGroup>
     <CleanDependsOn>
-      RV_CleanEntryFiles;
-      RV_CleanJSFiles;
-      RV_CleanCSSFiles;
-      RV_CleanGenerated;
       RV_Clean;
       $(CleanDependsOn);
     </CleanDependsOn>
@@ -50,7 +54,8 @@
     <VG_Inputs Include="**\*.tsx" Exclude="node_modules\**\*.tsx" />
     <VG_Inputs Include="**\*.ts" Exclude="node_modules\**\*.ts;**\*.d.ts" />
     <VG_Inputs Include="**\*.scss" Exclude="node_modules\**\*.scss" />
-    <VG_Inputs Condition="'$(PluginsRelativePath)' != ''" Include="$(PluginsRelativePath)VG_Build.cache" />
+    <!-- a project that consumes a plugins project rebundles when the plugins sources change -->
+    <VG_Inputs Condition="'$(PluginsRelativePath)' != ''" Include="$(PluginsRelativePath)**\*.tsx;$(PluginsRelativePath)**\*.ts;$(PluginsRelativePath)**\*.scss;$(PluginsRelativePath)webpack-output-config.json" Exclude="$(PluginsRelativePath)node_modules\**;$(PluginsRelativePath)**\*.d.ts" />
   </ItemGroup>
 
   <ItemGroup>
@@ -71,6 +76,8 @@
   <Target Name="RV_SetVariables">
     <PropertyGroup>
       <ReactViewIntermediatePath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'reactview'))</ReactViewIntermediatePath>
+      <RV_GeneratedPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'cs'))</RV_GeneratedPath>
+      <RV_OutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'out'))</RV_OutputPath>
       <RV_ViewsStamp>$(ReactViewIntermediatePath)views.stamp</RV_ViewsStamp>
       <RV_BundleStamp>$(ReactViewIntermediatePath)bundle.stamp</RV_BundleStamp>
 
@@ -129,23 +136,24 @@
     <CallTarget Targets="RV_GenerateViewsInner" />
   </Target>
 
-  <Target Name="RV_GenerateViewsInner" DependsOnTargets="RV_CleanGenerated">
+  <Target Name="RV_GenerateViewsInner">
     <Message Importance="High" Text="Generating View files" />
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;" />
+    <RemoveDir Directories="$(RV_GeneratedPath)" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment);REACTVIEW_GENERATED_PATH=$(RV_GeneratedPath)" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;" />
     <Touch Files="$(RV_ViewsStamp)" AlwaysCreate="true" />
   </Target>
 
   <!-- old-format and new-format projects have different built-in targets. In order to support both we need to have two
        different alternative ways of adding the generated code to the target project -->
-  <Target Name="RV_IncludeGeneratedFiles_NonSdk" BeforeTargets="CoreCompile">
+  <Target Name="RV_IncludeGeneratedFiles_NonSdk" DependsOnTargets="RV_SetVariables" BeforeTargets="CoreCompile">
     <ItemGroup>
-      <Compile Include="$(ViewGeneratorGeneratedFolder)\**\*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
 
   <Target Name="RV_IncludeGeneratedFiles_Sdk" AfterTargets="RV_GenerateViews">
     <ItemGroup>
-      <Compile Include="$(ViewGeneratorGeneratedFolder)\**\*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
 
@@ -156,8 +164,9 @@
     <CallTarget Targets="RV_GenerateBundleInner" />
   </Target>
 
-  <Target Name="RV_GenerateBundleInner" DependsOnTargets="RV_CleanEntryFiles;RV_CleanJSFiles;RV_CleanCSSFiles">
+  <Target Name="RV_GenerateBundleInner">
     <Message Text="Generating bundle" Importance="high" />
+    <RemoveDir Directories="$(RV_OutputPath)" />
 
     <!-- Default stylesheets bundle generation -->
     <CallTarget Condition="'@(VG_StyleSheet_Inputs)' != ''" Targets="RV_GenerateDefaultStyleSheet" />
@@ -166,69 +175,33 @@
     <CallTarget Condition="'@(VG_Workers_Inputs)' != ''" Targets="RV_GenerateWorkersBundle" />
 
     <!-- Main bundle generation -->
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=$(WP_OptimizeBundle)" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=$(WP_OptimizeBundle)" />
 
     <Touch Files="$(RV_BundleStamp)" AlwaysCreate="true" />
-    <!-- plugin projects are referenced by consumers through this file (see VG_Inputs) -->
-    <Touch Files="VG_Build.cache" AlwaysCreate="true" />
   </Target>
 
   <Target Name="RV_GenerateDefaultStyleSheet">
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
   </Target>
 
   <Target Name="RV_GenerateWorkersBundle">
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env entryPath='@(Workers)'" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(ReactViewNodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(Workers)'" />
   </Target>
 
+  <!-- The bundles keep the resource names they had when they were written into the project folder: Link is the path
+       relative to the output folder, which is what the generated C# refers to -->
   <Target Name="RV_IncludeGeneratedResources" AfterTargets="RV_GenerateBundle">
     <ItemGroup>
-      <EmbeddedResource Include="**\*.js" Exclude="node_modules\**\*.js;.bootstrap\**\*.js;@(EmbeddedResource)" />
-      <EmbeddedResource Include="**\*.css" Exclude="node_modules\**\*.css;**\*.min.css;@(EmbeddedResource)" />
-      <EmbeddedResource Include="**\*.entry" Exclude="@(EmbeddedResource)" />
+      <_RVBundleOutputs Include="$(RV_OutputPath)\**\*.js;$(RV_OutputPath)\**\*.css;$(RV_OutputPath)\**\*.entry" Exclude="$(RV_OutputPath)\.bootstrap\**" />
+      <EmbeddedResource Include="@(_RVBundleOutputs)" Link="%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
     </ItemGroup>
   </Target>
 
   <!-- /// -->
   <!-- Clean -->
   <!-- /// -->
-  <Target Name="RV_CleanEntryFiles">
-    <ItemGroup>
-      <EntryFilesToDelete Include="**\*.entry" Exclude="node_modules\**\*.entry" />
-    </ItemGroup>
-    <Message Condition="'@(EntryFilesToDelete)' != ''" Text="Deleting old files: @(EntryFilesToDelete)" Importance="high" />
-    <Delete Files="@(EntryFilesToDelete)"/>
-  </Target>
-
-  <Target Name="RV_CleanJSFiles">
-    <ItemGroup>
-      <JSFilesToDelete Include="**\*.js" Exclude="node_modules\**\*.js;**\*.eslintrc.js"/>
-      <JSFilesToDelete Condition="$(CleanFilesExcludePath) != ''" Remove="$(CleanFilesExcludePath)\**\*.js"/>
-    </ItemGroup>
-    <Message Condition="'@(JSFilesToDelete)' != ''" Text="Deleting old files: @(JSFilesToDelete)" Importance="high" />
-    <Delete Files="@(JSFilesToDelete)"/>
-    <RemoveDir Directories=".bootstrap" />
-  </Target>
-
-  <Target Name="RV_CleanCSSFiles">
-    <ItemGroup>
-      <CSSFilesToDelete Include="**\*.css" Exclude="node_modules\**\*.css;**\*.min.css"/>
-      <CSSFilesToDelete Condition="$(CleanFilesExcludePath) != ''" Remove="$(CleanFilesExcludePath)\**\*.css"/>
-    </ItemGroup>
-    <Message Condition="'@(CSSFilesToDelete)' != ''" Text="Deleting old files: @(CSSFilesToDelete)" Importance="high" />
-    <Delete Files="@(CSSFilesToDelete)"/>
-  </Target>
-
-  <Target Name="RV_CleanGenerated" DependsOnTargets="RV_SetVariables" BeforeTargets="Clean">
-    <Error Condition="'$(ViewGeneratorGeneratedFolder)' == ''" Text="Generated folder is not set." />
-    <ItemGroup>
-      <GeneratedTs2LangFiles Include="$(ViewGeneratorGeneratedFolder)\**\*.cs" />
-    </ItemGroup>
-    <Delete Files="@(GeneratedTs2LangFiles);$(RV_ViewsStamp)" />
-  </Target>
-
   <Target Name="RV_Clean" DependsOnTargets="RV_SetVariables" BeforeTargets="Clean">
-    <Delete Files="$(RV_BundleStamp);VG_Build.cache" />
+    <RemoveDir Directories="$(ReactViewIntermediatePath)" />
   </Target>
 
 </Project>

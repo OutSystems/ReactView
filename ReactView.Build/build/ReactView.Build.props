@@ -22,9 +22,6 @@
     <ReactViewNodeExe Condition="'$(ReactViewNodeExe)' == ''">node</ReactViewNodeExe>
     <ReactViewMinimumNodeMajor Condition="'$(ReactViewMinimumNodeMajor)' == ''">20</ReactViewMinimumNodeMajor>
 
-    <!-- Folder, relative to the project, where the generated C# bindings are written -->
-    <ViewGeneratorGeneratedFolder Condition="'$(ViewGeneratorGeneratedFolder)' == ''">Generated</ViewGeneratorGeneratedFolder>
-
     <!-- TypeScript is compiled by webpack, never by the TypeScript MSBuild integration -->
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
