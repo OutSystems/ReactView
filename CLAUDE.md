@@ -21,7 +21,7 @@ DEV_SERVER_URI=http://localhost:8080 DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true dotn
 dotnet msbuild Sample.Avalonia/Sample.Avalonia.csproj -t:ReactViewMcpConfig -p:Platform=ARM64   # MCP server config for agents
 ```
 
-After changing anything under `ReactView.Build/`, repack and rebuild the sample: consumers use the package from `nuget/`, restored into `packages/`.
+After changing anything under `ReactView.Build/`, repack and rebuild the sample: consumers use the package from `nuget/`, restored into `packages/`. Repacking keeps the version, so also delete the consumer's `packages/reactview.build` and run `dotnet build-server shutdown`: MSBuild worker nodes cache the parsed targets of the previous package.
 
 ## View conventions (enforced by the generator)
 
