@@ -145,15 +145,17 @@
 
   <!-- old-format and new-format projects have different built-in targets. In order to support both we need to have two
        different alternative ways of adding the generated code to the target project -->
-  <Target Name="RV_IncludeGeneratedFiles_NonSdk" DependsOnTargets="RV_SetVariables" BeforeTargets="CoreCompile">
+  <!-- Both run in design-time builds too, where RV_GenerateViews is skipped: they must set the paths up themselves and
+       must never glob from an empty root -->
+  <Target Name="RV_IncludeGeneratedFiles_NonSdk" DependsOnTargets="RV_SetVariables" BeforeTargets="CoreCompile" Condition="'$(UsingMicrosoftNETSdk)' != 'true'">
     <ItemGroup>
-      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" Condition="'$(RV_GeneratedPath)' != '' And Exists('$(RV_GeneratedPath)')" />
     </ItemGroup>
   </Target>
 
-  <Target Name="RV_IncludeGeneratedFiles_Sdk" AfterTargets="RV_GenerateViews">
+  <Target Name="RV_IncludeGeneratedFiles_Sdk" DependsOnTargets="RV_SetVariables" AfterTargets="RV_GenerateViews" Condition="'$(UsingMicrosoftNETSdk)' == 'true'">
     <ItemGroup>
-      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" Condition="'$(RV_GeneratedPath)' != '' And Exists('$(RV_GeneratedPath)')" />
     </ItemGroup>
   </Target>
 
@@ -190,8 +192,8 @@
 
   <!-- The bundles keep the resource names they had when they were written into the project folder: Link is the path
        relative to the output folder, which is what the generated C# refers to -->
-  <Target Name="RV_IncludeGeneratedResources" AfterTargets="RV_GenerateBundle">
-    <ItemGroup>
+  <Target Name="RV_IncludeGeneratedResources" DependsOnTargets="RV_SetVariables" AfterTargets="RV_GenerateBundle">
+    <ItemGroup Condition="'$(RV_OutputPath)' != '' And Exists('$(RV_OutputPath)')">
       <_RVBundleOutputs Include="$(RV_OutputPath)\**\*.js;$(RV_OutputPath)\**\*.css;$(RV_OutputPath)\**\*.entry" Exclude="$(RV_OutputPath)\.bootstrap\**" />
       <EmbeddedResource Include="@(_RVBundleOutputs)" Link="%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
     </ItemGroup>
