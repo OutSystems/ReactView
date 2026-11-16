@@ -264,6 +264,8 @@ function installHotReload(): void {
     });
 
     window["__reactview_hot__"] = {
+        // tooling: the views this page hosts
+        views: () => getViews().map(v => ({ name: v.name || "main", id: v.id, isMain: v.isMain, component: v.componentRender ? v.componentRender.componentName : null, rendered: !!v.root && v.root.childElementCount > 0 })),
         moduleUpdated: async (moduleName: string, moduleExports: any) => {
             const componentClass = (moduleExports || {}).default;
             if (!componentClass) {

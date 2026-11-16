@@ -39,6 +39,7 @@
   <Target Name="RV_CompileTools" DependsOnTargets="RV_InstallToolDependencies" BeforeTargets="Build">
     <Exec Command="&quot;$(NodeExe)&quot; node_modules/typescript/bin/tsc -p webpack" WorkingDirectory="$(ToolsDir)" />
     <Exec Command="&quot;$(NodeExe)&quot; node_modules/typescript/bin/tsc -p generator" WorkingDirectory="$(ToolsDir)" />
+    <Exec Command="&quot;$(NodeExe)&quot; node_modules/typescript/bin/tsc -p mcp" WorkingDirectory="$(ToolsDir)" />
   </Target>
 
   <!--
@@ -59,12 +60,14 @@
       <_RVBuildFiles Include="build/**" />
       <_RVWebpackFiles Include="tools/webpack/**/*.js" />
       <_RVGeneratorFiles Include="tools/generator/*.js" />
+      <_RVMcpFiles Include="tools/mcp/*.js" />
       <_RVToolRootFiles Include="tools/install.js;tools/package.json;tools/package-lock.json;tools/toolsid.txt" />
       <_RVContentFiles Include="content/**" />
 
       <TfmSpecificPackageFile Include="@(_RVBuildFiles)" PackagePath="build/%(RecursiveDir)%(Filename)%(Extension)" />
       <TfmSpecificPackageFile Include="@(_RVWebpackFiles)" PackagePath="tools/webpack/%(RecursiveDir)%(Filename)%(Extension)" />
       <TfmSpecificPackageFile Include="@(_RVGeneratorFiles)" PackagePath="tools/generator/%(Filename)%(Extension)" />
+      <TfmSpecificPackageFile Include="@(_RVMcpFiles)" PackagePath="tools/mcp/%(Filename)%(Extension)" />
       <TfmSpecificPackageFile Include="@(_RVToolRootFiles)" PackagePath="tools/%(Filename)%(Extension)" />
       <TfmSpecificPackageFile Include="@(_RVContentFiles)" PackagePath="content/%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>

@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "node16",
+        "moduleResolution": "node16",
+        "target": "ES2022",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "types": ["node"],
+        "typeRoots": ["../node_modules/@types"]
+    },
+    "include": ["./*.ts"]
+}

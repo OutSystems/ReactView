@@ -5,6 +5,7 @@
     "description": "Node tooling used by the ReactView.Build MSBuild package: view bindings generator and webpack bundler",
     "license": "ISC",
     "dependencies": {
+        "@modelcontextprotocol/sdk": "1.12.1",
         "@outsystems/ts2lang": "1.0.21",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.15",
         "css-loader": "6.10.0",
@@ -25,13 +26,16 @@
         "webpack": "5.91.0",
         "webpack-cli": "5.1.4",
         "webpack-dev-server": "5.0.4",
-        "webpack-manifest-plugin": "5.0.0"
+        "webpack-manifest-plugin": "5.0.0",
+        "ws": "8.17.1",
+        "zod": "3.23.8"
     },
     "devDependencies": {
         "@types/dts-generator": "2.1.11",
         "@types/fs-extra": "11.0.4",
         "@types/glob": "8.1.0",
         "@types/node": "20.11.30",
-        "@types/webpack": "5.28.5"
+        "@types/webpack": "5.28.5",
+        "@types/ws": "8.5.10"
     }
 }

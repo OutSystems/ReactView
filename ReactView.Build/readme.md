@@ -66,6 +66,18 @@ dotnet msbuild MyApp.csproj -t:ReactViewDevServer -p:Platform=ARM64
 DEV_SERVER_URI=http://localhost:8080 DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true dotnet watch --project MyApp.csproj run --property:Platform=ARM64
 ```
 
+## Agents (MCP server)
+
+The package ships an MCP server that drives a development session: it starts the dev server and the application under `dotnet watch`, and exposes the running views. Write its configuration for a project with:
+
+```
+dotnet msbuild MyApp.csproj -t:ReactViewMcpConfig -p:Platform=ARM64
+```
+
+This writes `reactview.mcp.json` next to the project, an `mcpServers` entry to merge into the project's `.mcp.json` (Claude Code) or any MCP client configuration. The application must open the DevTools protocol port in dev mode (`ReactViewFactory.RemoteDebuggingPort`, 9222 by default for the server).
+
+Tools: `reactview_start`, `reactview_stop`, `reactview_status`, `reactview_wait_for_build`, `reactview_logs`, `reactview_views`, `reactview_screenshot`, `reactview_dom`, `reactview_evaluate`, `reactview_click`, `reactview_type`, `reactview_console`. Selectors search inner views (shadow roots) too.
+
 ## Project setup
 
 1. Reference the package with `PrivateAssets="all"`.

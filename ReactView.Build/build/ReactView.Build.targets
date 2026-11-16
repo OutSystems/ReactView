@@ -223,6 +223,33 @@
   </Target>
 
   <!-- /// -->
+  <!-- MCP server (agents) -->
+  <!-- /// -->
+  <!--
+    dotnet msbuild <project> -t:ReactViewMcpConfig
+
+    Writes reactview.mcp.json next to the project: the configuration of the ReactView MCP server for this project,
+    for Claude Code or any MCP client (the file is the "mcpServers" entry). The server starts the dev server and the
+    application under dotnet watch, and exposes the running views (status, screenshots, DOM, console, clicks).
+  -->
+  <Target Name="ReactViewMcpConfig" DependsOnTargets="RV_CheckNode;RV_PrepareTools">
+    <PropertyGroup>
+      <RV_McpConfigPath>$(ProjectDir)reactview.mcp.json</RV_McpConfigPath>
+      <RV_McpConfig>{
+  "mcpServers": {
+    "reactview": {
+      "command": "$(RV_NodeExe.Replace('\', '/'))",
+      "args": ["$(ReactViewBuildToolsSourcePath.Replace('\', '/'))mcp/index.js", "--project", "$(MSBuildProjectFullPath.Replace('\', '/'))", "--configuration", "$(Configuration)", "--platform", "$(Platform)", "--dev-server-url", "$(ReactViewDevServerUrl)"],
+      "env": { "NODE_PATH": "$(ReactViewToolsNodeModules.Replace('\', '/'))", "DOTNET_HOST_PATH": "$(DOTNET_HOST_PATH.Replace('\', '/'))" }
+    }
+  }
+}</RV_McpConfig>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(RV_McpConfigPath)" Lines="$(RV_McpConfig)" Overwrite="true" />
+    <Message Importance="high" Text="ReactView MCP server configuration written to $(RV_McpConfigPath): merge its mcpServers entry into the project's .mcp.json (Claude Code) or your MCP client configuration." />
+  </Target>
+
+  <!-- /// -->
   <!-- Clean -->
   <!-- /// -->
   <Target Name="RV_Clean" DependsOnTargets="RV_SetVariables" BeforeTargets="Clean">
