@@ -5,6 +5,7 @@ import { Configuration } from "webpack";
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary, getCurrentDirectory, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
 import { statusMiddleware, watchCompiler } from "./Plugins/DevServerStatus";
+import stylesheetsConfig from "./webpack_stylesheets.config";
 import { FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder } from "./Plugins/Resources";
 
 const config = (env, argv) => {
@@ -131,6 +132,15 @@ const config = (env, argv) => {
                 return middlewares;
             }
         };
+
+        // the default stylesheets are a build of their own; the dev server runs it alongside so that they are served
+        // (and rebuilt on change) too. The loader refreshes their links after every update.
+        const stylesheetsEntryPath: string = sanitizeCommandLineParam(env.stylesheetsEntryPath);
+        if (stylesheetsEntryPath) {
+            const stylesheets: Configuration = stylesheetsConfig({ ...env, entryPath: stylesheetsEntryPath });
+            stylesheets.output.publicPath = standardConfig.output.publicPath;
+            return [standardConfig, stylesheets] as any;
+        }
     }
 
     return standardConfig;

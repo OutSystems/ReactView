@@ -234,6 +234,35 @@ export function loadComponent(
  * that component is re-rendered with the new class: it remounts, keeping its native object and properties.
  * */
 function installHotReload(): void {
+    const refreshStyleSheets = (hash: string) => {
+        const heads: Element[] = [document.head];
+        getViews().forEach(v => { if (v.head && v.head !== document.head) { heads.push(v.head); } });
+        heads.forEach(head => head.querySelectorAll("link[rel=stylesheet]").forEach((link: HTMLLinkElement) => {
+            const url = link.href.split("?")[0];
+            // the dev server serves every stylesheet of the application, bundled by it or embedded and redirected to it
+            if (url.startsWith(devServerBaseUrl) || url.indexOf("ReactViewResources") < 0) {
+                link.href = url + "?" + hash;
+            }
+        }));
+    };
+
+    // the dev server publishes every build; stylesheets are refreshed on each successful one. This does not go through
+    // webpack's hot runtime on purpose: the default stylesheets are a build of their own, which that runtime knows
+    // nothing about.
+    let lastBuildHash: string | undefined;
+    const events = new EventSource(new URL("/__reactview/events", devServerBaseUrl).toString());
+    events.addEventListener("status", (event: MessageEvent) => {
+        const status = JSON.parse(event.data);
+        if (status.state === "ok" && status.hash !== lastBuildHash) {
+            if (lastBuildHash) {
+                refreshStyleSheets(status.hash);
+            }
+            lastBuildHash = status.hash;
+        } else if (status.state === "error") {
+            window.console.error("[ReactView] Dev server build failed:\n" + status.errors.join("\n"));
+        }
+    });
+
     window["__reactview_hot__"] = {
         moduleUpdated: async (moduleName: string, moduleExports: any) => {
             const componentClass = (moduleExports || {}).default;

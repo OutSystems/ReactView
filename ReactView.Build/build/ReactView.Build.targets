@@ -219,7 +219,7 @@
       <RV_DevServerScript>$(ReactViewToolsNodeModules)/webpack-dev-server/bin/webpack-dev-server.js</RV_DevServerScript>
     </PropertyGroup>
     <Message Importance="high" Text="ReactView dev server for $(AssemblyName) at $(ReactViewDevServerUrl)" />
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_views.config.js&quot; --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env outputPath=&quot;$(RV_DevOutputPath)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=false" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_views.config.js&quot; --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env outputPath=&quot;$(RV_DevOutputPath)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot; --env stylesheetsEntryPath='@(DefaultStyleSheet)' --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=false" />
   </Target>
 
   <!-- /// -->

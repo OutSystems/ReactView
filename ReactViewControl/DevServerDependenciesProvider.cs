@@ -59,17 +59,4 @@ namespace ReactViewControl {
             }
         }
     }
-
-    internal sealed class DevServerDependenciesProviderFactory : IModuleDependenciesProviderFactory {
-
-        public DevServerDependenciesProviderFactory(Uri devServerUri) {
-            DevServerUri = devServerUri;
-        }
-
-        public Uri DevServerUri { get; }
-
-        public IModuleDependenciesProvider CreateModuleDependenciesProvider(string sourcePath) {
-            return new DevServerDependenciesProvider(DevServerUri, sourcePath);
-        }
-    }
 }

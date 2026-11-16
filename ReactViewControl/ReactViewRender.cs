@@ -590,10 +590,33 @@ namespace ReactViewControl {
             }
 
             if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
+                if (DevServerUri != null) {
+                    // dev mode: /<assembly>/<path> is served by the dev server
+                    return new Uri(DevServerUri, url.TrimStart(ResourceUrl.PathSeparator.ToCharArray())).ToString();
+                }
                 return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
             }
 
             return new ResourceUrl(UserCallingAssembly, url).ToString();
+        }
+
+        private readonly Dictionary<string, IModuleDependenciesProvider> devServerDependencies = new Dictionary<string, IModuleDependenciesProvider>();
+
+        /// <summary>
+        /// Dependencies of a module: the ones it declares (from the .entry files embedded at build time), or in dev mode the
+        /// ones the dev server manifest lists for it, which is the only consistent source once the bundles come from there.
+        /// </summary>
+        private (string[] js, string[] css) GetDependencies(IViewModule module) {
+            if (DevServerUri == null) {
+                return (module.DependencyJsSources, module.CssSources);
+            }
+            lock (devServerDependencies) {
+                if (!devServerDependencies.TryGetValue(module.MainJsSource, out var provider)) {
+                    provider = new DevServerDependenciesProvider(DevServerUri, module.MainJsSource);
+                    devServerDependencies[module.MainJsSource] = provider;
+                }
+                return (provider.GetJsDependencies(), provider.GetCssDependencies());
+            }
         }
 
         /// <summary>

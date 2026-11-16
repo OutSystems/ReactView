@@ -7,6 +7,7 @@
  * */
 declare const window: any;
 
+
 const RefreshRuntime = require("react-refresh/runtime");
 
 RefreshRuntime.injectIntoGlobalHook(window);

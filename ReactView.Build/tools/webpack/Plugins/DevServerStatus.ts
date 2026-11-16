@@ -1,4 +1,4 @@
-import { Compiler, Stats } from "webpack";
+import { Compiler, MultiStats, Stats } from "webpack";
 
 /*
  * Build status of the dev server, exposed over HTTP so that tools (and agents) can tell whether the running
@@ -21,6 +21,7 @@ const StatusPath = "/__reactview/status";
 const EventsPath = "/__reactview/events";
 
 let status: BuildStatus = { state: "building", errors: [], warnings: [] };
+let buildStartedAt: number = Date.now();
 const listeners = new Set<(status: BuildStatus) => void>();
 
 function publish(next: BuildStatus): void {
@@ -28,21 +29,22 @@ function publish(next: BuildStatus): void {
     listeners.forEach(l => l(status));
 }
 
-function formatMessages(stats: Stats, kind: "errors" | "warnings"): string[] {
+function formatMessages(stats: Stats | MultiStats, kind: "errors" | "warnings"): string[] {
     return stats.toJson({ all: false, [kind]: true, errorDetails: false })[kind]?.map(e => e.message) || [];
 }
 
-export function watchCompiler(compiler: Compiler): void {
+export function watchCompiler(compiler: Compiler | { hooks: Compiler["hooks"] }): void {
     compiler.hooks.invalid.tap("ReactViewDevServerStatus", () => {
+        buildStartedAt = Date.now();
         publish({ state: "building", errors: [], warnings: [] });
     });
-    compiler.hooks.done.tap("ReactViewDevServerStatus", stats => {
+    (compiler.hooks.done as any).tap("ReactViewDevServerStatus", (stats: Stats | MultiStats) => {
         const errors = formatMessages(stats, "errors");
         publish({
             state: errors.length > 0 ? "error" : "ok",
             hash: stats.hash,
-            builtAt: new Date(stats.endTime).toISOString(),
-            durationMs: stats.endTime - stats.startTime,
+            builtAt: new Date().toISOString(),
+            durationMs: Date.now() - buildStartedAt,
             errors,
             warnings: formatMessages(stats, "warnings")
         });
