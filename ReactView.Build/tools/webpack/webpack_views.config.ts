@@ -6,6 +6,8 @@ import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary, getCurrentDirectory, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
 import { statusMiddleware, watchCompiler } from "./Plugins/DevServerStatus";
 import stylesheetsConfig from "./webpack_stylesheets.config";
+import { BindingsGeneratorPlugin } from "./Plugins/BindingsGenerator";
+import { join } from "path";
 import { FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder } from "./Plugins/Resources";
 
 const config = (env, argv) => {
@@ -132,6 +134,17 @@ const config = (env, argv) => {
                 return middlewares;
             }
         };
+
+        // the C# bindings follow the sources too, into the folder the regular build uses, for "dotnet watch" to pick up
+        const generatedPath: string = sanitizeCommandLineParam(env.generatedPath);
+        if (generatedPath) {
+            standardConfig.plugins.push(new BindingsGeneratorPlugin({
+                projectDirectory: getCurrentDirectory(),
+                generatedPath: generatedPath,
+                ts2langScript: require.resolve("@outsystems/ts2lang/ts2lang-main.js"),
+                template: join(__dirname, "..", "generator", "ViewGenerator.js")
+            }));
+        }
 
         // the default stylesheets are a build of their own; the dev server runs it alongside so that they are served
         // (and rebuilt on change) too. The loader refreshes their links after every update.

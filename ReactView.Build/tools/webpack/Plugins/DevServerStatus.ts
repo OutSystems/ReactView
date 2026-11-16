@@ -15,6 +15,13 @@ export interface BuildStatus {
     durationMs?: number;
     errors: string[];
     warnings: string[];
+    bindings?: BindingsStatus; // C# bindings generation, when the dev server is doing it
+}
+
+export interface BindingsStatus {
+    state: "ok" | "error";
+    durationMs: number;
+    errors: string[];
 }
 
 const StatusPath = "/__reactview/status";
@@ -36,7 +43,7 @@ function formatMessages(stats: Stats | MultiStats, kind: "errors" | "warnings"):
 export function watchCompiler(compiler: Compiler | { hooks: Compiler["hooks"] }): void {
     compiler.hooks.invalid.tap("ReactViewDevServerStatus", () => {
         buildStartedAt = Date.now();
-        publish({ state: "building", errors: [], warnings: [] });
+        publish({ state: "building", errors: [], warnings: [], bindings: status.bindings });
     });
     (compiler.hooks.done as any).tap("ReactViewDevServerStatus", (stats: Stats | MultiStats) => {
         const errors = formatMessages(stats, "errors");
@@ -46,9 +53,14 @@ export function watchCompiler(compiler: Compiler | { hooks: Compiler["hooks"] })
             builtAt: new Date().toISOString(),
             durationMs: Date.now() - buildStartedAt,
             errors,
-            warnings: formatMessages(stats, "warnings")
+            warnings: formatMessages(stats, "warnings"),
+            bindings: status.bindings
         });
     });
+}
+
+export function reportBindings(bindings: BindingsStatus): void {
+    publish({ ...status, bindings });
 }
 
 /*

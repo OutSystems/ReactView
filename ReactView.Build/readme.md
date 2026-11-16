@@ -49,7 +49,7 @@ dotnet msbuild MyApp.csproj -t:ReactViewDevServer
 
 It bundles the views from the sources with webpack-dev-server and react-refresh, listens on `ReactViewDevServerUrl` (default `http://localhost:8080`), serves the project folder for assets, and publishes its build state:
 
-- `GET /__reactview/status` returns `{ state: "building" | "ok" | "error", hash, builtAt, durationMs, errors, warnings }`
+- `GET /__reactview/status` returns `{ state: "building" | "ok" | "error", hash, builtAt, durationMs, errors, warnings, bindings }`, where `bindings` is the state of the C# bindings generation
 - `GET /__reactview/events` is a server-sent events stream with one `status` event per state change
 
 Point the application at it by returning the same url from `ReactViewFactory.DevServerUri`, typically from an environment variable in Debug builds. While it is set:
@@ -58,6 +58,13 @@ Point the application at it by returning the same url from `ReactViewFactory.Dev
 - the development build of React is used, and react-refresh updates edited components in place (function components keep their state, class components remount);
 - the pre-rendered views cache is disabled;
 - an update that cannot be applied in place is logged in the webview console, never turned into a page reload.
+
+The dev server also regenerates the C# bindings after every build, into the same `obj/.../reactview/cs` folder the regular build uses, touching only the files whose content changed. Run the application under `dotnet watch` (same configuration and platform as the dev server) and a changed `IViewProperties`/`IViewBehaviors` interface reaches the C# side as a hot reload too:
+
+```
+dotnet msbuild MyApp.csproj -t:ReactViewDevServer -p:Platform=ARM64
+DEV_SERVER_URI=http://localhost:8080 DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true dotnet watch --project MyApp.csproj run --property:Platform=ARM64
+```
 
 ## Project setup
 
