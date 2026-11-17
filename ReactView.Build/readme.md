@@ -52,10 +52,12 @@ dotnet msbuild MyApp.csproj -t:ReactViewDevServer
 
 It bundles the views from the sources with webpack-dev-server and react-refresh, listens on `ReactViewDevServerUrl` (default `http://localhost:8080`), serves the project folder for assets, and publishes its build state:
 
-- `GET /__reactview/status` returns `{ state: "building" | "ok" | "error", assembly, hash, builtAt, durationMs, errors, warnings, bindings }`, where `assembly` is the one it builds and `bindings` the state of the C# bindings generation
+- `GET /__reactview/status` returns `{ state: "building" | "ok" | "error", assemblies, builds, hash, builtAt, durationMs, errors, warnings, bindings }`, where `assemblies` are the ones it serves, `builds` the webpack builds it runs (`{ name, assembly, kind: "views" | "plugins" | "stylesheets" | "workers", hash, state }`) and `bindings` the state of the C# bindings generation
 - `GET /__reactview/events` is a server-sent events stream with one `status` event per state change
 
-A dev server builds one project. An application whose views live in several assemblies (plugins project, views libraries) loads from the dev server the assembly it builds and keeps the other ones embedded: the control asks the dev server, once per assembly, whether it has a manifest for it.
+An application whose views live in several assemblies (a plugins project, plugin modules of their own) is served by one dev server: list the other projects as `ReactViewDevServerProject` items of the project the target runs on, or pass them with `-p:ReactViewDevServerProjects="../Plugins/Plugins.csproj;../Other/Other.csproj"`. Each project is a webpack build of its own, served under `/<assembly>/` like its embedded resources are addressed, with its default stylesheets and workers; a views project gets react-refresh and its bindings regenerated. The application keeps the assemblies the server does not build embedded: the control asks the dev server, once per assembly, whether it has a manifest for it.
+
+A change in a plugins project cannot be applied in place (its modules are globals every view captured when it loaded): the views reload from the current sources. Stylesheets, of any project, are refreshed in place.
 
 Point the application at it by returning the same url from `ReactViewFactory.DevServerUri`, typically from an environment variable in Debug builds. While it is set:
 

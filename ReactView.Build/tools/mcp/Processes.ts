@@ -24,6 +24,8 @@ export interface BuildStatus {
     durationMs?: number;
     errors: string[];
     warnings: string[];
+    assemblies?: string[]; // served under /<assembly>/
+    builds?: { name: string, assembly: string, kind: string, hash?: string, state: string }[];
     bindings?: { state: "ok" | "error", durationMs: number, errors: string[] };
 }
 

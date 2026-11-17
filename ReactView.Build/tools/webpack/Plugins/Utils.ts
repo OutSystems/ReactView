@@ -58,7 +58,8 @@ export function generateManifest(
         if (entry.chunks) {
             entry.chunks.forEach(c => {
                 if (c.files) {
-                    files = files.concat(Array.from(c.files));
+                    // dev server: the hot updates of a rebuilt chunk are files of it too, but only the hot runtime loads them
+                    files = files.concat(Array.from(c.files as Iterable<string>).filter(f => !f.includes(".hot-update.")));
                 }
             });
         }

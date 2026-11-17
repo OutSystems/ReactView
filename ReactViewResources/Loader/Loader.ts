@@ -248,13 +248,21 @@ function installHotReload(): void {
 
     // the dev server publishes every build; stylesheets are refreshed on each successful one. This does not go through
     // webpack's hot runtime on purpose: the default stylesheets are a build of their own, which that runtime knows
-    // nothing about.
+    // nothing about. Neither do the plugins and workers builds: their modules are globals every view captured when it
+    // loaded, so a change there loads the page again from the current sources.
     let lastBuildHash: string | undefined;
+    const lastHashes = new Map<string, string>();
     const events = new EventSource(new URL("/__reactview/events", devServerBaseUrl).toString());
     events.addEventListener("status", (event: MessageEvent) => {
         const status = JSON.parse(event.data);
         if (status.state === "ok" && status.hash !== lastBuildHash) {
-            if (lastBuildHash) {
+            const builds: { name: string, kind: string, hash: string }[] = status.builds || [];
+            const reloading = !!lastBuildHash && builds.filter(b => (b.kind === "plugins" || b.kind === "workers") && lastHashes.get(b.name) !== b.hash);
+            builds.forEach(b => lastHashes.set(b.name, b.hash));
+            if (reloading && reloading.length > 0) {
+                window.console.info(`[ReactView] ${reloading.map(b => b.name).join(", ")} changed, reloading the view`);
+                requestViewReload();
+            } else if (lastBuildHash) {
                 refreshStyleSheets(status.hash);
             }
             lastBuildHash = status.hash;

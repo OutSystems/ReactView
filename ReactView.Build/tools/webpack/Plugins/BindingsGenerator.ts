@@ -11,6 +11,7 @@ import { reportBindings } from "./DevServerStatus";
  * */
 export interface BindingsGeneratorOptions {
     projectDirectory: string; // where ts2lang.json lives
+    assemblyName: string; // names the project in the status
     generatedPath: string; // destination of the generated C#
     ts2langScript: string; // @outsystems/ts2lang/ts2lang-main.js
     template: string; // compiled ViewGenerator.js
@@ -51,12 +52,12 @@ export class BindingsGeneratorPlugin {
         if (errors.length === 0) {
             const changed = syncDirectories(staging, this.options.generatedPath);
             if (changed.length > 0) {
-                console.log(`[ReactView] bindings updated: ${changed.join(", ")}`);
+                console.log(`[ReactView] ${this.options.assemblyName} bindings updated: ${changed.join(", ")}`);
             }
         }
         rmSync(staging, { recursive: true, force: true });
 
-        reportBindings({ state: errors.length > 0 ? "error" : "ok", durationMs: Date.now() - startedAt, errors });
+        reportBindings(this.options.assemblyName, { state: errors.length > 0 ? "error" : "ok", durationMs: Date.now() - startedAt, errors });
     }
 
     private runGenerator(destination: string): Promise<string[]> {

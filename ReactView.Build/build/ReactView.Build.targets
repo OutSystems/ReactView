@@ -222,14 +222,53 @@
     Runs webpack-dev-server in the foreground, bundling the views from the sources with react-refresh. An application
     whose ReactViewFactory.DevServerUri points at $(ReactViewDevServerUrl) loads its views from it and hot reloads them
     as the sources change. Build status: $(ReactViewDevServerUrl)/__reactview/status (and /__reactview/events).
+
+    An application made of several view assemblies (a plugins project, plugin modules of their own) is served by one
+    dev server: list the other projects as ReactViewDevServerProject items of the project the target runs on, or pass
+    them with -p:ReactViewDevServerProjects="path;path". Each assembly is served under /<assembly>/; the application
+    keeps the assemblies the server does not build embedded.
   -->
+  <ItemGroup Condition="'$(ReactViewDevServerProjects)' != ''">
+    <ReactViewDevServerProject Include="$(ReactViewDevServerProjects)" />
+  </ItemGroup>
+
+  <!-- What the dev server needs to know about a project: run by ReactViewDevServer on each of the projects it serves -->
+  <Target Name="RV_DevServerProjectInfo" DependsOnTargets="RV_SetVariables" Returns="@(_RVDevServerProjectInfo)">
+    <ItemGroup>
+      <_RVDevServerProjectInfo Include="$(MSBuildProjectFullPath)">
+        <ProjectDirectory>$(MSBuildProjectDirectory)</ProjectDirectory>
+        <AssemblyName>$(AssemblyName)</AssemblyName>
+        <Kind>$(WP_ConfigFileName.Replace('webpack_', ''))</Kind>
+        <Bundle>$(ReactViewBundle)</Bundle>
+        <PluginsRelativePath>$(PluginsRelativePath)</PluginsRelativePath>
+        <StyleSheets>@(DefaultStyleSheet)</StyleSheets>
+        <Workers>@(Workers)</Workers>
+        <GeneratedPath Condition="'$(ReactViewGenerateBindings)' == 'true'">$(RV_GeneratedPath)</GeneratedPath>
+        <OutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'dev'))</OutputPath>
+      </_RVDevServerProjectInfo>
+    </ItemGroup>
+  </Target>
+
   <Target Name="ReactViewDevServer" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
     <PropertyGroup>
-      <RV_DevOutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'dev'))</RV_DevOutputPath>
       <RV_DevServerScript>$(ReactViewToolsNodeModules)/webpack-dev-server/bin/webpack-dev-server.js</RV_DevServerScript>
+      <RV_DevServerProjectsFile>$(ReactViewIntermediatePath)dev-server.json</RV_DevServerProjectsFile>
     </PropertyGroup>
-    <Message Importance="high" Text="ReactView dev server for $(AssemblyName) at $(ReactViewDevServerUrl)" />
-    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_views.config.js&quot; --mode=development --devtool=inline-source-map --env forHotReload=true --env useCache=false --env outputPath=&quot;$(RV_DevOutputPath)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot; --env stylesheetsEntryPath='@(DefaultStyleSheet)' --env generatedPath=&quot;$(RV_GeneratedPath)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=false" />
+
+    <!-- the other projects are built by this server too: they must have the tools (and their ts2lang.json) in place -->
+    <MSBuild Projects="@(ReactViewDevServerProject)" Targets="RV_SetupProject" />
+    <MSBuild Projects="$(MSBuildProjectFullPath);@(ReactViewDevServerProject)" Targets="RV_DevServerProjectInfo">
+      <Output TaskParameter="TargetOutputs" ItemName="_RVDevServerProjects" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <_RVDevServerProjectsJson>{ "projects": [ @(_RVDevServerProjects->'{ "project": "%(Identity)", "directory": "%(ProjectDirectory)", "assemblyName": "%(AssemblyName)", "kind": "%(Kind)", "bundle": %(Bundle), "pluginsRelativePath": "%(PluginsRelativePath)", "styleSheets": "%(StyleSheets)", "workers": "%(Workers)", "generatedPath": "%(GeneratedPath)", "outputPath": "%(OutputPath)" }', ', ') ] }</_RVDevServerProjectsJson>
+      <_RVDevServerProjectsJson>$(_RVDevServerProjectsJson.Replace('\', '/'))</_RVDevServerProjectsJson>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(RV_DevServerProjectsFile)" Lines="$(_RVDevServerProjectsJson)" Overwrite="true" />
+
+    <Message Importance="high" Text="ReactView dev server for @(_RVDevServerProjects->'%(AssemblyName)', ', ') at $(ReactViewDevServerUrl)" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_devserver.config.js&quot; --mode=development --devtool=inline-source-map --env projectsFile=&quot;$(RV_DevServerProjectsFile)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot;" />
   </Target>
 
   <!-- /// -->

@@ -77,7 +77,7 @@ server.tool("reactview_start",
                 return failure("dev server did not come up:\n" + session.devServer.tail(30).join("\n"));
             }
             status = await session.waitForBuild(deadline - Date.now());
-            report.push(`dev server: ${status?.state} at ${session.options.devServerUrl}` + (status?.errors.length ? "\n" + status.errors.join("\n") : ""));
+            report.push(`dev server: ${status?.state} at ${session.options.devServerUrl}, serving ${(status?.assemblies || []).join(", ") || "nothing"}` + (status?.errors.length ? "\n" + status.errors.join("\n") : ""));
         }
         if (app) {
             session.startApp();

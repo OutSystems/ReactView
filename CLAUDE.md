@@ -16,7 +16,7 @@ Node 22 (`.node-version`) and the .NET SDK. On Apple Silicon use `-p:Platform=AR
 ```
 dotnet build ReactView.Build/ReactView.Build.csproj -c Release        # repack the build package (delete packages/reactview.build first)
 dotnet build Sample.Avalonia/Sample.Avalonia.csproj -c Debug -p:Platform=ARM64
-dotnet msbuild Sample.Avalonia/Sample.Avalonia.csproj -t:ReactViewDevServer -p:Platform=ARM64   # hot reload server
+dotnet msbuild Sample.Avalonia/Sample.Avalonia.csproj -t:ReactViewDevServer -p:Platform=ARM64   # hot reload server (+ the project's ReactViewDevServerProject items)
 DEV_SERVER_URI=http://localhost:8080 DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true dotnet watch --project Sample.Avalonia run -c Debug --property:Platform=ARM64
 dotnet msbuild Sample.Avalonia/Sample.Avalonia.csproj -t:ReactViewMcpConfig -p:Platform=ARM64   # MCP server config for agents
 ```
@@ -28,7 +28,7 @@ After changing anything under `ReactView.Build/`, repack and rebuild the sample:
 - Properties interface `I<Name>Properties`, behaviors interface `I<Name>Behaviors`, optional `IChildViews`; the component is the default export.
 - Every type used by those interfaces is exported from the same file; behavior methods return `void`.
 - Generated C# goes to `obj/<platform>/<config>/<tfm>/reactview/cs`, bundles to `.../out`; nothing is written into the source tree.
-- Hot reload: function components refresh in place, class components and modules exporting enums remount. New interface members restart the application under `dotnet watch`. `ReactView.ReloadView()` (MCP: `reactview_reload`) recreates the views from the current sources when an update could not be applied, e.g. plugin modules.
+- Hot reload: function components refresh in place, class components and modules exporting enums remount, a plugins project change reloads the views. New interface members restart the application under `dotnet watch`. `ReactView.ReloadView()` (MCP: `reactview_reload`) recreates the views from the current sources when an update could not be applied, e.g. plugin modules.
 
 ## Verifying changes
 

@@ -1,23 +1,38 @@
 ﻿import { existsSync } from "fs";
-import { resolve } from "path";
+import { join, resolve } from "path";
 import { Configuration } from "webpack";
 
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary, getCurrentDirectory, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
-import { setServedAssembly, statusMiddleware, watchCompiler } from "./Plugins/DevServerStatus";
-import stylesheetsConfig from "./webpack_stylesheets.config";
 import { BindingsGeneratorPlugin } from "./Plugins/BindingsGenerator";
-import { join } from "path";
 import { FullHashPlaceholder, IdPlaceholder, OutputDirectoryDefault, RuntimePlaceholder } from "./Plugins/Resources";
 
-const config = (env, argv) => {
+export interface ViewsConfigurationOptions {
+    projectDirectory: string;
+    assemblyName: string;
+    outputPath: string;
+    isProductionBuild: boolean;
+    useCache: boolean;
+    optimizeBundle: boolean;
+    pluginsRelativePath?: string; // relative to the project directory
+    forHotReload?: boolean;
+    devServerUrl?: string;
+    generatedPath?: string; // dev server: where the C# bindings are regenerated after every build
+}
+
+/*
+ * Bundle of the views of one project: every file ts2lang.json selects is an entry exporting its component to
+ * window.Views, the modules of the plugins project (pluginsRelativePath) are externals.
+ * */
+export function getViewsConfiguration(options: ViewsConfigurationOptions): Configuration {
+    const { projectDirectory, assemblyName, forHotReload, devServerUrl } = options;
 
     let aliasMap: Dictionary<string> = {};
     let externalsMap: Dictionary<string> = {};
 
     // Get aliases and externals from a configuration file, if exists
     let generateExtendedConfig = (relativePath: string, throwError: boolean): void => {
-        let fullPath: string = relativePath.replace(/\\/g, "/")
+        let fullPath: string = resolve(projectDirectory, relativePath.replace(/\\/g, "/"));
 
         let webpackOutputConfigFile = resolve(fullPath, "webpack-output-config.json");
         if (existsSync(webpackOutputConfigFile)) {
@@ -40,20 +55,19 @@ const config = (env, argv) => {
         }
     };
 
-    const sanitizedPluginsRelativePath: string = sanitizeCommandLineParam(env.pluginsRelativePath);
-    const assemblyName: string = sanitizeCommandLineParam(env.assemblyName);
-    const forHotReload: boolean = env.forHotReload === "true";
-    const devServerUrl: string = sanitizeCommandLineParam(env.devServerUrl) || "http://localhost:8080";
-
-    const standardConfig: Configuration = getCommonConfiguration(
-        argv.mode === "production", 
-        env.useCache === "true" ? "viewsCache" : "", 
-        "Views",
-        getOutputPath(env),
+    const standardConfig: Configuration = getCommonConfiguration({
+        isProductionBuild: options.isProductionBuild,
+        cacheName: options.useCache ? "viewsCache" : "",
+        libraryName: "Views",
+        outputPath: options.outputPath,
+        projectDirectory,
         assemblyName,
-        sanitizedPluginsRelativePath,
+        pluginsRelativePath: options.pluginsRelativePath,
         forHotReload,
-        forHotReload ? devServerUrl : undefined);
+        devServerUrl: forHotReload ? devServerUrl : undefined
+    });
+
+    standardConfig.name = assemblyName;
 
     if (!standardConfig.optimization) {
         standardConfig.optimization = {};
@@ -63,7 +77,7 @@ const config = (env, argv) => {
         name: "ViewsRuntime"
     };
 
-    if (env.optimizeBundle === "true") {
+    if (options.optimizeBundle) {
         // SplitChunksOptions
         standardConfig.optimization.splitChunks = {
             chunks: "all",
@@ -72,8 +86,8 @@ const config = (env, argv) => {
     } else {
         standardConfig.optimization.splitChunks = false;
     }
-    
-    generateExtendedConfig(sanitizedPluginsRelativePath || ".", !!sanitizedPluginsRelativePath);
+
+    generateExtendedConfig(options.pluginsRelativePath || ".", !!options.pluginsRelativePath);
 
     // resolve.alias
     if (Object.keys(aliasMap).length > 0) {
@@ -98,67 +112,33 @@ const config = (env, argv) => {
         standardConfig.output.hotUpdateChunkFilename = OutputDirectoryDefault + IdPlaceholder + "." + FullHashPlaceholder + ".hot-update.js";
         standardConfig.output.hotUpdateMainFilename = OutputDirectoryDefault + RuntimePlaceholder + "." + FullHashPlaceholder + ".hot-update.json";
 
-        const url = new URL(devServerUrl);
-        const servedPath: string = "/" + assemblyName + "/";
-
-        // @ts-ignore
-        standardConfig.devServer = {
-            // "localhost" would bind a single stack (::1 on recent Node), and the host application may connect over the other
-            host: url.hostname === "localhost" ? "127.0.0.1" : url.hostname,
-            port: Number(url.port) || 80,
-            // the page is not served by this server, so the client cannot derive the socket url from its location
-            client: {
-                overlay: false,
-                logging: "info",
-                webSocketURL: { protocol: "ws", hostname: url.hostname, port: Number(url.port) || 80, pathname: "/ws" }
-            },
-            // an update that cannot be applied in place is reported, never turned into a page reload the host does not expect
-            hot: "only",
-            liveReload: false,
-            allowedHosts: "all",
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Cache-Control": "no-store"
-            },
-            devMiddleware: {
-                publicPath: servedPath
-            },
-            // project assets (images referenced by the views) are served from the project folder
-            static: {
-                directory: getCurrentDirectory(),
-                publicPath: servedPath,
-                watch: false
-            },
-            setupMiddlewares: (middlewares, devServer) => {
-                watchCompiler(devServer.compiler);
-                setServedAssembly(assemblyName);
-                middlewares.unshift({ name: "reactview-status", middleware: statusMiddleware });
-                return middlewares;
-            }
-        };
-
         // the C# bindings follow the sources too, into the folder the regular build uses, for "dotnet watch" to pick up
-        const generatedPath: string = sanitizeCommandLineParam(env.generatedPath);
-        if (generatedPath) {
+        if (options.generatedPath) {
             standardConfig.plugins.push(new BindingsGeneratorPlugin({
-                projectDirectory: getCurrentDirectory(),
-                generatedPath: generatedPath,
+                projectDirectory,
+                assemblyName,
+                generatedPath: options.generatedPath,
                 ts2langScript: require.resolve("@outsystems/ts2lang/ts2lang-main.js"),
                 template: join(__dirname, "..", "generator", "ViewGenerator.js")
             }));
         }
-
-        // the default stylesheets are a build of their own; the dev server runs it alongside so that they are served
-        // (and rebuilt on change) too. The loader refreshes their links after every update.
-        const stylesheetsEntryPath: string = sanitizeCommandLineParam(env.stylesheetsEntryPath);
-        if (stylesheetsEntryPath) {
-            const stylesheets: Configuration = stylesheetsConfig({ ...env, entryPath: stylesheetsEntryPath });
-            stylesheets.output.publicPath = standardConfig.output.publicPath;
-            return [standardConfig, stylesheets] as any;
-        }
     }
 
     return standardConfig;
-};
+}
+
+/*
+ * Regular build (webpack --config webpack_views.config.js): one project, the current directory.
+ * Hot reload is the dev server's business, see webpack_devserver.config.ts.
+ * */
+const config = (env, argv) => getViewsConfiguration({
+    projectDirectory: getCurrentDirectory(),
+    assemblyName: sanitizeCommandLineParam(env.assemblyName),
+    outputPath: getOutputPath(env),
+    isProductionBuild: argv.mode === "production",
+    useCache: env.useCache === "true",
+    optimizeBundle: env.optimizeBundle === "true",
+    pluginsRelativePath: sanitizeCommandLineParam(env.pluginsRelativePath)
+});
 
 export default config;

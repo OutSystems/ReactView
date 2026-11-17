@@ -28,7 +28,21 @@ import SassRuleSet from "../Rules/Sass";
 import getTypeScriptRuleSet from "../Rules/TypeScript";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, libraryName: string, outputPath: string, assemblyName?: string, pluginsRelativePath?: string, forHotReload?: boolean, devServerUrl?: string): Configuration => {
+export interface CommonConfigurationOptions {
+    isProductionBuild: boolean;
+    cacheName: string; // empty: no filesystem cache
+    libraryName: string; // "Views" or "Plugins", the window global the bundles export to
+    outputPath: string;
+    projectDirectory: string; // where ts2lang.json and the sources live (webpack context)
+    assemblyName?: string;
+    pluginsRelativePath?: string;
+    forHotReload?: boolean;
+    devServerUrl?: string;
+}
+
+let getCommonConfiguration = (options: CommonConfigurationOptions): Configuration => {
+
+    const { isProductionBuild, cacheName, libraryName, outputPath, projectDirectory, assemblyName, pluginsRelativePath, forHotReload, devServerUrl } = options;
 
     const entryMap: Dictionary<string> = {}
     const outputMap: Dictionary<string> = {};
@@ -37,14 +51,14 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
 
     // Build entry, output, and namespace mappings for webpack config
     let getConfiguration = (input: string, output: string, namespace: string): void => {
-        sync(input).forEach(f => {
+        sync(input, { cwd: projectDirectory }).forEach(f => {
 
             // Exclude node_modules and d.ts files
             if (!f.includes("node_modules") && !f.endsWith(DtsExtension)) {
 
                 let entryName: string = parse(f).name;
                 entryMap[entryName] = "./" + f;
-                entryFiles.push(resolve(f));
+                entryFiles.push(resolve(projectDirectory, f));
                 outputMap[entryName] = output;
                 namespaceMap[entryName] = namespace;
             }
@@ -52,7 +66,7 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
     }
 
     // Gets input and output entries from ts2lang file
-    require(resolve("./ts2lang.json")).tasks.forEach(t => getConfiguration(t.input, t.output, t.parameters.namespace));
+    require(resolve(projectDirectory, "ts2lang.json")).tasks.forEach(t => getConfiguration(t.input, t.output, t.parameters.namespace));
 
     if (forHotReload) {
         // entry the loader runs before React in dev mode, see hot/RefreshSetup.ts
@@ -82,6 +96,8 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
     const Configuration: Configuration = {
         stats: "minimal",
 
+        context: projectDirectory,
+
         entry: entryMap,
 
         externals: {
@@ -102,7 +118,10 @@ let getCommonConfiguration = (isProductionBuild: boolean, cacheName: string, lib
             libraryTarget: "window",
             globalObject: "window",
             devtoolNamespace: libraryName,
-            publicPath: publicPath
+            publicPath: publicPath,
+            // the globals the runtime shares with its chunks and hot updates are named after the assembly: several
+            // view assemblies (an application and its plugins) load into the same document, each with its runtime
+            uniqueName: (assemblyName || libraryName).replace(/[^A-Za-z0-9_$]/g, "_")
         },
 
         node: false,
