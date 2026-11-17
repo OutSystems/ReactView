@@ -2,7 +2,10 @@
 /*
  * ReactView MCP server: lets an agent develop against a running ReactView application.
  *
- *   node index.js --project <app.csproj> [--configuration Debug] [--platform ARM64] [--dev-server-url http://localhost:8080] [--debugging-port 9222]
+ *   node index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url http://localhost:8080] [--debugging-port 9222]
+ *
+ * --project is the project whose views hot reload (the dev server builds it); --app-project the executable to run under
+ * dotnet watch, when it is another project (plugins or views libraries), the views project otherwise.
  *
  * Start the dev server and the application (dotnet watch) with reactview_start, then edit sources: the views hot reload
  * from the dev server, the C# through dotnet watch. reactview_wait_for_build tells when the sources are built,
@@ -22,12 +25,13 @@ function argument(name: string, fallback?: string): string | undefined {
 
 const project = argument("project");
 if (!project) {
-    console.error("usage: index.js --project <app.csproj> [--configuration Debug] [--platform ARM64] [--dev-server-url url] [--debugging-port 9222]");
+    console.error("usage: index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url url] [--debugging-port 9222]");
     process.exit(1);
 }
 
 const session = new DevSession({
     project: resolve(project),
+    appProject: resolve(argument("app-project", project)!),
     configuration: argument("configuration", "Debug")!,
     platform: argument("platform", process.arch === "arm64" ? "ARM64" : "x64")!,
     devServerUrl: argument("dev-server-url", "http://localhost:8080")!.replace(/\/+$/, ""),
@@ -234,6 +238,9 @@ server.tool("reactview_console",
         return text(entries.length ? entries : "(no console output)");
     });
 
+// the client went away (closed our stdin): the processes it started go with it
+process.stdin.on("end", () => { session.stop(); process.exit(0); });
+process.stdin.on("close", () => { session.stop(); process.exit(0); });
 process.on("SIGTERM", () => { session.stop(); process.exit(0); });
 process.on("SIGINT", () => { session.stop(); process.exit(0); });
 

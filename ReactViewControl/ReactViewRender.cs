@@ -81,7 +81,7 @@ namespace ReactViewControl {
                 ExecutionEngine.ModulesObjectName,
                 NativeAPI.NativeObjectName,
                 ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl,
-                DevServerUri != null ? Uri.EscapeDataString(new Uri(DevServerUri, UserCallingAssembly.GetName().Name + "/").ToString()) : "false",
+                DevServerUri != null ? Uri.EscapeDataString(DevServerUri.ToString()) : "false",
             };
 
             loaderUrl = new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams));
@@ -569,8 +569,9 @@ namespace ReactViewControl {
         }
 
         /// <summary>
-        /// Dev mode: embedded resources of the application (bundles, stylesheets, images) are served by the dev server,
-        /// which bundles the views from the sources and serves the project folder. The loader's own resources stay embedded.
+        /// Dev mode: embedded resources of the assembly the dev server builds (bundles, stylesheets, images) are served by it,
+        /// from the sources and the project folder. The other assemblies (the loader's, plugins, views of other projects)
+        /// stay embedded.
         /// </summary>
         private bool TryRedirectToDevServer(ResourceHandler resourceHandler) {
             // embedded://webview/<assembly>[-<version>]/<path>: urls built from an assembly carry its version, urls built
@@ -584,7 +585,7 @@ namespace ReactViewControl {
             if (versionSeparator > 0 && Version.TryParse(assemblySegment.Substring(versionSeparator + 1), out _)) {
                 assemblyName = assemblySegment.Substring(0, versionSeparator);
             }
-            if (string.Equals(assemblyName, ResourcesAssembly.GetName().Name, StringComparison.OrdinalIgnoreCase)) {
+            if (string.Equals(assemblyName, ResourcesAssembly.GetName().Name, StringComparison.OrdinalIgnoreCase) || !DevServer.Serves(DevServerUri, assemblyName)) {
                 return false;
             }
             var path = assemblyName + "/" + string.Concat(uri.Segments.Skip(2)) + uri.Query;
@@ -603,7 +604,7 @@ namespace ReactViewControl {
             }
 
             if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
-                if (DevServerUri != null) {
+                if (DevServerUri != null && DevServer.Serves(DevServerUri, DevServer.AssemblyOf(url))) {
                     // dev mode: /<assembly>/<path> is served by the dev server
                     return new Uri(DevServerUri, url.TrimStart(ResourceUrl.PathSeparator.ToCharArray())).ToString();
                 }
@@ -616,11 +617,11 @@ namespace ReactViewControl {
         private readonly Dictionary<string, IModuleDependenciesProvider> devServerDependencies = new Dictionary<string, IModuleDependenciesProvider>();
 
         /// <summary>
-        /// Dependencies of a module: the ones it declares (from the .entry files embedded at build time), or in dev mode the
-        /// ones the dev server manifest lists for it, which is the only consistent source once the bundles come from there.
+        /// Dependencies of a module: the ones it declares (from the .entry files embedded at build time), or, when the dev
+        /// server builds its assembly, the ones its manifest lists, the only consistent source once the bundles come from there.
         /// </summary>
         private (string[] js, string[] css) GetDependencies(IViewModule module) {
-            if (DevServerUri == null) {
+            if (DevServerUri == null || !DevServer.Serves(DevServerUri, DevServer.AssemblyOf(module.MainJsSource))) {
                 return (module.DependencyJsSources, module.CssSources);
             }
             lock (devServerDependencies) {

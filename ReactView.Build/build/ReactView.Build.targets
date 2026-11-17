@@ -245,11 +245,14 @@
   <Target Name="ReactViewMcpConfig" DependsOnTargets="RV_CheckNode;RV_PrepareTools">
     <PropertyGroup>
       <RV_McpConfigPath>$(ProjectDir)reactview.mcp.json</RV_McpConfigPath>
+      <!-- the executable the server runs under dotnet watch, when the views live in a library: -p:ReactViewApplicationProject=path -->
+      <ReactViewApplicationProject Condition="'$(ReactViewApplicationProject)' == ''">$(MSBuildProjectFullPath)</ReactViewApplicationProject>
+      <ReactViewApplicationProject>$([System.IO.Path]::GetFullPath('$(ReactViewApplicationProject)', '$(MSBuildProjectDirectory)'))</ReactViewApplicationProject>
       <RV_McpConfig>{
   "mcpServers": {
     "reactview": {
       "command": "$(RV_NodeExe.Replace('\', '/'))",
-      "args": ["$(ReactViewBuildToolsSourcePath.Replace('\', '/'))mcp/index.js", "--project", "$(MSBuildProjectFullPath.Replace('\', '/'))", "--configuration", "$(Configuration)", "--platform", "$(Platform)", "--dev-server-url", "$(ReactViewDevServerUrl)"],
+      "args": ["$(ReactViewBuildToolsSourcePath.Replace('\', '/'))mcp/index.js", "--project", "$(MSBuildProjectFullPath.Replace('\', '/'))", "--app-project", "$(ReactViewApplicationProject.Replace('\', '/'))", "--configuration", "$(Configuration)", "--platform", "$(Platform)", "--dev-server-url", "$(ReactViewDevServerUrl)"],
       "env": { "NODE_PATH": "$(ReactViewToolsNodeModules.Replace('\', '/'))", "DOTNET_HOST_PATH": "$(DOTNET_HOST_PATH.Replace('\', '/'))" }
     }
   }

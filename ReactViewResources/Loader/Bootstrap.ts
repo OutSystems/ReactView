@@ -47,12 +47,20 @@ async function loadFramework(view: ViewMetadata): Promise<void> {
 
 /*
  * Loads the dev server entry that sets react-refresh up (the webpack runtime it shares with the views comes first).
+ * The entry lives with the views of the assembly the dev server builds, which its status names; the scripts are
+ * loaded by the same urls the views' dependencies use, so that they run once.
  * */
 async function loadRefreshRuntime(view: ViewMetadata): Promise<void> {
     const refreshEntryName = "ReactViewRefresh";
-    const response = await fetch(devServerBaseUrl + "manifest.json", { cache: "no-store" });
+    const statusResponse = await fetch(devServerBaseUrl + "__reactview/status", { cache: "no-store" });
+    if (!statusResponse.ok) {
+        throw new Error(`ReactView dev server status not available at '${devServerBaseUrl}' (${statusResponse.status})`);
+    }
+    const assembly: string = (await statusResponse.json()).assembly;
+    const bootstrapBaseUrl = devServerBaseUrl + assembly + "/";
+    const response = await fetch(bootstrapBaseUrl + "manifest.json", { cache: "no-store" });
     if (!response.ok) {
-        throw new Error(`ReactView dev server manifest not available at '${devServerBaseUrl}' (${response.status})`);
+        throw new Error(`ReactView dev server manifest not available at '${bootstrapBaseUrl}' (${response.status})`);
     }
     const manifest: { [entry: string]: string[] } = await response.json();
     const files = (manifest[refreshEntryName] || []).filter(f => f.endsWith(".js"));
@@ -60,7 +68,7 @@ async function loadRefreshRuntime(view: ViewMetadata): Promise<void> {
         throw new Error(`ReactView dev server manifest has no '${refreshEntryName}' entry; is the dev server running with hot reload?`);
     }
     for (const file of files) {
-        await loadScript(devServerBaseUrl + file, view);
+        await loadScript(bootstrapBaseUrl + file, view);
     }
 }
 

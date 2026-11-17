@@ -52,8 +52,10 @@ dotnet msbuild MyApp.csproj -t:ReactViewDevServer
 
 It bundles the views from the sources with webpack-dev-server and react-refresh, listens on `ReactViewDevServerUrl` (default `http://localhost:8080`), serves the project folder for assets, and publishes its build state:
 
-- `GET /__reactview/status` returns `{ state: "building" | "ok" | "error", hash, builtAt, durationMs, errors, warnings, bindings }`, where `bindings` is the state of the C# bindings generation
+- `GET /__reactview/status` returns `{ state: "building" | "ok" | "error", assembly, hash, builtAt, durationMs, errors, warnings, bindings }`, where `assembly` is the one it builds and `bindings` the state of the C# bindings generation
 - `GET /__reactview/events` is a server-sent events stream with one `status` event per state change
+
+A dev server builds one project. An application whose views live in several assemblies (plugins project, views libraries) loads from the dev server the assembly it builds and keeps the other ones embedded: the control asks the dev server, once per assembly, whether it has a manifest for it.
 
 Point the application at it by returning the same url from `ReactViewFactory.DevServerUri`, typically from an environment variable in Debug builds. While it is set:
 
@@ -77,7 +79,7 @@ The package ships an MCP server that drives a development session: it starts the
 dotnet msbuild MyApp.csproj -t:ReactViewMcpConfig -p:Platform=ARM64
 ```
 
-This writes `reactview.mcp.json` next to the project, an `mcpServers` entry to merge into the project's `.mcp.json` (Claude Code) or any MCP client configuration. The application must open the DevTools protocol port in dev mode (`ReactViewFactory.RemoteDebuggingPort`, 9222 by default for the server).
+This writes `reactview.mcp.json` next to the project, an `mcpServers` entry to merge into the project's `.mcp.json` (Claude Code) or any MCP client configuration. When the views live in a library, name the executable the server runs under `dotnet watch` with `-p:ReactViewApplicationProject=../MyApp/MyApp.csproj`. The application must open the DevTools protocol port in dev mode (`ReactViewFactory.RemoteDebuggingPort`, 9222 by default for the server).
 
 Tools: `reactview_start`, `reactview_stop`, `reactview_status`, `reactview_wait_for_build`, `reactview_logs`, `reactview_views`, `reactview_screenshot`, `reactview_dom`, `reactview_evaluate`, `reactview_click`, `reactview_type`, `reactview_console`, `reactview_reload`. Selectors search inner views (shadow roots) too.
 

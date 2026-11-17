@@ -30,6 +30,11 @@ namespace ReactViewControl {
                     }
                 }
                 var devServerUri = factory.DevServerUri;
+                if (devServerUri != null && RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && !ExtendedWebView.Settings.CommandLineSwitches.Any(s => s.Key == "use-mock-keychain")) {
+                    // dev mode: an unsigned binary that changes with every build makes macOS ask, on the UI thread, for the
+                    // keychain item chromium keeps its storage key in: a modal prompt the tools driving the application cannot answer
+                    ExtendedWebView.Settings.AddCommandLineSwitch("use-mock-keychain", "");
+                }
                 var view = new ReactViewRender(factory.DefaultStyleSheet, () => factory.InitializePlugins(), factory.EnableViewPreload, factory.EnableDebugMode, factory.LoadScriptsOncePerDocument, factory.EnsureViewPluginsAreDisposed, devServerUri);
                 if (factory.ShowDeveloperTools) {
                     view.ShowDeveloperTools();

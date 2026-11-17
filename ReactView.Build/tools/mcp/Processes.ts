@@ -8,7 +8,8 @@ import { dirname } from "path";
  * */
 
 export interface SessionOptions {
-    project: string; // absolute path of the application csproj
+    project: string; // absolute path of the views csproj, the one the dev server builds
+    appProject: string; // absolute path of the executable csproj (dotnet watch run), the views one when they are the same
     configuration: string;
     platform: string;
     devServerUrl: string;
@@ -91,8 +92,8 @@ export class DevSession {
     public startApp(): void {
         const o = this.options;
         this.app.start(o.dotnet,
-            ["watch", "--non-interactive", "--project", o.project, "run", "-c", o.configuration, `--property:Platform=${o.platform}`],
-            dirname(o.project),
+            ["watch", "--non-interactive", "--project", o.appProject, "run", "-c", o.configuration, `--property:Platform=${o.platform}`],
+            dirname(o.appProject),
             { ...process.env, DEV_SERVER_URI: o.devServerUrl, DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "true", DOTNET_WATCH_SUPPRESS_EMOJIS: "true" });
     }
 

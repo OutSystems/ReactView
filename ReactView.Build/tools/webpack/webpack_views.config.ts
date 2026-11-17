@@ -4,7 +4,7 @@ import { Configuration } from "webpack";
 
 import getCommonConfiguration from "./Plugins/CommonConfiguration";
 import { Dictionary, getCurrentDirectory, getOutputPath, sanitizeCommandLineParam } from "./Plugins/Utils";
-import { statusMiddleware, watchCompiler } from "./Plugins/DevServerStatus";
+import { setServedAssembly, statusMiddleware, watchCompiler } from "./Plugins/DevServerStatus";
 import stylesheetsConfig from "./webpack_stylesheets.config";
 import { BindingsGeneratorPlugin } from "./Plugins/BindingsGenerator";
 import { join } from "path";
@@ -103,7 +103,8 @@ const config = (env, argv) => {
 
         // @ts-ignore
         standardConfig.devServer = {
-            host: url.hostname,
+            // "localhost" would bind a single stack (::1 on recent Node), and the host application may connect over the other
+            host: url.hostname === "localhost" ? "127.0.0.1" : url.hostname,
             port: Number(url.port) || 80,
             // the page is not served by this server, so the client cannot derive the socket url from its location
             client: {
@@ -130,6 +131,7 @@ const config = (env, argv) => {
             },
             setupMiddlewares: (middlewares, devServer) => {
                 watchCompiler(devServer.compiler);
+                setServedAssembly(assemblyName);
                 middlewares.unshift({ name: "reactview-status", middleware: statusMiddleware });
                 return middlewares;
             }

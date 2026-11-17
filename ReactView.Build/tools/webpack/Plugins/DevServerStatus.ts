@@ -6,10 +6,13 @@ import { Compiler, MultiStats, Stats } from "webpack";
  *
  *   GET /__reactview/status   current state as JSON
  *   GET /__reactview/events   server-sent events stream, one "status" event per state change
+ *
+ * The status names the assembly the server builds: the loader takes the hot reload runtime from /<assembly>/.
  * */
 
 export interface BuildStatus {
     state: "building" | "ok" | "error";
+    assembly?: string; // the assembly this server builds and serves (under /<assembly>/)
     hash?: string;
     builtAt?: string;
     durationMs?: number;
@@ -32,8 +35,12 @@ let buildStartedAt: number = Date.now();
 const listeners = new Set<(status: BuildStatus) => void>();
 
 function publish(next: BuildStatus): void {
-    status = next;
+    status = { ...next, assembly: status.assembly };
     listeners.forEach(l => l(status));
+}
+
+export function setServedAssembly(assembly: string): void {
+    status = { ...status, assembly };
 }
 
 function formatMessages(stats: Stats | MultiStats, kind: "errors" | "warnings"): string[] {
