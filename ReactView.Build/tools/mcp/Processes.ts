@@ -13,6 +13,9 @@ export interface SessionOptions {
     configuration: string;
     platform: string;
     devServerUrl: string;
+    // javascript expression, evaluated in the application's pages, that tells when the application is ready for the
+    // agent (e.g. the developer has logged in); none: ready as soon as a view has rendered
+    readyExpression?: string;
     debuggingPort: number;
     dotnet: string;
 }

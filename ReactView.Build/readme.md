@@ -83,7 +83,9 @@ dotnet msbuild MyApp.csproj -t:ReactViewMcpConfig -p:Platform=ARM64
 
 This writes `reactview.mcp.json` next to the project, an `mcpServers` entry to merge into the project's `.mcp.json` (Claude Code) or any MCP client configuration. When the views live in a library, name the executable the server runs under `dotnet watch` with `-p:ReactViewApplicationProject=../MyApp/MyApp.csproj`. The application must open the DevTools protocol port in dev mode (`ReactViewFactory.RemoteDebuggingPort`, 9222 by default for the server).
 
-Tools: `reactview_start`, `reactview_stop`, `reactview_status`, `reactview_wait_for_build`, `reactview_logs`, `reactview_views`, `reactview_screenshot`, `reactview_dom`, `reactview_evaluate`, `reactview_click`, `reactview_type`, `reactview_console`, `reactview_reload`. Selectors search inner views (shadow roots) too.
+An application that needs the developer before an agent can work on it (a login, a workspace to open) sets `ReactViewReadyExpression` in its project: a JavaScript expression evaluated in the application's pages, true in one of them once the application is ready, e.g. `!!window.__rv.query('.applications-list')`. `reactview_start` waits for it instead of handing the agent a login page, and `reactview_wait_for_ready` waits for it again after a restart under `dotnet watch`. Without it, the application is ready as soon as a view has rendered.
+
+Tools: `reactview_start`, `reactview_stop`, `reactview_status`, `reactview_wait_for_build`, `reactview_wait_for_ready`, `reactview_logs`, `reactview_views`, `reactview_screenshot`, `reactview_dom`, `reactview_evaluate`, `reactview_click`, `reactview_type`, `reactview_console`, `reactview_reload`. Selectors search inner views (shadow roots) too.
 
 ## Project setup
 

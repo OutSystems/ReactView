@@ -2,10 +2,13 @@
 /*
  * ReactView MCP server: lets an agent develop against a running ReactView application.
  *
- *   node index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url http://localhost:8080] [--debugging-port 9222]
+ *   node index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url http://localhost:8080] [--debugging-port 9222] [--ready-when <expression>]
  *
  * --project is the project whose views hot reload (the dev server builds it); --app-project the executable to run under
- * dotnet watch, when it is another project (plugins or views libraries), the views project otherwise.
+ * dotnet watch, when it is another project (plugins or views libraries), the views project otherwise. --ready-when is a
+ * javascript expression evaluated in the application's pages: the application is ready for the agent once it is true
+ * in one of them (e.g. the developer has logged in); reactview_start waits for it, and so does reactview_wait_for_ready
+ * after a restart.
  *
  * Start the dev server and the application (dotnet watch) with reactview_start, then edit sources: the views hot reload
  * from the dev server, the C# through dotnet watch. reactview_wait_for_build tells when the sources are built,
@@ -25,7 +28,7 @@ function argument(name: string, fallback?: string): string | undefined {
 
 const project = argument("project");
 if (!project) {
-    console.error("usage: index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url url] [--debugging-port 9222]");
+    console.error("usage: index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url url] [--debugging-port 9222] [--ready-when expression]");
     process.exit(1);
 }
 
@@ -36,6 +39,7 @@ const session = new DevSession({
     platform: argument("platform", process.arch === "arm64" ? "ARM64" : "x64")!,
     devServerUrl: argument("dev-server-url", "http://localhost:8080")!.replace(/\/+$/, ""),
     debuggingPort: Number(argument("debugging-port", "9222")),
+    readyExpression: argument("ready-when") || undefined,
     dotnet: process.env.DOTNET_HOST_PATH || "dotnet"
 });
 const cdp = new CdpClient(session.options.debuggingPort);
@@ -58,10 +62,56 @@ async function evaluate(expression: string, target?: string, timeoutMs: number =
     return r.result.value;
 }
 
+/*
+ * Whether the application is ready for the agent: a page where the readiness expression is true, any page that has
+ * rendered a view without one. A page being torn down (a restart) counts as not ready.
+ * */
+async function isReady(expression: string | undefined = session.options.readyExpression): Promise<boolean> {
+    if (!await session.debuggingPortOpen()) {
+        return false;
+    }
+    const targets = await cdp.targets().catch(() => []);
+    for (const t of targets) {
+        try {
+            if (await evaluate(expression ? `!!(${expression})` : "window.__rv.text(document.body).length > 0", t.id, 5000)) {
+                return true;
+            }
+        } catch {
+            // not this page
+        }
+    }
+    return false;
+}
+
+/*
+ * Waits for the application to be ready, attaching to its pages (console collection) as they come: after a restart
+ * under dotnet watch the pages are new ones.
+ * */
+async function waitForReady(timeoutMs: number, expression?: string): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+    let attached = 0;
+    do {
+        if (await isReady(expression)) {
+            await cdp.attachAll();
+            return true;
+        }
+        if (Date.now() > attached + 10000) {
+            await cdp.attachAll();
+            attached = Date.now();
+        }
+        await new Promise(r => setTimeout(r, 1000));
+    } while (Date.now() < deadline);
+    return false;
+}
+
+function readiness(): string {
+    return session.options.readyExpression ? `ready when: ${session.options.readyExpression}` : "ready when a view has rendered";
+}
+
 const server = new McpServer({ name: "reactview", version: "1.0.0" });
 
 server.tool("reactview_start",
-    "Starts the ReactView dev server (hot reload of views, stylesheets and C# bindings) and the application under dotnet watch (hot reload of C#). Idempotent. Returns when the first build is done and the application's views answer, or with what is in the logs otherwise.",
+    "Starts the ReactView dev server (hot reload of views, stylesheets and C# bindings) and the application under dotnet watch (hot reload of C#). Idempotent. Returns when the first build is done and the application is ready: its views answer and, when the project configures a readiness condition (e.g. the developer has logged in), that condition holds; it waits for the developer up to timeoutSeconds, then returns the application as running but not ready (keep waiting with reactview_wait_for_ready). Otherwise returns with what is in the logs.",
     { devServer: z.boolean().optional().describe("start the dev server (default true)"), app: z.boolean().optional().describe("start the application (default true)"), timeoutSeconds: z.number().optional() },
     async ({ devServer = true, app = true, timeoutSeconds = 180 }) => {
         const deadline = Date.now() + timeoutSeconds * 1000;
@@ -87,9 +137,21 @@ server.tool("reactview_start",
             }
             await new Promise(r => setTimeout(r, 3000)); // first render
             await cdp.attachAll();
-            report.push(`application: running, DevTools protocol on port ${session.options.debuggingPort}`);
+            const ready = await waitForReady(Math.max(deadline - Date.now(), 1000));
+            report.push(`application: running, DevTools protocol on port ${session.options.debuggingPort}, ${ready ? "ready" : "NOT READY yet (" + readiness() + "): the developer may have to act in the application, e.g. log in; wait with reactview_wait_for_ready"}`);
         }
         return text(report.join("\n"));
+    });
+
+server.tool("reactview_wait_for_ready",
+    "Waits until the application is ready for the agent: a view has rendered and the project's readiness condition holds (e.g. the developer has logged in). Use after reactview_start reported the application as not ready, and after a restart under dotnet watch (rude edit: new interface members), when the developer has to log in again.",
+    { timeoutSeconds: z.number().optional(), expression: z.string().optional().describe("readiness expression for this wait, instead of the project's") },
+    async ({ timeoutSeconds = 300, expression }) => {
+        if (!session.app.running) {
+            return failure("application not running: call reactview_start");
+        }
+        const ready = await waitForReady(timeoutSeconds * 1000, expression);
+        return ready ? text("ready") : failure(`not ready after ${timeoutSeconds} s (${expression ? "ready when: " + expression : readiness()})`);
     });
 
 server.tool("reactview_stop", "Stops the application and the dev server started by reactview_start.", {}, async () => {
@@ -103,7 +165,7 @@ server.tool("reactview_status",
     {},
     async () => text({
         devServer: { running: session.devServer.running, build: await session.buildStatus() },
-        app: { running: session.app.running, devToolsReachable: await session.debuggingPortOpen(), lastLines: session.app.tail(5) }
+        app: { running: session.app.running, devToolsReachable: await session.debuggingPortOpen(), ready: await isReady(), readiness: readiness(), lastLines: session.app.tail(5) }
     }));
 
 server.tool("reactview_wait_for_build",
