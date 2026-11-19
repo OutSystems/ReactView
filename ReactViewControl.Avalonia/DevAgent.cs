@@ -13,7 +13,9 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Diagnostics;
 using Avalonia.Controls.Primitives;
+using Avalonia.LogicalTree;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Avalonia.Media.Imaging;
@@ -34,7 +36,9 @@ namespace ReactViewControl {
 
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions() {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            // a tree node nests two levels per depth level
+            MaxDepth = 512
         };
 
         private static HttpListener listener;
@@ -152,16 +156,47 @@ namespace ReactViewControl {
             (string.IsNullOrEmpty(name) || (visual as Control)?.Name == name) && (string.IsNullOrEmpty(type) || visual.GetType().Name == type);
 
         /// <summary>The visual descendants of a root, the contents of its open popups included (recursively).</summary>
-        private static IEnumerable<Visual> Descendants(Visual root) {
+        private static IEnumerable<Visual> Descendants(Visual root) => Descendants(root, new HashSet<Visual> { root });
+
+        private static IEnumerable<Visual> Descendants(Visual root, HashSet<Visual> visited) {
             foreach (var visual in root.GetVisualDescendants()) {
                 yield return visual;
-                if (visual is Popup popup && PopupRootOf(popup) is PopupRoot popupRoot) {
-                    yield return popupRoot;
-                    foreach (var inner in Descendants(popupRoot)) {
-                        yield return inner;
-                    }
+            }
+            // a popup's content provides the popup it is shown in: visited keeps that from recursing
+            foreach (var popupRoot in PopupRoots(root).Where(visited.Add)) {
+                yield return popupRoot;
+                foreach (var inner in Descendants(popupRoot, visited)) {
+                    yield return inner;
                 }
             }
+        }
+
+        /// <summary>
+        /// The open popups of a root: those of its visual descendants, and those of controls only in its logical tree
+        /// (the context menu of a control that is not displayed, as Studio's view adapters attach theirs).
+        /// </summary>
+        private static List<PopupRoot> PopupRoots(Visual root) =>
+            root.GetVisualDescendants().Concat(root.GetLogicalDescendants().OfType<Visual>()).Distinct().SelectMany(PopupRootsOf).Distinct().ToList();
+
+        /// <summary>The open popups of a root whose owner is not a visual descendant of it: shown under the root's node.</summary>
+        private static List<PopupRoot> OrphanPopupRoots(Visual root) =>
+            PopupRoots(root).Except(root.GetVisualDescendants().SelectMany(PopupRootsOf)).ToList();
+
+        /// <summary>
+        /// The open popups a visual shows: a Popup's own, the context menu of a control, the flyout attached to it or
+        /// set on a button, its tooltip. None of those but the Popup is a visual child of anything.
+        /// </summary>
+        private static IEnumerable<PopupRoot> PopupRootsOf(Visual visual) {
+            var providers = new List<object> { visual };
+            if (visual is Control control) {
+                providers.Add(control.ContextMenu);
+                providers.Add(FlyoutBase.GetAttachedFlyout(control));
+                providers.Add(ToolTip.GetTip(control) as ToolTip);
+                providers.Add(control.GetType().GetProperty("Flyout")?.GetValue(control));
+            }
+            // the content of a popup (a context menu, a flyout presenter) provides the popup it is shown in: not a popup of its own
+            var own = TopLevel.GetTopLevel(visual);
+            return providers.OfType<IPopupHostProvider>().Select(p => p.PopupHost as PopupRoot).Where(r => r != null && r.IsVisible && r != own).Distinct();
         }
 
         private static PopupRoot PopupRootOf(Popup popup) => popup.IsOpen ? popup.Host as PopupRoot : null;
@@ -183,7 +218,7 @@ namespace ReactViewControl {
 
         /// <summary>The open popups shown over the window, outermost first, with where each one sits relative to the window.</summary>
         private static List<(PopupRoot root, Vector offset)> Popups(Window window) =>
-            Descendants(window).OfType<PopupRoot>().Select(root => (root, OffsetOf(root, window))).ToList();
+            Descendants(window).OfType<PopupRoot>().Distinct().Select(root => (root, OffsetOf(root, window))).ToList();
 
         private static object Describe(Window window, int index) => new {
             index,
@@ -245,11 +280,14 @@ namespace ReactViewControl {
             var (root, offset) = Popups(window).LastOrDefault(p => new Rect(p.offset.X, p.offset.Y, p.root.Bounds.Width, p.root.Bounds.Height).Contains(position)) is var popup && popup.root != null
                 ? ((TopLevel)popup.root, popup.offset) : (window, default);
             var local = position - offset;
-            Pointer(root, RawPointerEventType.Move, local, modifiers);
-            for (var i = 0; i < count; i++) {
-                Pointer(root, down, local, modifiers | held);
-                Pointer(root, up, local, modifiers);
-            }
+            // posted: the handler of the click may run a nested loop (a modal dialog) that would hold the request
+            Dispatcher.UIThread.Post(() => {
+                Pointer(root, RawPointerEventType.Move, local, modifiers);
+                for (var i = 0; i < count; i++) {
+                    Pointer(root, down, local, modifiers | held);
+                    Pointer(root, up, local, modifiers);
+                }
+            }, DispatcherPriority.Input);
             return new { clicked = button, x = position.X, y = position.Y, count, window = window.Title, popup = root == window ? null : root.GetType().Name };
         }
 
@@ -286,8 +324,10 @@ namespace ReactViewControl {
             var key = Enum.TryParse<Avalonia.Input.Key>(query["key"], true, out var parsed) ? parsed : throw new InvalidOperationException($"unknown key '{query["key"]}': an Avalonia.Input.Key name, e.g. Enter, Escape, Tab, Down, F2, A");
             var modifiers = ModifiersOf(query);
             EnsureActive(window);
-            RawInput.Process(RawInput.Create<RawKeyEventArgs>(RawInput.Keyboard, Timestamp, window, RawKeyEventType.KeyDown, key, modifiers));
-            RawInput.Process(RawInput.Create<RawKeyEventArgs>(RawInput.Keyboard, Timestamp, window, RawKeyEventType.KeyUp, key, modifiers));
+            Dispatcher.UIThread.Post(() => {
+                RawInput.Process(RawInput.Create<RawKeyEventArgs>(RawInput.Keyboard, Timestamp, window, RawKeyEventType.KeyDown, key, modifiers));
+                RawInput.Process(RawInput.Create<RawKeyEventArgs>(RawInput.Keyboard, Timestamp, window, RawKeyEventType.KeyUp, key, modifiers));
+            }, DispatcherPriority.Input);
             return new { pressed = key.ToString(), modifiers = modifiers.ToString(), window = window.Title };
         }
 
@@ -296,7 +336,7 @@ namespace ReactViewControl {
             var window = WindowOf(query);
             var text = query["text"] ?? throw new InvalidOperationException("text= missing");
             EnsureActive(window);
-            RawInput.Process(RawInput.Create<RawTextInputEventArgs>(RawInput.Keyboard, Timestamp, window, text));
+            Dispatcher.UIThread.Post(() => RawInput.Process(RawInput.Create<RawTextInputEventArgs>(RawInput.Keyboard, Timestamp, window, text)), DispatcherPriority.Input);
             return new { typed = text, window = window.Title };
         }
 
@@ -349,7 +389,7 @@ namespace ReactViewControl {
 
         private static object Node(Visual visual, Window window, int depth) {
             var area = AreaOf(visual, window);
-            var popupRoot = visual is Popup popup ? PopupRootOf(popup) : null;
+            var popupRoots = PopupRootsOf(visual).Concat(visual is Window ? OrphanPopupRoots(visual) : Enumerable.Empty<PopupRoot>()).ToArray();
             return new {
                 type = visual.GetType().Name,
                 name = string.IsNullOrEmpty((visual as Control)?.Name) ? null : ((Control)visual).Name,
@@ -361,10 +401,11 @@ namespace ReactViewControl {
                 width = Math.Round(area.Width, 1),
                 height = Math.Round(area.Height, 1),
                 visible = visual.IsEffectivelyVisible ? (bool?)null : false,
-                open = popupRoot != null ? (bool?)true : null,
+                open = popupRoots.Length > 0 ? (bool?)true : null,
+                contextMenu = (visual as Control)?.ContextMenu is ContextMenu contextMenu ? new { contextMenu.IsOpen, items = contextMenu.ItemCount, host = (contextMenu as IPopupHostProvider).PopupHost?.GetType().Name } : null,
                 // the subtree of a hidden control is noise, so is the one below the requested depth; an open popup's
                 // contents (its own native window) show as its children, placed relative to the window
-                children = depth > 0 && visual.IsEffectivelyVisible ? (popupRoot != null ? new[] { popupRoot } : visual.GetVisualChildren()).Select(c => Node(c, window, depth - 1)).ToArray() : null
+                children = depth > 0 && visual.IsEffectivelyVisible ? popupRoots.Concat(visual is Popup ? Enumerable.Empty<Visual>() : visual.GetVisualChildren()).Select(c => Node(c, window, depth - 1)).ToArray() : null
             };
         }
 
