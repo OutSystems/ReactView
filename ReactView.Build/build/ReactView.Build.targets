@@ -67,6 +67,13 @@
     <VG_Inputs Condition="'$(PluginsRelativePath)' != ''" Include="$(PluginsRelativePath)**\*.tsx;$(PluginsRelativePath)**\*.ts;$(PluginsRelativePath)**\*.scss;$(PluginsRelativePath)webpack-output-config.json" Exclude="$(PluginsRelativePath)node_modules\**;$(PluginsRelativePath)**\*.d.ts" />
   </ItemGroup>
 
+  <!-- under dotnet watch with the dev server (DEV_SERVER_URI set), the views, stylesheets and bindings are hot reloaded by the
+       dev server: dotnet watch must not react to those sources (a burst of stylesheet edits made its managed hot reload crash) -->
+  <ItemGroup Condition="'$(DEV_SERVER_URI)' != ''">
+    <None Update="**\*.tsx;**\*.ts;**\*.scss" Watch="false" />
+    <Watch Remove="**\*.tsx;**\*.ts;**\*.scss" />
+  </ItemGroup>
+
   <ItemGroup>
     <VG_StyleSheet_Inputs Include="@(DefaultStyleSheet)"/>
     <VG_StyleSheet_Inputs Condition="'@(DefaultStyleSheet)' != ''" Include="**\*.scss" Exclude="node_modules\**\*.scss" />

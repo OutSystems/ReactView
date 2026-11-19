@@ -143,8 +143,9 @@ export class CdpClient {
     /*
      * Attaches to every page so that console output is collected for all of them.
      * */
+    /** Attaches to every page; none when the DevTools port is not open yet (the application is still starting). */
     public async attachAll(): Promise<PageSession[]> {
-        const targets = await this.targets();
+        const targets = await this.targets().catch(() => [] as PageTarget[]);
         const sessions: PageSession[] = [];
         for (const t of targets) {
             try {
