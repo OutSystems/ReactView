@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,6 +13,9 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -22,7 +26,7 @@ namespace ReactViewControl {
     /// Dev mode only (the application loads its views from the dev server): a local http endpoint for the tools that
     /// drive the application (the ReactView MCP server), covering what the DevTools protocol of the views does not see,
     /// the native windows around them: the windows, their visual tree, screenshots of a window or of one of its
-    /// controls, raising a window. Listens on 127.0.0.1:REACTVIEW_AGENT_PORT (default 9223); 0 disables it.
+    /// controls, raising a window, mouse and keyboard input into a window. Listens on 127.0.0.1:REACTVIEW_AGENT_PORT (default 9223); 0 disables it.
     /// </summary>
     internal static class DevAgent {
 
@@ -81,13 +85,22 @@ namespace ReactViewControl {
                     case "/activate":
                         WriteJson(response, await OnUIThread(() => Activate(query)));
                         break;
+                    case "/click":
+                        WriteJson(response, await OnUIThread(() => Click(query)));
+                        break;
+                    case "/key":
+                        WriteJson(response, await OnUIThread(() => Key(query)));
+                        break;
+                    case "/text":
+                        WriteJson(response, await OnUIThread(() => Text(query)));
+                        break;
                     case "/screenshot":
                         var pages = PagesOf(context.Request);
                         WritePng(response, await OnUIThread(() => Screenshot(query, pages)));
                         break;
                     default:
                         response.StatusCode = (int)HttpStatusCode.NotFound;
-                        WriteText(response, "unknown path: /windows, /activate?window=, /tree?window=&name=&type=&depth=, /screenshot?window=&name=&type=&scale= (POST { pages: { id: png base64 } })");
+                        WriteText(response, "unknown path: /windows, /activate?window=, /tree?window=&name=&type=&text=&depth=, /click?window=&x=&y=|name=&type=&text=&button=&count=&modifiers=, /key?window=&key=&modifiers=, /text?window=&text=, /screenshot?window=&name=&type=&text=&scale= (POST { pages: { id: png base64 } })");
                         break;
                 }
             } catch (Exception e) {
@@ -116,18 +129,61 @@ namespace ReactViewControl {
             return window ?? throw new InvalidOperationException($"no window '{specification}': {string.Join(", ", windows.Select(w => $"{windows.IndexOf(w)} '{w.Title}'"))}");
         }
 
-        /// <summary>The control the request names (name=, or type=), the window itself when it names none.</summary>
+        /// <summary>
+        /// The control the request names (name=, type=, text=: the control showing that text, or with type= its closest
+        /// ancestor of that type, e.g. the MenuItem whose header is the text), the window itself when it names none.
+        /// The open popups of the window (menus, flyouts, combo box lists) are searched too.
+        /// </summary>
         private static Visual ControlOf(Window window, NameValueCollection query) {
             var name = query["name"];
             var type = query["type"];
-            if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(type)) {
+            var text = query["text"];
+            if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(type) && string.IsNullOrEmpty(text)) {
                 return window;
             }
-            var control = window.GetVisualDescendants()
-                .Where(v => v.IsEffectivelyVisible)
-                .FirstOrDefault(v => (string.IsNullOrEmpty(name) || (v as Control)?.Name == name) && (string.IsNullOrEmpty(type) || v.GetType().Name == type));
-            return control ?? throw new InvalidOperationException($"no visible control with name '{name}' / type '{type}' in window '{window.Title}'");
+            var candidates = Descendants(window).Where(v => v.IsEffectivelyVisible);
+            var control = string.IsNullOrEmpty(text)
+                ? candidates.FirstOrDefault(v => Matches(v, name, type))
+                : candidates.Where(v => (TextOf(v) ?? "").Trim() == text.Trim()).Select(v => v.GetSelfAndVisualAncestors().FirstOrDefault(a => Matches(a, name, type))).FirstOrDefault(v => v != null);
+            return control ?? throw new InvalidOperationException($"no visible control with name '{name}' / type '{type}' / text '{text}' in window '{window.Title}'");
         }
+
+        private static bool Matches(Visual visual, string name, string type) =>
+            (string.IsNullOrEmpty(name) || (visual as Control)?.Name == name) && (string.IsNullOrEmpty(type) || visual.GetType().Name == type);
+
+        /// <summary>The visual descendants of a root, the contents of its open popups included (recursively).</summary>
+        private static IEnumerable<Visual> Descendants(Visual root) {
+            foreach (var visual in root.GetVisualDescendants()) {
+                yield return visual;
+                if (visual is Popup popup && PopupRootOf(popup) is PopupRoot popupRoot) {
+                    yield return popupRoot;
+                    foreach (var inner in Descendants(popupRoot)) {
+                        yield return inner;
+                    }
+                }
+            }
+        }
+
+        private static PopupRoot PopupRootOf(Popup popup) => popup.IsOpen ? popup.Host as PopupRoot : null;
+
+        /// <summary>The window the visual is shown in (its own top level, a popup root for the contents of a popup).</summary>
+        private static TopLevel TopLevelOf(Visual visual) => TopLevel.GetTopLevel(visual) ?? throw new InvalidOperationException("the control is not shown");
+
+        /// <summary>
+        /// Where a top level sits relative to the window, in device independent pixels: zero for the window itself, the
+        /// offset of a popup root (its own native window) otherwise.
+        /// </summary>
+        private static Vector OffsetOf(TopLevel topLevel, Window window) {
+            if (topLevel == window) {
+                return default;
+            }
+            var offset = topLevel.PointToScreen(new Point()) - window.PointToScreen(new Point());
+            return new Vector(offset.X / window.RenderScaling, offset.Y / window.RenderScaling);
+        }
+
+        /// <summary>The open popups shown over the window, outermost first, with where each one sits relative to the window.</summary>
+        private static List<(PopupRoot root, Vector offset)> Popups(Window window) =>
+            Descendants(window).OfType<PopupRoot>().Select(root => (root, OffsetOf(root, window))).ToList();
 
         private static object Describe(Window window, int index) => new {
             index,
@@ -144,7 +200,12 @@ namespace ReactViewControl {
         private static List<ReactViewRender> Views(Window window) =>
             window.GetVisualDescendants().OfType<ReactViewRender>().Where(v => v.IsEffectivelyVisible && v.Bounds.Width > 0 && v.Bounds.Height > 0).ToList();
 
-        private static Rect AreaOf(Visual visual, Window window) => new Rect(visual.TranslatePoint(new Point(), window) ?? new Point(), visual.Bounds.Size);
+        /// <summary>The area of a control relative to the window, for controls in the window's popups too.</summary>
+        private static Rect AreaOf(Visual visual, Window window) {
+            var topLevel = TopLevelOf(visual);
+            var origin = (visual.TranslatePoint(new Point(), topLevel) ?? new Point()) + OffsetOf(topLevel, window);
+            return new Rect(origin, visual.Bounds.Size);
+        }
 
         /// <summary>
         /// Brings the window to the front: the webviews are native views, their pages stop producing frames (and
@@ -159,6 +220,126 @@ namespace ReactViewControl {
             return new { activated = window.Title };
         }
 
+        private static ulong Timestamp => (ulong)Environment.TickCount64;
+
+        /// <summary>
+        /// A mouse click into the window, injected where the platform's events enter Avalonia (the way the headless
+        /// platform does it): at x=,y= in device independent pixels relative to the window's client area, or at the
+        /// center of the control name= / type= / text= names (see ControlOf). button= left (default), right or middle; count= clicks (2 for a
+        /// double click); modifiers= a comma separated list of Control, Shift, Alt, Meta. Only the Avalonia controls
+        /// see it: the web views are native views, input into them goes through the DevTools protocol.
+        /// </summary>
+        private static object Click(NameValueCollection query) {
+            var window = WindowOf(query);
+            var position = PositionOf(window, query);
+            var button = (query["button"] ?? "left").ToLowerInvariant();
+            var count = int.TryParse(query["count"], out var requestedCount) ? Math.Max(1, requestedCount) : 1;
+            var modifiers = ModifiersOf(query);
+            var (down, up, held) = button switch {
+                "left" => (RawPointerEventType.LeftButtonDown, RawPointerEventType.LeftButtonUp, RawInputModifiers.LeftMouseButton),
+                "right" => (RawPointerEventType.RightButtonDown, RawPointerEventType.RightButtonUp, RawInputModifiers.RightMouseButton),
+                "middle" => (RawPointerEventType.MiddleButtonDown, RawPointerEventType.MiddleButtonUp, RawInputModifiers.MiddleMouseButton),
+                _ => throw new InvalidOperationException($"unknown button '{button}': left, right, middle")
+            };
+            // an open popup (menu, flyout) is its own native window: the click goes to the innermost one under the point
+            var (root, offset) = Popups(window).LastOrDefault(p => new Rect(p.offset.X, p.offset.Y, p.root.Bounds.Width, p.root.Bounds.Height).Contains(position)) is var popup && popup.root != null
+                ? ((TopLevel)popup.root, popup.offset) : (window, default);
+            var local = position - offset;
+            Pointer(root, RawPointerEventType.Move, local, modifiers);
+            for (var i = 0; i < count; i++) {
+                Pointer(root, down, local, modifiers | held);
+                Pointer(root, up, local, modifiers);
+            }
+            return new { clicked = button, x = position.X, y = position.Y, count, window = window.Title, popup = root == window ? null : root.GetType().Name };
+        }
+
+        private static void Pointer(TopLevel root, RawPointerEventType type, Point position, RawInputModifiers modifiers) =>
+            RawInput.Process(RawInput.Create<RawPointerEventArgs>(RawInput.Mouse, Timestamp, root, type, position, modifiers));
+
+        private static Point PositionOf(Window window, NameValueCollection query) {
+            var hasX = double.TryParse(query["x"], NumberStyles.Float, CultureInfo.InvariantCulture, out var x);
+            var hasY = double.TryParse(query["y"], NumberStyles.Float, CultureInfo.InvariantCulture, out var y);
+            if (hasX && hasY) {
+                return new Point(x, y);
+            }
+            var control = ControlOf(window, query);
+            if (control == window) {
+                throw new InvalidOperationException("where: x= and y=, or the control's name= / type= / text=");
+            }
+            return AreaOf(control, window).Center;
+        }
+
+        private static RawInputModifiers ModifiersOf(NameValueCollection query) {
+            var modifiers = RawInputModifiers.None;
+            foreach (var name in (query["modifiers"] ?? "").Split(new[] { ',', ' ', '+' }, StringSplitOptions.RemoveEmptyEntries)) {
+                modifiers |= Enum.TryParse<RawInputModifiers>(name, true, out var modifier) ? modifier : throw new InvalidOperationException($"unknown modifier '{name}': Control, Shift, Alt, Meta");
+            }
+            return modifiers;
+        }
+
+        /// <summary>
+        /// A key press (down then up) into the window: key= an Avalonia.Input.Key name (Enter, Escape, Tab, F2, A, ...),
+        /// modifiers= as for /click. Goes to the focused control, so the window is activated first when it is not.
+        /// </summary>
+        private static object Key(NameValueCollection query) {
+            var window = WindowOf(query);
+            var key = Enum.TryParse<Avalonia.Input.Key>(query["key"], true, out var parsed) ? parsed : throw new InvalidOperationException($"unknown key '{query["key"]}': an Avalonia.Input.Key name, e.g. Enter, Escape, Tab, Down, F2, A");
+            var modifiers = ModifiersOf(query);
+            EnsureActive(window);
+            RawInput.Process(RawInput.Create<RawKeyEventArgs>(RawInput.Keyboard, Timestamp, window, RawKeyEventType.KeyDown, key, modifiers));
+            RawInput.Process(RawInput.Create<RawKeyEventArgs>(RawInput.Keyboard, Timestamp, window, RawKeyEventType.KeyUp, key, modifiers));
+            return new { pressed = key.ToString(), modifiers = modifiers.ToString(), window = window.Title };
+        }
+
+        /// <summary>Text input (text=) into the focused control of the window, as typing it would produce.</summary>
+        private static object Text(NameValueCollection query) {
+            var window = WindowOf(query);
+            var text = query["text"] ?? throw new InvalidOperationException("text= missing");
+            EnsureActive(window);
+            RawInput.Process(RawInput.Create<RawTextInputEventArgs>(RawInput.Keyboard, Timestamp, window, text));
+            return new { typed = text, window = window.Title };
+        }
+
+        private static void EnsureActive(Window window) {
+            if (!window.IsActive) {
+                window.Activate();
+            }
+        }
+
+        /// <summary>
+        /// Avalonia's raw input entry point, the one the platforms (and the headless platform) feed: public in the
+        /// runtime assemblies, hidden by the reference assemblies the package compiles against, hence reflection.
+        /// </summary>
+        private static class RawInput {
+
+            private static readonly Assembly Base = typeof(RawInputEventArgs).Assembly;
+
+            private static readonly object Manager = Base.GetType("Avalonia.Input.InputManager")?.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)
+                ?? throw new InvalidOperationException("Avalonia.Input.InputManager.Instance not found");
+
+            private static readonly MethodInfo ProcessInput = Manager.GetType().GetMethod("ProcessInput", new[] { typeof(RawInputEventArgs) })
+                ?? throw new InvalidOperationException("InputManager.ProcessInput not found");
+
+            public static readonly object Mouse = Create<MouseDevice>(new object[] { null });
+
+            public static object Keyboard => Service(typeof(IKeyboardDevice)) ?? throw new InvalidOperationException("no keyboard device registered");
+
+            /// <summary>AvaloniaLocator.Current.GetService(type): the keyboard device the platform registered (the one that tracks the focus).</summary>
+            private static object Service(Type type) {
+                var locator = typeof(AvaloniaLocator).GetProperty("Current", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)
+                    ?? throw new InvalidOperationException("AvaloniaLocator.Current not found");
+                return locator.GetType().GetMethod("GetService", new[] { typeof(Type) })?.Invoke(locator, new object[] { type });
+            }
+
+            public static void Process(RawInputEventArgs args) => ProcessInput.Invoke(Manager, new object[] { args });
+
+            public static T Create<T>(params object[] arguments) {
+                var constructor = typeof(T).GetConstructors().FirstOrDefault(c => c.GetParameters().Length == arguments.Length)
+                    ?? throw new InvalidOperationException($"{typeof(T).Name} has no constructor with {arguments.Length} parameters");
+                return (T)constructor.Invoke(arguments);
+            }
+        }
+
         private static object Tree(NameValueCollection query) {
             var window = WindowOf(query);
             var root = ControlOf(window, query);
@@ -167,20 +348,23 @@ namespace ReactViewControl {
         }
 
         private static object Node(Visual visual, Window window, int depth) {
-            var origin = visual.TranslatePoint(new Point(), window) ?? new Point();
+            var area = AreaOf(visual, window);
+            var popupRoot = visual is Popup popup ? PopupRootOf(popup) : null;
             return new {
                 type = visual.GetType().Name,
                 name = string.IsNullOrEmpty((visual as Control)?.Name) ? null : ((Control)visual).Name,
                 classes = (visual as StyledElement)?.Classes.Count > 0 ? string.Join(" ", ((StyledElement)visual).Classes) : null,
                 text = TextOf(visual),
                 page = (visual as ReactViewRender)?.PageId,
-                x = Math.Round(origin.X, 1),
-                y = Math.Round(origin.Y, 1),
-                width = Math.Round(visual.Bounds.Width, 1),
-                height = Math.Round(visual.Bounds.Height, 1),
+                x = Math.Round(area.X, 1),
+                y = Math.Round(area.Y, 1),
+                width = Math.Round(area.Width, 1),
+                height = Math.Round(area.Height, 1),
                 visible = visual.IsEffectivelyVisible ? (bool?)null : false,
-                // the subtree of a hidden control is noise, so is the one below the requested depth
-                children = depth > 0 && visual.IsEffectivelyVisible ? visual.GetVisualChildren().Select(c => Node(c, window, depth - 1)).ToArray() : null
+                open = popupRoot != null ? (bool?)true : null,
+                // the subtree of a hidden control is noise, so is the one below the requested depth; an open popup's
+                // contents (its own native window) show as its children, placed relative to the window
+                children = depth > 0 && visual.IsEffectivelyVisible ? (popupRoot != null ? new[] { popupRoot } : visual.GetVisualChildren()).Select(c => Node(c, window, depth - 1)).ToArray() : null
             };
         }
 
@@ -192,6 +376,12 @@ namespace ReactViewControl {
                     return textBox.Text;
                 case ContentControl contentControl when contentControl.Content is string content:
                     return content;
+                case HeaderedSelectingItemsControl headered when headered.Header is string header:
+                    return header;
+                case HeaderedContentControl headered when headered.Header is string header:
+                    return header;
+                case HeaderedItemsControl headered when headered.Header is string header:
+                    return header;
                 default:
                     return null;
             }
@@ -223,6 +413,13 @@ namespace ReactViewControl {
                                 using (var page = new Bitmap(stream)) {
                                     drawingContext.DrawImage(page, AreaOf(view, window).Translate(-(Vector)area.Position));
                                 }
+                            }
+                        }
+                        // the open popups (menus, flyouts) are native windows of their own, drawn where they sit over the window
+                        foreach (var (popupRoot, offset) in Popups(window)) {
+                            using (var popup = new RenderTargetBitmap(PixelSizeOf(popupRoot.Bounds.Size, scaling), dpi)) {
+                                popup.Render(popupRoot);
+                                drawingContext.DrawImage(popup, new Rect(new Point(offset.X, offset.Y) - (Vector)area.Position, popupRoot.Bounds.Size));
                             }
                         }
                     }

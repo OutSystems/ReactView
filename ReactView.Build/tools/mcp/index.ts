@@ -15,7 +15,9 @@
  * reactview_views / reactview_dom / reactview_screenshot show the result, reactview_console what went wrong.
  *
  * The views are reached through the DevTools protocol (chromium). The native windows around them (Avalonia) through the
- * application's agent on --agent-port: reactview_windows, reactview_window_tree, reactview_window_screenshot.
+ * application's agent on --agent-port: reactview_windows, reactview_window_tree, reactview_window_screenshot, and input
+ * into the native controls: reactview_window_click, reactview_window_key, reactview_window_type. Real mouse input into a
+ * page (what element.click() cannot do: native context menus, drag, hover): reactview_mouse.
  * */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -70,7 +72,8 @@ async function evaluate(expression: string, target?: string, timeoutMs: number =
 }
 
 /*
- * A request to the application's native agent (ReactViewControl.Avalonia DevAgent, dev mode): /windows, /tree, /screenshot.
+ * A request to the application's native agent (ReactViewControl.Avalonia DevAgent, dev mode): /windows, /tree, /screenshot,
+ * /click, /key, /text.
  * */
 function agentRequest(path: string, parameters: Record<string, string | number | undefined>, body?: object): Promise<{ contentType: string, body: Buffer }> {
     const query = Object.entries(parameters).filter(([, v]) => v !== undefined && v !== "").map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&");
@@ -167,9 +170,13 @@ async function pagesByNativeId(): Promise<Map<string, string>> {
     return result;
 }
 
+const lastPageCaptures = new Map<string, string>();
+
 /*
  * The webviews paint on their own, outside Avalonia's rendering: captures each page shown in the window at the
- * requested scale, for the native agent to draw them into the window's screenshot.
+ * requested scale, for the native agent to draw them into the window's screenshot. A page that reports itself hidden
+ * (the pages stop rendering while a popup, e.g. a menu, is open over the window) keeps showing its last frame on
+ * screen, so its last capture at that scale is used; raising the window would close the popup.
  * */
 async function capturePages(windowSpecification: string | undefined, scale: number): Promise<Record<string, string>> {
     const windows: NativeWindow[] = JSON.parse((await agentRequest("/windows", {})).body.toString());
@@ -182,9 +189,15 @@ async function capturePages(windowSpecification: string | undefined, scale: numb
         if (!target) {
             continue;
         }
+        const cacheKey = `${p.id}@${scale}`;
         try {
-            const viewport = await evaluate("({ width: window.innerWidth, height: window.innerHeight })", target, 5000);
+            const viewport = await evaluate("({ width: window.innerWidth, height: window.innerHeight, hidden: document.visibilityState === \"hidden\" })", target, 5000);
+            if (viewport.hidden && lastPageCaptures.has(cacheKey)) {
+                pages[p.id] = lastPageCaptures.get(cacheKey)!;
+                continue;
+            }
             pages[p.id] = (await captureScreenshot(target, { format: "png", clip: { x: 0, y: 0, width: viewport.width, height: viewport.height, scale } })).toString("base64");
+            lastPageCaptures.set(cacheKey, pages[p.id]);
         } catch (e: any) {
             // the page's area stays as Avalonia renders it (blank)
             console.error(`[reactview] page ${p.id} not captured: ${e.message}`);
@@ -379,24 +392,86 @@ server.tool("reactview_windows",
     });
 
 server.tool("reactview_window_tree",
-    "Visual tree of a native window (default: the active one), or of one of its controls (name: the control's Name, type: its type name): control type, name, classes, text, position and size relative to the window, down to depth levels. Hidden subtrees are left out. Use it to find what to screenshot or where things are; the web views appear as a single control, see them with reactview_dom.",
-    { window: z.string().optional().describe("index or title substring"), name: z.string().optional(), type: z.string().optional(), depth: z.number().optional() },
-    async ({ window, name, type, depth }) => {
+    "Visual tree of a native window (default: the active one), or of one of its controls (name: the control's Name, type: its type name, text: the text it shows, e.g. a menu item's header; text with type gives the closest ancestor of that type): control type, name, classes, text, position and size relative to the window, down to depth levels. Hidden subtrees are left out; open popups (menus, flyouts) appear under their Popup node with open: true. Use it to find what to screenshot or click; the web views appear as a single control, see them with reactview_dom.",
+    { window: z.string().optional().describe("index or title substring"), name: z.string().optional(), type: z.string().optional(), text: z.string().optional(), depth: z.number().optional() },
+    async ({ window, name, type, text: label, depth }) => {
         try {
-            return text(JSON.parse((await agentRequest("/tree", { window, name, type, depth })).body.toString()));
+            return text(JSON.parse((await agentRequest("/tree", { window, name, type, text: label, depth })).body.toString()));
         } catch (e: any) {
             return failure(e.message);
         }
     });
 
 server.tool("reactview_window_screenshot",
-    "PNG of a native window (default: the active one) as rendered by Avalonia, web views included, or of one of its controls (name / type, as in reactview_window_tree), at scale times the window's render scaling. Saved to path when given, returned inline otherwise. Does not need the window to be unobscured on screen.",
-    { window: z.string().optional().describe("index or title substring"), name: z.string().optional(), type: z.string().optional(), scale: z.number().optional(), path: z.string().optional().describe("file to save the PNG to") },
-    async ({ window, name, type, scale = 1, path }) => {
+    "PNG of a native window (default: the active one) as rendered by Avalonia, web views and open popups (menus) included, or of one of its controls (name / type / text, as in reactview_window_tree), at scale times the window's render scaling. Saved to path when given, returned inline otherwise. Does not need the window to be unobscured on screen. While a popup is open the web views stop rendering: their last capture is used, as on screen.",
+    { window: z.string().optional().describe("index or title substring"), name: z.string().optional(), type: z.string().optional(), text: z.string().optional(), scale: z.number().optional(), path: z.string().optional().describe("file to save the PNG to") },
+    async ({ window, name, type, text: label, scale = 1, path }) => {
         try {
             const pages = await capturePages(window, scale);
-            const r = await agentRequest("/screenshot", { window, name, type, scale }, { pages });
+            const r = await agentRequest("/screenshot", { window, name, type, text: label, scale }, { pages });
             return imageResult(r.body, path, `screenshot of ${name || type || "the window"}`);
+        } catch (e: any) {
+            return failure(e.message);
+        }
+    });
+
+server.tool("reactview_window_click",
+    "Clicks into a native window (default: the active one) through Avalonia's input pipeline: at x, y in device independent pixels relative to the window (as in reactview_window_tree), or at the center of the control given by name / type / text (text: what it shows, e.g. { text: \"Edit Entity\", type: \"MenuItem\" } for a menu item). Open popups (menus, flyouts) receive the click when it lands on them. For the Avalonia controls (menus, dialogs, toolbars); the web views are native views and do not see it, use reactview_click or reactview_mouse for them.",
+    { window: z.string().optional().describe("index or title substring"), x: z.number().optional(), y: z.number().optional(), name: z.string().optional(), type: z.string().optional(), text: z.string().optional(), button: z.enum(["left", "right", "middle"]).optional(), count: z.number().optional().describe("2 for a double click"), modifiers: z.string().optional().describe("comma separated: Control, Shift, Alt, Meta") },
+    async ({ window, x, y, name, type, text: label, button, count, modifiers }) => {
+        try {
+            return text(JSON.parse((await agentRequest("/click", { window, x, y, name, type, text: label, button, count, modifiers })).body.toString()));
+        } catch (e: any) {
+            return failure(e.message);
+        }
+    });
+
+server.tool("reactview_window_key",
+    "Presses a key (down, up) in a native window (default: the active one), delivered to its focused control; the window is activated first when it is not. key is an Avalonia.Input.Key name: Enter, Escape, Tab, Down, F2, A... Reaches a focused web view too (the keyboard goes through Avalonia).",
+    { window: z.string().optional().describe("index or title substring"), key: z.string(), modifiers: z.string().optional().describe("comma separated: Control, Shift, Alt, Meta") },
+    async ({ window, key, modifiers }) => {
+        try {
+            return text(JSON.parse((await agentRequest("/key", { window, key, modifiers })).body.toString()));
+        } catch (e: any) {
+            return failure(e.message);
+        }
+    });
+
+server.tool("reactview_window_type",
+    "Types text into the focused control of a native window (default: the active one), as the keyboard would; the window is activated first when it is not. For inputs inside the web views prefer reactview_type (sets the value the way React expects).",
+    { window: z.string().optional().describe("index or title substring"), text: z.string() },
+    async ({ window, text: value }) => {
+        try {
+            return text(JSON.parse((await agentRequest("/text", { window, text: value })).body.toString()));
+        } catch (e: any) {
+            return failure(e.message);
+        }
+    });
+
+server.tool("reactview_mouse",
+    "Real mouse input into a page through the DevTools protocol (moves the pointer, presses and releases): at the center of the first element matching selector (inner views included), or at x, y in CSS pixels of the page. Unlike reactview_click (element.click()) it produces pointer, mouse, hover and focus events as a user would: use it for native context menus (button right), controls that need pointerdown, hover styles (count 0: move only), and double clicks (count 2).",
+    { target: z.string().optional(), selector: z.string().optional(), x: z.number().optional(), y: z.number().optional(), button: z.enum(["left", "right", "middle"]).optional(), count: z.number().optional().describe("clicks: 0 moves only, 2 double clicks (default 1)"), modifiers: z.array(z.enum(["Alt", "Control", "Meta", "Shift"])).optional() },
+    async ({ target, selector, x, y, button = "left", count = 1, modifiers = [] }) => {
+        try {
+            let position = x !== undefined && y !== undefined ? { x, y } : undefined;
+            if (!position) {
+                if (!selector) {
+                    return failure("where: selector, or x and y");
+                }
+                position = await evaluate(`(function(){ const e = window.__rv.query(${JSON.stringify(selector)}); if (!e) return null; e.scrollIntoView({ block: "nearest" }); const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`, target);
+                if (!position) {
+                    return failure(`no element matches ${selector}`);
+                }
+            }
+            const s = await page(target);
+            const modifierFlags: Record<string, number> = { Alt: 1, Control: 2, Meta: 4, Shift: 8 };
+            const flags = modifiers.reduce((sum: number, m: string) => sum + (modifierFlags[m] ?? 0), 0);
+            await s.send("Input.dispatchMouseEvent", { type: "mouseMoved", x: position.x, y: position.y, button: "none", modifiers: flags });
+            for (let i = 1; i <= count; i++) {
+                await s.send("Input.dispatchMouseEvent", { type: "mousePressed", x: position.x, y: position.y, button, clickCount: i, modifiers: flags });
+                await s.send("Input.dispatchMouseEvent", { type: "mouseReleased", x: position.x, y: position.y, button, clickCount: i, modifiers: flags });
+            }
+            return text(`${count === 0 ? "moved to" : `${button} ${count === 1 ? "click" : count + " clicks"} at`} ${selector ?? ""} (${Math.round(position.x)}, ${Math.round(position.y)})`);
         } catch (e: any) {
             return failure(e.message);
         }
