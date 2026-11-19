@@ -17,6 +17,8 @@ export interface SessionOptions {
     // agent (e.g. the developer has logged in); none: ready as soon as a view has rendered
     readyExpression?: string;
     debuggingPort: number;
+    // port of the application's native agent (DevAgent in ReactViewControl.Avalonia): windows, visual tree, native screenshots
+    agentPort: number;
     dotnet: string;
 }
 
@@ -99,7 +101,7 @@ export class DevSession {
         this.app.start(o.dotnet,
             ["watch", "--non-interactive", "--project", o.appProject, "run", "-c", o.configuration, `--property:Platform=${o.platform}`],
             dirname(o.appProject),
-            { ...process.env, DEV_SERVER_URI: o.devServerUrl, DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "true", DOTNET_WATCH_SUPPRESS_EMOJIS: "true" });
+            { ...process.env, DEV_SERVER_URI: o.devServerUrl, REACTVIEW_AGENT_PORT: String(o.agentPort), DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "true", DOTNET_WATCH_SUPPRESS_EMOJIS: "true" });
     }
 
     public stop(): void {

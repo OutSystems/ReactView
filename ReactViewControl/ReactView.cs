@@ -35,6 +35,9 @@ namespace ReactViewControl {
                     // keychain item chromium keeps its storage key in: a modal prompt the tools driving the application cannot answer
                     ExtendedWebView.Settings.AddCommandLineSwitch("use-mock-keychain", "");
                 }
+                if (devServerUri != null) {
+                    StartDevAgent();
+                }
                 var view = new ReactViewRender(factory.DefaultStyleSheet, () => factory.InitializePlugins(), factory.EnableViewPreload, factory.EnableDebugMode, factory.LoadScriptsOncePerDocument, factory.EnsureViewPluginsAreDisposed, devServerUri);
                 if (factory.ShowDeveloperTools) {
                     view.ShowDeveloperTools();
@@ -103,6 +106,9 @@ namespace ReactViewControl {
         }
 
         partial void ExtraInitialize();
+
+        /// <summary>Dev mode: the endpoint the tools driving the application use for the native windows.</summary>
+        static partial void StartDevAgent();
 
         ~ReactView() {
             Dispose();

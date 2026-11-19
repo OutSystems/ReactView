@@ -279,7 +279,8 @@
 
     Writes reactview.mcp.json next to the project: the configuration of the ReactView MCP server for this project,
     for Claude Code or any MCP client (the file is the "mcpServers" entry). The server starts the dev server and the
-    application under dotnet watch, and exposes the running views (status, screenshots, DOM, console, clicks).
+    application under dotnet watch, and exposes the running views (status, screenshots, DOM, console, clicks) and the
+    native windows around them (visual tree, screenshots) through the control's dev-mode agent (REACTVIEW_AGENT_PORT).
   -->
   <Target Name="ReactViewMcpConfig" DependsOnTargets="RV_CheckNode;RV_PrepareTools">
     <PropertyGroup>

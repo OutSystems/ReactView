@@ -32,4 +32,4 @@ After changing anything under `ReactView.Build/`, repack and rebuild the sample:
 
 ## Verifying changes
 
-Build the sample, then run it in dev mode and use the MCP server (or `tools/mcp` over the DevTools port 9222) to read the DOM, screenshot and console. The NUnit suite only runs on Windows.
+Build the sample, then run it in dev mode and use the MCP server (or `tools/mcp` over the DevTools port 9222) to read the DOM, screenshot and console. The native Avalonia windows (menus, dialogs, the chrome around the views) are reached through the control's dev-mode agent on port 9223 (`ReactViewControl.Avalonia/DevAgent.cs`: windows, visual tree, screenshots with the web views composed in): `reactview_windows`, `reactview_window_tree`, `reactview_window_screenshot`. The NUnit suite only runs on Windows.

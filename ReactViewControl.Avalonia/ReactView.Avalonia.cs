@@ -27,5 +27,7 @@ namespace ReactViewControl {
         }
 
         protected override void InternalDispose() => Dispose();
+
+        static partial void StartDevAgent() => DevAgent.Start();
     }
 }

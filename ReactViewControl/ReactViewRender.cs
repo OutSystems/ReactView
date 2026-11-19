@@ -84,7 +84,8 @@ namespace ReactViewControl {
                 DevServerUri != null ? Uri.EscapeDataString(DevServerUri.ToString()) : "false",
             };
 
-            loaderUrl = new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams));
+            // the fragment tells the pages of this view apart in the DevTools protocol (see PageId)
+            loaderUrl = new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams) + "#" + PageId);
             WebView.LoadResource(loaderUrl);
 
             if (preloadWebView) {
@@ -104,6 +105,12 @@ namespace ReactViewControl {
         /// Root url of the dev server the views are loaded from, null outside dev mode.
         /// </summary>
         public Uri DevServerUri { get; }
+
+        /// <summary>
+        /// Identifies the page of this view among those the webview's DevTools protocol lists (its url ends with #PageId):
+        /// the tools driving the application in dev mode put the native windows and the pages together.
+        /// </summary>
+        internal string PageId { get; } = Guid.NewGuid().ToString("N");
 
         public bool IsDisposing => WebView.IsDisposing;
 

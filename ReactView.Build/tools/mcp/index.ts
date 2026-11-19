@@ -2,7 +2,7 @@
 /*
  * ReactView MCP server: lets an agent develop against a running ReactView application.
  *
- *   node index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url http://localhost:8080] [--debugging-port 9222] [--ready-when <expression>]
+ *   node index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url http://localhost:8080] [--debugging-port 9222] [--agent-port 9223] [--ready-when <expression>]
  *
  * --project is the project whose views hot reload (the dev server builds it); --app-project the executable to run under
  * dotnet watch, when it is another project (plugins or views libraries), the views project otherwise. --ready-when is a
@@ -13,10 +13,16 @@
  * Start the dev server and the application (dotnet watch) with reactview_start, then edit sources: the views hot reload
  * from the dev server, the C# through dotnet watch. reactview_wait_for_build tells when the sources are built,
  * reactview_views / reactview_dom / reactview_screenshot show the result, reactview_console what went wrong.
+ *
+ * The views are reached through the DevTools protocol (chromium). The native windows around them (Avalonia) through the
+ * application's agent on --agent-port: reactview_windows, reactview_window_tree, reactview_window_screenshot.
  * */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { resolve } from "path";
+import { execFileSync } from "child_process";
+import * as http from "http";
+import { mkdirSync, writeFileSync } from "fs";
+import { dirname, resolve } from "path";
 import { z } from "zod";
 import { CdpClient, PageHelpers } from "./Cdp";
 import { DevSession } from "./Processes";
@@ -28,7 +34,7 @@ function argument(name: string, fallback?: string): string | undefined {
 
 const project = argument("project");
 if (!project) {
-    console.error("usage: index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url url] [--debugging-port 9222] [--ready-when expression]");
+    console.error("usage: index.js --project <views.csproj> [--app-project <app.csproj>] [--configuration Debug] [--platform ARM64] [--dev-server-url url] [--debugging-port 9222] [--agent-port 9223] [--ready-when expression]");
     process.exit(1);
 }
 
@@ -39,6 +45,7 @@ const session = new DevSession({
     platform: argument("platform", process.arch === "arm64" ? "ARM64" : "x64")!,
     devServerUrl: argument("dev-server-url", "http://localhost:8080")!.replace(/\/+$/, ""),
     debuggingPort: Number(argument("debugging-port", "9222")),
+    agentPort: Number(argument("agent-port", "9223")),
     readyExpression: argument("ready-when") || undefined,
     dotnet: process.env.DOTNET_HOST_PATH || "dotnet"
 });
@@ -60,6 +67,143 @@ async function evaluate(expression: string, target?: string, timeoutMs: number =
         throw new Error(r.exceptionDetails.exception?.description || r.exceptionDetails.text);
     }
     return r.result.value;
+}
+
+/*
+ * A request to the application's native agent (ReactViewControl.Avalonia DevAgent, dev mode): /windows, /tree, /screenshot.
+ * */
+function agentRequest(path: string, parameters: Record<string, string | number | undefined>, body?: object): Promise<{ contentType: string, body: Buffer }> {
+    const query = Object.entries(parameters).filter(([, v]) => v !== undefined && v !== "").map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&");
+    return new Promise((resolvePromise, reject) => {
+        const request = http.request(`http://127.0.0.1:${session.options.agentPort}${path}${query ? "?" + query : ""}`, { method: body ? "POST" : "GET", headers: body ? { "content-type": "application/json" } : {} }, response => {
+            const chunks: Buffer[] = [];
+            response.on("data", c => chunks.push(c));
+            response.on("end", () => {
+                const body = Buffer.concat(chunks);
+                if (response.statusCode !== 200) {
+                    reject(new Error(`${path}: ${body.toString() || response.statusCode}`));
+                } else {
+                    resolvePromise({ contentType: response.headers["content-type"] || "", body });
+                }
+            });
+        });
+        request.on("error", e => reject(new Error(`the application's native agent did not answer on port ${session.options.agentPort} (${e.message}): is the application running in dev mode, with a ReactViewControl that has it?`)));
+        request.setTimeout(30000, () => request.destroy(new Error("native agent request timed out")));
+        request.end(body ? JSON.stringify(body) : undefined);
+    });
+}
+
+/*
+ * The pages of a covered window stop producing frames on macOS (the webviews are native views), and a screenshot
+ * request then never answers: a capture that does not answer promptly is retried with the application's window
+ * raised through the native agent, and the application that was in front gets the focus back.
+ * */
+async function captureScreenshot(target: string | undefined, parameters: object): Promise<Buffer> {
+    const s = await page(target);
+    const capture = async (timeoutMs: number) => { const r = await s.send("Page.captureScreenshot", parameters, timeoutMs); return Buffer.from(r.result?.data ?? r.data, "base64"); };
+    try {
+        return await capture(4000);
+    } catch (e: any) {
+        if (!String(e.message).includes("timed out")) {
+            throw e;
+        }
+    }
+    return withWindowRaised(() => capture(15000));
+}
+
+function frontmostApplication(): string | undefined {
+    if (process.platform !== "darwin") {
+        return undefined;
+    }
+    try {
+        return execFileSync("osascript", ["-e", "tell application \"System Events\" to get name of first process whose frontmost is true"], { encoding: "utf8", timeout: 5000 }).trim() || undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function bringToFront(application: string): void {
+    try {
+        execFileSync("osascript", ["-e", `tell application "System Events" to set frontmost of process "${application.replace(/"/g, "")}" to true`], { timeout: 5000 });
+    } catch {
+        // the application may be gone
+    }
+}
+
+async function withWindowRaised<T>(action: () => Promise<T>): Promise<T> {
+    const previous = frontmostApplication();
+    try {
+        await agentRequest("/activate", {});
+    } catch (e: any) {
+        throw new Error(`the page did not answer the screenshot request, its window is probably covered by other windows, and it could not be raised: ${e.message}`);
+    }
+    await new Promise(r => setTimeout(r, 500));
+    try {
+        return await action();
+    } finally {
+        if (previous) {
+            bringToFront(previous);
+        }
+    }
+}
+
+interface NativeWindow {
+    index: number;
+    title: string;
+    pages: { id: string, x: number, y: number, width: number, height: number }[];
+}
+
+/*
+ * The pages the DevTools protocol lists, by the page id the native agent knows them by (the fragment of their url).
+ * */
+async function pagesByNativeId(): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+    for (const t of await cdp.targets()) {
+        const id = t.url.split("#")[1];
+        if (id) {
+            result.set(id, t.id);
+        }
+    }
+    return result;
+}
+
+/*
+ * The webviews paint on their own, outside Avalonia's rendering: captures each page shown in the window at the
+ * requested scale, for the native agent to draw them into the window's screenshot.
+ * */
+async function capturePages(windowSpecification: string | undefined, scale: number): Promise<Record<string, string>> {
+    const windows: NativeWindow[] = JSON.parse((await agentRequest("/windows", {})).body.toString());
+    const window = windowSpecification === undefined || windowSpecification === "" ? windows[0]
+        : windows.find(w => String(w.index) === windowSpecification) ?? windows.find(w => (w.title || "").toLowerCase().includes(windowSpecification.toLowerCase()));
+    const targets = await pagesByNativeId();
+    const pages: Record<string, string> = {};
+    for (const p of window?.pages ?? []) {
+        const target = targets.get(p.id);
+        if (!target) {
+            continue;
+        }
+        try {
+            const viewport = await evaluate("({ width: window.innerWidth, height: window.innerHeight })", target, 5000);
+            pages[p.id] = (await captureScreenshot(target, { format: "png", clip: { x: 0, y: 0, width: viewport.width, height: viewport.height, scale } })).toString("base64");
+        } catch (e: any) {
+            // the page's area stays as Avalonia renders it (blank)
+            console.error(`[reactview] page ${p.id} not captured: ${e.message}`);
+        }
+    }
+    return pages;
+}
+
+/*
+ * A screenshot as the tool's result: saved to path when given (the result says where), returned inline otherwise.
+ * */
+function imageResult(png: Buffer, path: string | undefined, description: string) {
+    if (path) {
+        const file = resolve(path);
+        mkdirSync(dirname(file), { recursive: true });
+        writeFileSync(file, png);
+        return text(`${description} saved to ${file} (${png.length} bytes)`);
+    }
+    return { content: [{ type: "image" as const, data: png.toString("base64"), mimeType: "image/png" }] };
 }
 
 /*
@@ -204,12 +348,58 @@ server.tool("reactview_views",
     });
 
 server.tool("reactview_screenshot",
-    "PNG screenshot of a page (default: the rendered one).",
-    { target: z.string().optional() },
-    async ({ target }) => {
-        const s = await page(target);
-        const r = await s.send("Page.captureScreenshot", { format: "png" });
-        return { content: [{ type: "image" as const, data: r.result?.data ?? r.data, mimeType: "image/png" }] };
+    "PNG screenshot of a page (default: the rendered one), of the first element matching selector when given (inner views included), at scale times the page's device pixel ratio. Saved to path when given, returned inline otherwise.",
+    { target: z.string().optional(), selector: z.string().optional(), scale: z.number().optional(), path: z.string().optional().describe("file to save the PNG to") },
+    async ({ target, selector, scale = 1, path }) => {
+        try {
+            let clip: { x: number, y: number, width: number, height: number, scale: number } | undefined;
+            if (selector) {
+                const box = await evaluate(`(function(){ const e = window.__rv.query(${JSON.stringify(selector)}); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; })()`, target);
+                if (!box) {
+                    return failure(`no element matches ${selector}`);
+                }
+                clip = { ...box, scale };
+            }
+            const png = await captureScreenshot(target, clip ? { format: "png", clip, captureBeyondViewport: true } : { format: "png" });
+            return imageResult(png, path, `screenshot of ${selector || "the page"}`);
+        } catch (e: any) {
+            return failure(e.message);
+        }
+    });
+
+server.tool("reactview_windows",
+    "The native (Avalonia) windows of the application, the active one first: index and title (both usable as window for the other native tools), size in device independent pixels, render scaling, and the pages (web views) each one shows with their area.",
+    {},
+    async () => {
+        try {
+            return text(JSON.parse((await agentRequest("/windows", {})).body.toString()));
+        } catch (e: any) {
+            return failure(e.message);
+        }
+    });
+
+server.tool("reactview_window_tree",
+    "Visual tree of a native window (default: the active one), or of one of its controls (name: the control's Name, type: its type name): control type, name, classes, text, position and size relative to the window, down to depth levels. Hidden subtrees are left out. Use it to find what to screenshot or where things are; the web views appear as a single control, see them with reactview_dom.",
+    { window: z.string().optional().describe("index or title substring"), name: z.string().optional(), type: z.string().optional(), depth: z.number().optional() },
+    async ({ window, name, type, depth }) => {
+        try {
+            return text(JSON.parse((await agentRequest("/tree", { window, name, type, depth })).body.toString()));
+        } catch (e: any) {
+            return failure(e.message);
+        }
+    });
+
+server.tool("reactview_window_screenshot",
+    "PNG of a native window (default: the active one) as rendered by Avalonia, web views included, or of one of its controls (name / type, as in reactview_window_tree), at scale times the window's render scaling. Saved to path when given, returned inline otherwise. Does not need the window to be unobscured on screen.",
+    { window: z.string().optional().describe("index or title substring"), name: z.string().optional(), type: z.string().optional(), scale: z.number().optional(), path: z.string().optional().describe("file to save the PNG to") },
+    async ({ window, name, type, scale = 1, path }) => {
+        try {
+            const pages = await capturePages(window, scale);
+            const r = await agentRequest("/screenshot", { window, name, type, scale }, { pages });
+            return imageResult(r.body, path, `screenshot of ${name || type || "the window"}`);
+        } catch (e: any) {
+            return failure(e.message);
+        }
     });
 
 server.tool("reactview_evaluate",
