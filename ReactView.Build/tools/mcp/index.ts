@@ -298,9 +298,9 @@ server.tool("reactview_wait_for_ready",
         return ready ? text("ready") : failure(`not ready after ${timeoutSeconds} s (${expression ? "ready when: " + expression : readiness()})`);
     });
 
-server.tool("reactview_stop", "Stops the application and the dev server started by reactview_start.", {}, async () => {
+server.tool("reactview_stop", "Stops the application and the dev server started by reactview_start, and waits for them to go.", {}, async () => {
     cdp.closeAll();
-    session.stop();
+    await session.stop();
     return text("stopped");
 });
 
@@ -491,9 +491,9 @@ server.tool("reactview_console",
     });
 
 // the client went away (closed our stdin): the processes it started go with it
-process.stdin.on("end", () => { session.stop(); process.exit(0); });
-process.stdin.on("close", () => { session.stop(); process.exit(0); });
-process.on("SIGTERM", () => { session.stop(); process.exit(0); });
-process.on("SIGINT", () => { session.stop(); process.exit(0); });
+process.stdin.on("end", () => { session.kill(); process.exit(0); });
+process.stdin.on("close", () => { session.kill(); process.exit(0); });
+process.on("SIGTERM", () => { session.kill(); process.exit(0); });
+process.on("SIGINT", () => { session.kill(); process.exit(0); });
 
 server.connect(new StdioServerTransport()).catch(e => { console.error(e); process.exit(1); });

@@ -62,12 +62,57 @@ export class ManagedProcess {
         return this.process !== null && this.process.exitCode === null;
     }
 
+    /*
+     * Asks the whole tree to stop (msbuild -> node, dotnet watch -> app -> browser helpers): the process group.
+     * */
     public stop(): void {
         if (this.process) {
-            // the whole tree: msbuild -> node, dotnet watch -> app -> browser helpers
-            try { process.kill(-this.process.pid!, "SIGTERM"); } catch { /* not a group leader */ }
-            try { this.process.kill("SIGTERM"); } catch { /* already gone */ }
+            this.groupId = this.process.pid!;
+            this.signal("SIGTERM");
             this.process = null;
+        }
+    }
+
+    /*
+     * Stops the tree and waits for it to go, up to timeoutMs; what is still there then is killed (webpack-dev-server
+     * has been seen to survive a SIGTERM).
+     * */
+    public async stopAndWait(timeoutMs: number = 5000): Promise<void> {
+        this.stop();
+        const deadline = Date.now() + timeoutMs;
+        while (this.groupAlive() && Date.now() < deadline) {
+            await new Promise(r => setTimeout(r, 200));
+        }
+        this.signal("SIGKILL");
+    }
+
+    /*
+     * Stops the tree without waiting: for when this process is going away itself.
+     * */
+    public kill(): void {
+        this.stop();
+        this.signal("SIGKILL");
+    }
+
+    private groupId: number | null = null;
+
+    private signal(signal: NodeJS.Signals): void {
+        if (this.groupId === null) {
+            return;
+        }
+        try { process.kill(-this.groupId, signal); } catch { /* the group is gone */ }
+        try { process.kill(this.groupId, signal); } catch { /* already gone */ }
+    }
+
+    private groupAlive(): boolean {
+        if (this.groupId === null) {
+            return false;
+        }
+        try {
+            process.kill(-this.groupId, 0);
+            return true;
+        } catch {
+            return false;
         }
     }
 
@@ -104,9 +149,19 @@ export class DevSession {
             { ...process.env, DEV_SERVER_URI: o.devServerUrl, REACTVIEW_AGENT_PORT: String(o.agentPort), DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "true", DOTNET_WATCH_SUPPRESS_EMOJIS: "true" });
     }
 
-    public stop(): void {
-        this.app.stop();
-        this.devServer.stop();
+    /*
+     * Stops the application and the dev server, waiting for them to go (reactview_stop).
+     * */
+    public async stop(): Promise<void> {
+        await Promise.all([this.app.stopAndWait(), this.devServer.stopAndWait()]);
+    }
+
+    /*
+     * Kills both at once: the client went away, so does this process.
+     * */
+    public kill(): void {
+        this.app.kill();
+        this.devServer.kill();
     }
 
     public buildStatus(timeoutMs: number = 3000): Promise<BuildStatus | null> {
