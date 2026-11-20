@@ -1,0 +1,322 @@
+<Project>
+
+  <!--
+    Two things happen on every build of a project that references this package:
+
+      1. RV_GenerateViews   generates the C# bindings (ts2lang + tools/generator/ViewGenerator.js) for the
+                            TypeScript files selected by the project's ts2lang.json.
+      2. RV_GenerateBundle  bundles the views, the default stylesheets and the workers with webpack and embeds the
+                            resulting .js, .css and .entry files as resources.
+
+    Nothing is written into the project folder. Everything lands under $(IntermediateOutputPath)reactview/:
+
+      cs/       the generated C# files, added to Compile
+      out/      the bundles, entry files and manifest, embedded with the same resource names they had when they
+                lived in the project folder (the paths in ts2lang.json, e.g. Generated/MainView.js)
+      cache/    the webpack filesystem cache (Debug builds)
+      *.stamp   up-to-date markers of the two steps
+
+    Both steps run the Node tooling from $(ReactViewToolsPath), which RV_PrepareTools installs on first use from
+    the lockfile shipped with the package. NODE_PATH points the compiled webpack configurations at that install.
+  -->
+
+  <PropertyGroup>
+    <CleanDependsOn>
+      RV_Clean;
+      $(CleanDependsOn);
+    </CleanDependsOn>
+
+    <!-- what the build produces, for other targets of the project that consume it -->
+    <ReactViewIntermediatePath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'reactview'))</ReactViewIntermediatePath>
+    <ReactViewGeneratedPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'cs'))</ReactViewGeneratedPath>
+    <ReactViewOutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'out'))</ReactViewOutputPath>
+
+    <!-- a project may only generate bindings (ReactViewBundle=false) or only bundle (ReactViewGenerateBindings=false) -->
+    <ReactViewBundle Condition="'$(ReactViewBundle)' == ''">true</ReactViewBundle>
+    <ReactViewGenerateBindings Condition="'$(ReactViewGenerateBindings)' == ''">true</ReactViewGenerateBindings>
+  </PropertyGroup>
+
+  <!-- /// -->
+  <!-- Webpack options -->
+  <!-- /// -->
+  <PropertyGroup Condition="'$(WP_OptimizeBundle)' == ''">
+    <WP_OptimizeBundle>false</WP_OptimizeBundle>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(WP_ConfigFileName)' == ''">
+    <WP_ConfigFileName>webpack_views</WP_ConfigFileName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(Configuration.Split(&quot;_&quot;)[0].StartsWith('Debug'))">
+    <WP_Mode>development</WP_Mode>
+    <WP_DevTool>inline-source-map</WP_DevTool>
+    <WP_UseCache>true</WP_UseCache>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(Configuration.Split(&quot;_&quot;)[0].StartsWith('Release'))">
+    <WP_Mode>production</WP_Mode>
+    <WP_DevTool>source-map</WP_DevTool>
+    <WP_UseCache>false</WP_UseCache>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <VG_Inputs Include="**\*.tsx" Exclude="node_modules\**\*.tsx" />
+    <VG_Inputs Include="**\*.ts" Exclude="node_modules\**\*.ts;**\*.d.ts" />
+    <VG_Inputs Include="**\*.scss" Exclude="node_modules\**\*.scss" />
+    <!-- a project that consumes a plugins project rebundles when the plugins sources change -->
+    <VG_Inputs Condition="'$(PluginsRelativePath)' != ''" Include="$(PluginsRelativePath)**\*.tsx;$(PluginsRelativePath)**\*.ts;$(PluginsRelativePath)**\*.scss;$(PluginsRelativePath)webpack-output-config.json" Exclude="$(PluginsRelativePath)node_modules\**;$(PluginsRelativePath)**\*.d.ts" />
+  </ItemGroup>
+
+  <!-- under dotnet watch with the dev server (DEV_SERVER_URI set), the views, stylesheets and bindings are hot reloaded by the
+       dev server: dotnet watch must not react to those sources (a burst of stylesheet edits made its managed hot reload crash) -->
+  <ItemGroup Condition="'$(DEV_SERVER_URI)' != ''">
+    <None Update="**\*.tsx;**\*.ts;**\*.scss" Watch="false" />
+    <Watch Remove="**\*.tsx;**\*.ts;**\*.scss" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <VG_StyleSheet_Inputs Include="@(DefaultStyleSheet)"/>
+    <VG_StyleSheet_Inputs Condition="'@(DefaultStyleSheet)' != ''" Include="**\*.scss" Exclude="node_modules\**\*.scss" />
+    <VG_Workers_Inputs Include="@(Workers)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Include="@(VG_Inputs)" Exclude="@(UpToDateCheckInput)" />
+    <UpToDateCheckInput Include="@(DefaultStyleSheet)" Exclude="@(UpToDateCheckInput)" />
+    <UpToDateCheckInput Include="@(VG_Workers)" Exclude="@(UpToDateCheckInput)" />
+  </ItemGroup>
+
+  <!-- /// -->
+  <!-- Tooling setup -->
+  <!-- /// -->
+  <Target Name="RV_SetVariables">
+    <PropertyGroup>
+      <RV_GeneratedPath>$(ReactViewGeneratedPath)</RV_GeneratedPath>
+      <RV_OutputPath>$(ReactViewOutputPath)</RV_OutputPath>
+      <RV_ViewsStamp>$(ReactViewIntermediatePath)views.stamp</RV_ViewsStamp>
+      <RV_BundleStamp>$(ReactViewIntermediatePath)bundle.stamp</RV_BundleStamp>
+
+      <RV_ToolsEnvironment>NODE_PATH=$(ReactViewToolsNodeModules)</RV_ToolsEnvironment>
+      <RV_Ts2LangScript>$(ReactViewToolsNodeModules)/@outsystems/ts2lang/ts2lang-main.js</RV_Ts2LangScript>
+      <RV_GeneratorTemplate>$(ReactViewBuildToolsSourcePath)generator/ViewGenerator.js</RV_GeneratorTemplate>
+      <RV_WebpackScript>$(ReactViewToolsNodeModules)/webpack/bin/webpack.js</RV_WebpackScript>
+      <RV_WebpackConfigPath>$(ReactViewBuildToolsSourcePath)webpack/</RV_WebpackConfigPath>
+      <RV_InstallScript>$(ReactViewBuildToolsSourcePath)install.js</RV_InstallScript>
+    </PropertyGroup>
+    <MakeDir Directories="$(ReactViewIntermediatePath)" />
+  </Target>
+
+  <!-- Resolves the Node.js executable once. Version managers (nodenv, nvm, volta) install shims that pick a version from
+       the directory of the script being run, so the tools must be run through the real executable the check saw. -->
+  <Target Name="RV_CheckNode" DependsOnTargets="RV_SetVariables">
+    <Exec Command="&quot;$(ReactViewNodeExe)&quot; -p &quot;process.versions.node + ';' + process.execPath&quot;" ContinueOnError="true" IgnoreExitCode="true" StandardOutputImportance="low" ConsoleToMSBuild="true">
+      <Output TaskParameter="ExitCode" PropertyName="RV_NodeExitCode" />
+      <Output TaskParameter="ConsoleOutput" PropertyName="RV_NodeInfo" />
+    </Exec>
+    <Error Condition="'$(RV_NodeExitCode)' != '0'" Text="ReactView.Build requires Node.js $(ReactViewMinimumNodeMajor) or later on the PATH (or set ReactViewNodeExe). '$(ReactViewNodeExe)' could not be run." />
+    <PropertyGroup>
+      <RV_NodeVersion>$(RV_NodeInfo.Trim().Split(';')[0])</RV_NodeVersion>
+      <RV_NodeExe>$(RV_NodeInfo.Trim().Split(';')[1])</RV_NodeExe>
+      <RV_NodeMajor>$(RV_NodeVersion.Split('.')[0])</RV_NodeMajor>
+    </PropertyGroup>
+    <Error Condition="$([System.Int32]::Parse('$(RV_NodeMajor)')) &lt; $([System.Int32]::Parse('$(ReactViewMinimumNodeMajor)'))" Text="ReactView.Build requires Node.js $(ReactViewMinimumNodeMajor) or later, found $(RV_NodeVersion) ('$(ReactViewNodeExe)'). Set ReactViewNodeExe to a newer Node.js executable or update the one on the PATH." />
+  </Target>
+
+  <!-- Installs the Node dependencies of the tooling into $(ReactViewToolsPath) when they are not there yet -->
+  <Target Name="RV_PrepareTools" DependsOnTargets="RV_CheckNode" Condition="'$(ReactViewSkipToolsInstall)' != 'true' And !Exists('$(ReactViewToolsNodeModules)/.reactview-installed')">
+    <Error Condition="'$(ReactViewToolsId)' == ''" Text="ReactView.Build: tools id not found in the package ($(ReactViewBuildToolsSourcePath)toolsid.txt)." />
+    <Message Importance="high" Text="Installing ReactView build tools ($(ReactViewToolsId)) into $(ReactViewToolsPath)" />
+    <Exec Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_InstallScript)&quot; --source &quot;$(ReactViewBuildToolsSourcePath).&quot; --target &quot;$(ReactViewToolsPath)&quot; --min-node $(ReactViewMinimumNodeMajor)" />
+  </Target>
+
+  <!-- Copies the project templates (once) and the ambient type declarations (whenever they change) into the project -->
+  <Target Name="RV_SetupProject" DependsOnTargets="RV_SetVariables">
+    <ItemGroup>
+      <_RVTemplates Include="$(ReactViewBuildContentPath)ts2lang.json" />
+      <!-- the TypeScript side only matters to a project that bundles views -->
+      <_RVTemplates Include="$(ReactViewBuildContentPath)tsconfig.json" Condition="'$(ReactViewBundle)' == 'true'" />
+      <_RVDeclarations Include="$(ReactViewBuildContentPath)**\*.d.ts" Condition="'$(ReactViewBundle)' == 'true'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_RVTemplates)" DestinationFolder="$(ProjectDir)%(_RVTemplates.RecursiveDir)" Condition="!Exists('$(ProjectDir)%(_RVTemplates.RecursiveDir)%(_RVTemplates.Filename)%(_RVTemplates.Extension)')" />
+    <Copy SourceFiles="@(_RVDeclarations)" DestinationFolder="$(ProjectDir)%(_RVDeclarations.RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- /// -->
+  <!-- View bindings generation -->
+  <!-- /// -->
+  <Target Name="RV_GetViewInputs" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
+    <Exec ConsoleToMSBuild="True" EnvironmentVariables="$(RV_ToolsEnvironment)" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -l -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;">
+      <Output TaskParameter="ConsoleOutput" ItemName="VGC_Inputs"/>
+    </Exec>
+    <ItemGroup>
+      <UpToDateCheckInput Include="@(VGC_Inputs)" Exclude="@(UpToDateCheckInput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RV_GenerateViews" Inputs="@(VGC_Inputs);$(ProjectDir)ts2lang.json;$(RV_GeneratorTemplate);$(MSBuildThisFileFullPath)" Outputs="$(RV_ViewsStamp)" Condition="'$(ReactViewGenerateBindings)' == 'true' And ('$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true')" BeforeTargets="CustomTransformDuringBuild;TransformDuringBuild;AfterResolveReferences" DependsOnTargets="RV_GetViewInputs">
+    <CallTarget Targets="RV_GenerateViewsInner" />
+  </Target>
+
+  <Target Name="RV_GenerateViewsInner">
+    <Message Importance="High" Text="Generating View files" />
+    <RemoveDir Directories="$(RV_GeneratedPath)" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment);REACTVIEW_GENERATED_PATH=$(RV_GeneratedPath)" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_Ts2LangScript)&quot; -f &quot;$(ProjectDir)ts2lang.json&quot; -t &quot;$(RV_GeneratorTemplate)&quot;" />
+    <Touch Files="$(RV_ViewsStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <!-- old-format and new-format projects have different built-in targets. In order to support both we need to have two
+       different alternative ways of adding the generated code to the target project -->
+  <!-- Both run in design-time builds too, where RV_GenerateViews is skipped: they must set the paths up themselves and
+       must never glob from an empty root -->
+  <Target Name="RV_IncludeGeneratedFiles_NonSdk" DependsOnTargets="RV_SetVariables" BeforeTargets="CoreCompile" Condition="'$(UsingMicrosoftNETSdk)' != 'true'">
+    <ItemGroup>
+      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" Condition="'$(RV_GeneratedPath)' != '' And Exists('$(RV_GeneratedPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RV_IncludeGeneratedFiles_Sdk" DependsOnTargets="RV_SetVariables" AfterTargets="RV_GenerateViews" Condition="'$(UsingMicrosoftNETSdk)' == 'true'">
+    <ItemGroup>
+      <Compile Include="$(RV_GeneratedPath)\**\*.cs" Exclude="@(Compile)" Condition="'$(RV_GeneratedPath)' != '' And Exists('$(RV_GeneratedPath)')" />
+    </ItemGroup>
+  </Target>
+
+  <!-- /// -->
+  <!-- Webpack bundle generation -->
+  <!-- /// -->
+  <Target Name="RV_GenerateBundle" Inputs="@(VG_Inputs);@(VG_Workers_Inputs);$(MSBuildThisFileFullPath);$(ReactViewBuildToolsSourcePath)toolsid.txt" Outputs="$(RV_BundleStamp)" Condition="'$(ReactViewBundle)' == 'true' And ('$(UsingMicrosoftNETSdk)' != 'true' Or '$(DesignTimeBuild)' != 'true')" AfterTargets="AfterResolveReferences" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
+    <CallTarget Targets="RV_GenerateBundleInner" />
+  </Target>
+
+  <Target Name="RV_GenerateBundleInner">
+    <Message Text="Generating bundle" Importance="high" />
+    <RemoveDir Directories="$(RV_OutputPath)" />
+
+    <!-- Default stylesheets bundle generation -->
+    <CallTarget Condition="'@(VG_StyleSheet_Inputs)' != ''" Targets="RV_GenerateDefaultStyleSheet" />
+
+    <!-- Workers bundle generation -->
+    <CallTarget Condition="'@(VG_Workers_Inputs)' != ''" Targets="RV_GenerateWorkersBundle" />
+
+    <!-- Main bundle generation -->
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)$(WP_ConfigFileName).config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env pluginsRelativePath='$(PluginsRelativePath)' --env assemblyName='$(AssemblyName)' --env optimizeBundle=$(WP_OptimizeBundle)" />
+
+    <Touch Files="$(RV_BundleStamp)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="RV_GenerateDefaultStyleSheet">
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_stylesheets.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(DefaultStyleSheet)' --env assemblyName='$(AssemblyName)'" />
+  </Target>
+
+  <Target Name="RV_GenerateWorkersBundle">
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_WebpackScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_workers.config.js&quot; --mode=$(WP_Mode) --devtool=$(WP_DevTool) --env useCache=$(WP_UseCache) --env outputPath=&quot;$(RV_OutputPath)&quot; --env entryPath='@(Workers)'" />
+  </Target>
+
+  <!-- The bundles keep the resource names they had when they were written into the project folder: Link is the path
+       relative to the output folder, which is what the generated C# refers to -->
+  <Target Name="RV_IncludeGeneratedResources" DependsOnTargets="RV_SetVariables" AfterTargets="RV_GenerateBundle">
+    <ItemGroup Condition="'$(RV_OutputPath)' != '' And Exists('$(RV_OutputPath)')">
+      <_RVBundleOutputs Include="$(RV_OutputPath)\**\*.js;$(RV_OutputPath)\**\*.css;$(RV_OutputPath)\**\*.entry" Exclude="$(RV_OutputPath)\.bootstrap\**" />
+      <EmbeddedResource Include="@(_RVBundleOutputs)" Link="%(RecursiveDir)%(Filename)%(Extension)" Visible="false" />
+    </ItemGroup>
+  </Target>
+
+  <!-- /// -->
+  <!-- Dev server (hot reload) -->
+  <!-- /// -->
+  <!--
+    dotnet msbuild <project> -t:ReactViewDevServer
+
+    Runs webpack-dev-server in the foreground, bundling the views from the sources with react-refresh. An application
+    whose ReactViewFactory.DevServerUri points at $(ReactViewDevServerUrl) loads its views from it and hot reloads them
+    as the sources change. Build status: $(ReactViewDevServerUrl)/__reactview/status (and /__reactview/events).
+
+    An application made of several view assemblies (a plugins project, plugin modules of their own) is served by one
+    dev server: list the other projects as ReactViewDevServerProject items of the project the target runs on, or pass
+    them with -p:ReactViewDevServerProjects="path;path". Each assembly is served under /<assembly>/; the application
+    keeps the assemblies the server does not build embedded.
+  -->
+  <ItemGroup Condition="'$(ReactViewDevServerProjects)' != ''">
+    <ReactViewDevServerProject Include="$(ReactViewDevServerProjects)" />
+  </ItemGroup>
+
+  <!-- What the dev server needs to know about a project: run by ReactViewDevServer on each of the projects it serves -->
+  <Target Name="RV_DevServerProjectInfo" DependsOnTargets="RV_SetVariables" Returns="@(_RVDevServerProjectInfo)">
+    <ItemGroup>
+      <_RVDevServerProjectInfo Include="$(MSBuildProjectFullPath)">
+        <ProjectDirectory>$(MSBuildProjectDirectory)</ProjectDirectory>
+        <AssemblyName>$(AssemblyName)</AssemblyName>
+        <Kind>$(WP_ConfigFileName.Replace('webpack_', ''))</Kind>
+        <Bundle>$(ReactViewBundle)</Bundle>
+        <PluginsRelativePath>$(PluginsRelativePath)</PluginsRelativePath>
+        <StyleSheets>@(DefaultStyleSheet)</StyleSheets>
+        <Workers>@(Workers)</Workers>
+        <GeneratedPath Condition="'$(ReactViewGenerateBindings)' == 'true'">$(RV_GeneratedPath)</GeneratedPath>
+        <OutputPath>$([MSBuild]::NormalizePath('$(ReactViewIntermediatePath)', 'dev'))</OutputPath>
+      </_RVDevServerProjectInfo>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ReactViewDevServer" DependsOnTargets="RV_CheckNode;RV_PrepareTools;RV_SetupProject">
+    <PropertyGroup>
+      <RV_DevServerScript>$(ReactViewToolsNodeModules)/webpack-dev-server/bin/webpack-dev-server.js</RV_DevServerScript>
+      <RV_DevServerProjectsFile>$(ReactViewIntermediatePath)dev-server.json</RV_DevServerProjectsFile>
+    </PropertyGroup>
+
+    <!-- the other projects are built by this server too: they must have the tools (and their ts2lang.json) in place -->
+    <MSBuild Projects="@(ReactViewDevServerProject)" Targets="RV_SetupProject" />
+    <MSBuild Projects="$(MSBuildProjectFullPath);@(ReactViewDevServerProject)" Targets="RV_DevServerProjectInfo">
+      <Output TaskParameter="TargetOutputs" ItemName="_RVDevServerProjects" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <_RVDevServerProjectsJson>{ "projects": [ @(_RVDevServerProjects->'{ "project": "%(Identity)", "directory": "%(ProjectDirectory)", "assemblyName": "%(AssemblyName)", "kind": "%(Kind)", "bundle": %(Bundle), "pluginsRelativePath": "%(PluginsRelativePath)", "styleSheets": "%(StyleSheets)", "workers": "%(Workers)", "generatedPath": "%(GeneratedPath)", "outputPath": "%(OutputPath)" }', ', ') ] }</_RVDevServerProjectsJson>
+      <_RVDevServerProjectsJson>$(_RVDevServerProjectsJson.Replace('\', '/'))</_RVDevServerProjectsJson>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(RV_DevServerProjectsFile)" Lines="$(_RVDevServerProjectsJson)" Overwrite="true" />
+
+    <Message Importance="high" Text="ReactView dev server for @(_RVDevServerProjects->'%(AssemblyName)', ', ') at $(ReactViewDevServerUrl)" />
+    <Exec EnvironmentVariables="$(RV_ToolsEnvironment)" IgnoreStandardErrorWarningFormat="true" Command="&quot;$(RV_NodeExe)&quot; &quot;$(RV_DevServerScript)&quot; --config=&quot;$(RV_WebpackConfigPath)webpack_devserver.config.js&quot; --mode=development --devtool=inline-source-map --env projectsFile=&quot;$(RV_DevServerProjectsFile)&quot; --env devServerUrl=&quot;$(ReactViewDevServerUrl)&quot;" />
+  </Target>
+
+  <!-- /// -->
+  <!-- MCP server (agents) -->
+  <!-- /// -->
+  <!--
+    dotnet msbuild <project> -t:ReactViewMcpConfig
+
+    Writes reactview.mcp.json next to the project: the configuration of the ReactView MCP server for this project,
+    for Claude Code or any MCP client (the file is the "mcpServers" entry). The server starts the dev server and the
+    application under dotnet watch, and exposes the running views (status, screenshots, DOM, console, clicks) and the
+    native windows around them (visual tree, screenshots) through the control's dev-mode agent (REACTVIEW_AGENT_PORT).
+  -->
+  <Target Name="ReactViewMcpConfig" DependsOnTargets="RV_CheckNode;RV_PrepareTools">
+    <PropertyGroup>
+      <RV_McpConfigPath>$(ProjectDir)reactview.mcp.json</RV_McpConfigPath>
+      <!-- the executable the server runs under dotnet watch, when the views live in a library: -p:ReactViewApplicationProject=path -->
+      <ReactViewApplicationProject Condition="'$(ReactViewApplicationProject)' == ''">$(MSBuildProjectFullPath)</ReactViewApplicationProject>
+      <ReactViewApplicationProject>$([System.IO.Path]::GetFullPath('$(ReactViewApplicationProject)', '$(MSBuildProjectDirectory)'))</ReactViewApplicationProject>
+      <!-- javascript expression, true in a page of the application once it is ready for the agent (e.g. the developer has
+           logged in), set by the project: the server waits for it instead of handing the agent a login page -->
+      <RV_McpReadyArgs Condition="'$(ReactViewReadyExpression)' != ''">, "--ready-when", "$(ReactViewReadyExpression.Replace('\', '\\').Replace('"', '\"'))"</RV_McpReadyArgs>
+      <RV_McpConfig>{
+  "mcpServers": {
+    "reactview": {
+      "command": "$(RV_NodeExe.Replace('\', '/'))",
+      "args": ["$(ReactViewBuildToolsSourcePath.Replace('\', '/'))mcp/index.js", "--project", "$(MSBuildProjectFullPath.Replace('\', '/'))", "--app-project", "$(ReactViewApplicationProject.Replace('\', '/'))", "--configuration", "$(Configuration)", "--platform", "$(Platform)", "--dev-server-url", "$(ReactViewDevServerUrl)"$(RV_McpReadyArgs)],
+      "env": { "NODE_PATH": "$(ReactViewToolsNodeModules.Replace('\', '/'))", "DOTNET_HOST_PATH": "$(DOTNET_HOST_PATH.Replace('\', '/'))" }
+    }
+  }
+}</RV_McpConfig>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(RV_McpConfigPath)" Lines="$(RV_McpConfig)" Overwrite="true" />
+    <Message Importance="high" Text="ReactView MCP server configuration written to $(RV_McpConfigPath): merge its mcpServers entry into the project's .mcp.json (Claude Code) or your MCP client configuration." />
+  </Target>
+
+  <!-- /// -->
+  <!-- Clean -->
+  <!-- /// -->
+  <Target Name="RV_Clean" DependsOnTargets="RV_SetVariables" BeforeTargets="Clean">
+    <RemoveDir Directories="$(ReactViewIntermediatePath)" />
+  </Target>
+
+</Project>

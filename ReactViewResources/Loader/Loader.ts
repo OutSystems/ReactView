@@ -1,16 +1,16 @@
-﻿/// <reference path="./../../ViewGenerator/contentFiles/global.d.ts"/>
+﻿/// <reference path="./../../ReactView.Build/content/global.d.ts"/>
 
 import { getPluginModule, getViewModule, waitForNextPaint } from "./Internal/Common";
 import { renderCachedView, storeViewRenderInCache } from "./Internal/ComponentsRenderCache";
-import { mainFrameName } from "./Internal/Environment";
+import { devServerBaseUrl, mainFrameName } from "./Internal/Environment";
 import { handleError } from "./Internal/ErrorHandler";
 import { renderMainView } from "./Internal/Loader.View";
-import { bindNativeObject, notifyViewInitialized, notifyViewLoaded } from "./Internal/NativeAPI";
+import { bindNativeObject, notifyViewInitialized, notifyViewLoaded, requestViewReload } from "./Internal/NativeAPI";
 import { loadScript, loadStyleSheet } from "./Internal/ResourcesLoader";
 import { Task } from "./Internal/Task";
 import { ViewMetadata } from "./Internal/ViewMetadata";
 import { createPropertiesProxy } from "./Internal/ViewPropertiesProxy";
-import { addView, getView, tryGetView } from "./Internal/ViewsCollection";
+import { addView, getView, getViews, tryGetView } from "./Internal/ViewsCollection";
 import { setEnsureViewPluginsAreDisposedFlag, setLoadScriptsOncePerDocumentFlag } from "./Internal/Flags";
 
 export { disableMouseInteractions, enableMouseInteractions } from "./Internal/InputManager";
@@ -199,6 +199,7 @@ export function loadComponent(
 
             const { createView } = await import("./Internal/Loader.View");
 
+            view.componentRender = { componentName, properties };
             const viewElement = createView(componentClass, properties, view, componentName);
             const render = view.renderHandler;
             if (!render) {
@@ -227,6 +228,84 @@ export function loadComponent(
     innerLoad();
 }
 
+/*
+ * Dev mode. The dev server build makes each view entry accept the hot updates react-refresh cannot apply in place
+ * (class components, modules exporting more than components) and hand its fresh exports here. Every view showing
+ * that component is re-rendered with the new class: it remounts, keeping its native object and properties.
+ * */
+function installHotReload(): void {
+    const refreshStyleSheets = (hash: string) => {
+        const heads: Element[] = [document.head];
+        getViews().forEach(v => { if (v.head && v.head !== document.head) { heads.push(v.head); } });
+        heads.forEach(head => head.querySelectorAll("link[rel=stylesheet]").forEach((link: HTMLLinkElement) => {
+            const url = link.href.split("?")[0];
+            // the dev server serves every stylesheet of the application, bundled by it or embedded and redirected to it
+            if (url.startsWith(devServerBaseUrl) || url.indexOf("ReactViewResources") < 0) {
+                link.href = url + "?" + hash;
+            }
+        }));
+    };
+
+    // the dev server publishes every build; stylesheets are refreshed on each successful one. This does not go through
+    // webpack's hot runtime on purpose: the default stylesheets are a build of their own, which that runtime knows
+    // nothing about. Neither do the plugins and workers builds: their modules are globals every view captured when it
+    // loaded, so a change there loads the page again from the current sources.
+    let lastBuildHash: string | undefined;
+    const lastHashes = new Map<string, string>();
+    const events = new EventSource(new URL("/__reactview/events", devServerBaseUrl).toString());
+    events.addEventListener("status", (event: MessageEvent) => {
+        const status = JSON.parse(event.data);
+        if (status.state === "ok" && status.hash !== lastBuildHash) {
+            const builds: { name: string, kind: string, hash: string }[] = status.builds || [];
+            const reloading = !!lastBuildHash && builds.filter(b => (b.kind === "plugins" || b.kind === "workers") && lastHashes.get(b.name) !== b.hash);
+            builds.forEach(b => lastHashes.set(b.name, b.hash));
+            if (reloading && reloading.length > 0) {
+                window.console.info(`[ReactView] ${reloading.map(b => b.name).join(", ")} changed, reloading the view`);
+                requestViewReload();
+            } else if (lastBuildHash) {
+                refreshStyleSheets(status.hash);
+            }
+            lastBuildHash = status.hash;
+        } else if (status.state === "error") {
+            window.console.error("[ReactView] Dev server build failed:\n" + status.errors.join("\n"));
+        }
+    });
+
+    window["__reactview_hot__"] = {
+        // loads the page again from the current sources: for updates that cannot be applied in place, and for tooling
+        reload: () => {
+            window.console.info("[ReactView] Reloading the view");
+            requestViewReload();
+        },
+        // tooling: the views this page hosts
+        views: () => getViews().map(v => ({ name: v.name || "main", id: v.id, isMain: v.isMain, component: v.componentRender ? v.componentRender.componentName : null, rendered: !!v.root && v.root.childElementCount > 0 })),
+        moduleUpdated: async (moduleName: string, moduleExports: any) => {
+            const componentClass = (moduleExports || {}).default;
+            if (!componentClass) {
+                return;
+            }
+            // later loads (new frames) get the fresh module
+            const bundle = window["Views"];
+            if (bundle) {
+                bundle[moduleName] = moduleExports;
+            }
+            const { createView } = await import("./Internal/Loader.View");
+            for (const view of getViews()) {
+                const current = view.componentRender;
+                if (!current || current.componentName !== moduleName || !view.renderHandler || view.isReleased) {
+                    continue;
+                }
+                try {
+                    await view.renderHandler(createView(componentClass, current.properties, view, moduleName));
+                    window.console.info(`[ReactView] Hot reloaded '${moduleName}' in view '${view.name || "main"}'`);
+                } catch (error) {
+                    handleError(error, view);
+                }
+            }
+        }
+    };
+}
+
 export function initialize(mainView: ViewMetadata) {
     function preventDroppingFiles(event: DragEvent): void {
         const containsDraggedFiles = event.dataTransfer && event.dataTransfer.types.includes("Files");
@@ -240,6 +319,10 @@ export function initialize(mainView: ViewMetadata) {
 
     addView(mainFrameName, mainView);
     mainView.renderHandler = component => renderMainView(component, mainView.root!);
+
+    if (devServerBaseUrl) {
+        installHotReload();
+    }
 
     notifyViewInitialized(mainFrameName);
 

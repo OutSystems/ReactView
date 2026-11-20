@@ -4,6 +4,7 @@ interface INativeObject {
     notifyViewInitialized(frameName: string): void;
     notifyViewLoaded(frameName: string, id: string): void;
     notifyViewDestroyed(frameName: string): void;
+    reloadView(): void;
 }
 
 declare const cefglue: {
@@ -34,4 +35,8 @@ export function notifyViewLoaded(viewName: string, id: string): void {
 
 export function notifyViewDestroyed(viewName: string): void {
     withAPI(api => api.notifyViewDestroyed(viewName));
+}
+
+export function requestViewReload(): void {
+    withAPI(api => api.reloadView());
 }

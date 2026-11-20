@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using WebViewControl;
 
@@ -18,8 +20,25 @@ namespace ReactViewControl {
         private ReactViewRender View { get; }
 
         private static ReactViewRender CreateReactViewInstance(ReactViewFactory factory) {
+            KeepHotReloadAgentOutOfBrowserProcesses();
+
             ReactViewRender InnerCreateView() {
-                var view = new ReactViewRender(factory.DefaultStyleSheet, () => factory.InitializePlugins(), factory.EnableViewPreload, factory.EnableDebugMode, factory.LoadScriptsOncePerDocument, factory.EnsureViewPluginsAreDisposed);
+                if (factory.RemoteDebuggingPort > 0) {
+                    // read by the webview at initialization (chromium's --remote-debugging-port)
+                    if (!ExtendedWebView.Settings.CommandLineSwitches.Any(s => s.Key == "remote-debugging-port")) {
+                        ExtendedWebView.Settings.AddCommandLineSwitch("remote-debugging-port", factory.RemoteDebuggingPort.ToString());
+                    }
+                }
+                var devServerUri = factory.DevServerUri;
+                if (devServerUri != null && RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && !ExtendedWebView.Settings.CommandLineSwitches.Any(s => s.Key == "use-mock-keychain")) {
+                    // dev mode: an unsigned binary that changes with every build makes macOS ask, on the UI thread, for the
+                    // keychain item chromium keeps its storage key in: a modal prompt the tools driving the application cannot answer
+                    ExtendedWebView.Settings.AddCommandLineSwitch("use-mock-keychain", "");
+                }
+                if (devServerUri != null) {
+                    StartDevAgent();
+                }
+                var view = new ReactViewRender(factory.DefaultStyleSheet, () => factory.InitializePlugins(), factory.EnableViewPreload, factory.EnableDebugMode, factory.LoadScriptsOncePerDocument, factory.EnsureViewPluginsAreDisposed, devServerUri);
                 if (factory.ShowDeveloperTools) {
                     view.ShowDeveloperTools();
                 }
@@ -48,6 +67,33 @@ namespace ReactViewControl {
             return InnerCreateView();
         }
 
+        private static bool hotReloadAgentVariablesCleared;
+
+        /// <summary>
+        /// Under "dotnet watch", the .NET hot reload agent is injected into the application through environment
+        /// variables (a startup hook and a named pipe). The browser helper processes are .NET processes as well and
+        /// would inherit them: each helper then runs the agent at startup and waits for a handshake on a pipe only the
+        /// application owns, so no view ever renders. The agent is already loaded in this process by the time this runs,
+        /// so clearing the variables here keeps hot reload working while the helpers start clean.
+        /// </summary>
+        private static void KeepHotReloadAgentOutOfBrowserProcesses() {
+            if (hotReloadAgentVariablesCleared || Environment.GetEnvironmentVariable("DOTNET_WATCH") == null) {
+                return;
+            }
+            hotReloadAgentVariablesCleared = true;
+            foreach (var variable in new[] { "DOTNET_STARTUP_HOOKS", "DOTNET_WATCH_HOTRELOAD_NAMEDPIPE_NAME", "DOTNET_HOTRELOAD_NAMEDPIPE_NAME", "DOTNET_MODIFIABLE_ASSEMBLIES" }) {
+                Environment.SetEnvironmentVariable(variable, null);
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                    // on unix the runtime only updates its own copy of the environment; the browser helpers are spawned
+                    // natively from the real one
+                    unsetenv(variable);
+                }
+            }
+        }
+
+        [DllImport("libc", EntryPoint = "unsetenv")]
+        private static extern int unsetenv(string name);
+
         protected ReactView(IViewModule mainModule) {
             View = CreateReactViewInstance(Factory);
 
@@ -60,6 +106,9 @@ namespace ReactViewControl {
         }
 
         partial void ExtraInitialize();
+
+        /// <summary>Dev mode: the endpoint the tools driving the application use for the native windows.</summary>
+        static partial void StartDevAgent();
 
         ~ReactView() {
             Dispose();
@@ -203,6 +252,15 @@ namespace ReactViewControl {
         /// <summary>
         /// Opens the developer tools.
         /// </summary>
+        /// <summary>
+        /// Loads the view again from its current sources: the component and its inner views are recreated, the native
+        /// objects, properties and plugins are kept, the javascript state is lost. In dev mode this picks up changes hot
+        /// reload could not apply in place.
+        /// </summary>
+        public void ReloadView() {
+            View.Reload();
+        }
+
         public void ShowDeveloperTools() {
             View.ShowDeveloperTools();
         }

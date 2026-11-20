@@ -36,11 +36,7 @@
     <PackageReference Include="Avalonia.ReactiveUI" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="NLog" />
-    <PackageReference Include="ViewGenerator">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="ViewGeneratorCore">
+    <PackageReference Include="ReactView.Build">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -62,6 +58,4 @@
       <Visible>True</Visible>
     </None>
   </ItemGroup>
-
-  <Import Project="Build\GenerateWebpackDevServerScript.targets" />
 </Project>

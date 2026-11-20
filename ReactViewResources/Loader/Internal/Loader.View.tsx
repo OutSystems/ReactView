@@ -21,5 +21,8 @@ export function createView(componentClass: any, properties: {}, view: ViewMetada
 }
 
 export function renderMainView(children: React.ReactElement, container: Element) {
-    return new Promise<void>(resolve => ReactDOM.hydrate(children, container, resolve));
+    // hydrate over the pre-rendered html of the cache; a plain render otherwise (and on re-renders)
+    const render = container.hasChildNodes() && !container["__reactViewRendered"] ? ReactDOM.hydrate : ReactDOM.render;
+    container["__reactViewRendered"] = true;
+    return new Promise<void>(resolve => render(children, container, resolve));
 }

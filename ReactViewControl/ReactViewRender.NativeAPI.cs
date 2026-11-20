@@ -67,6 +67,13 @@ namespace ReactViewControl {
             }
 
             /// <summary>
+            /// The page asks to be loaded again (dev mode: an update that could not be applied in place, or tooling).
+            /// </summary>
+            public void ReloadView() {
+                ReactView.AsyncExecuteInUI(() => ViewRender.Reload(), false);
+            }
+
+            /// <summary>
             /// An inner view was destroyed, cleanup its resources.
             /// </summary>
             public void NotifyViewDestroyed(string frameName) {

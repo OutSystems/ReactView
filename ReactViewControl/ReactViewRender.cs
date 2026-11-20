@@ -34,14 +34,16 @@ namespace ReactViewControl {
         private Func<IViewModule[]> PluginsFactory { get; }
 
         private bool enableDebugMode;
+        private ResourceUrl loaderUrl;
         private ResourceUrl defaultStyleSheet;
         private bool isInputDisabled; // used primarly to control the intention to disable input (before the browser is ready)
         private readonly bool loadScriptsOncePerDocument;
         private readonly bool ensureViewPluginsAreDisposed;
 
-        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true) {
+        public ReactViewRender(ResourceUrl defaultStyleSheet, Func<IViewModule[]> initializePlugins, bool preloadWebView, bool enableDebugMode, bool loadScriptsOncePerDocument = true, bool ensureViewPluginsAreDisposed = true, Uri devServerUri = null) {
             this.loadScriptsOncePerDocument = loadScriptsOncePerDocument;
             this.ensureViewPluginsAreDisposed = ensureViewPluginsAreDisposed;
+            DevServerUri = devServerUri;
             UserCallingAssembly = GetUserCallingMethod().ReflectedType.Assembly;
 
             // must useSharedDomain for the local storage to be shared
@@ -79,9 +81,12 @@ namespace ReactViewControl {
                 ExecutionEngine.ModulesObjectName,
                 NativeAPI.NativeObjectName,
                 ResourceUrl.CustomScheme +  Uri.SchemeDelimiter + CustomResourceBaseUrl,
+                DevServerUri != null ? Uri.EscapeDataString(DevServerUri.ToString()) : "false",
             };
 
-            WebView.LoadResource(new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams)));
+            // the fragment tells the pages of this view apart in the DevTools protocol (see PageId)
+            loaderUrl = new ResourceUrl(ResourcesAssembly, ReactViewResources.Resources.DefaultUrl + "?" + string.Join("&", urlParams) + "#" + PageId);
+            WebView.LoadResource(loaderUrl);
 
             if (preloadWebView) {
                 PreloadWebView();
@@ -95,6 +100,17 @@ namespace ReactViewControl {
         partial void PreloadWebView();
 
         public ReactView Host { get; set; }
+
+        /// <summary>
+        /// Root url of the dev server the views are loaded from, null outside dev mode.
+        /// </summary>
+        public Uri DevServerUri { get; }
+
+        /// <summary>
+        /// Identifies the page of this view among those the webview's DevTools protocol lists (its url ends with #PageId):
+        /// the tools driving the application in dev mode put the native windows and the pages together.
+        /// </summary>
+        internal string PageId { get; } = Guid.NewGuid().ToString("N");
 
         public bool IsDisposing => WebView.IsDisposing;
 
@@ -217,6 +233,17 @@ namespace ReactViewControl {
 
         public void Dispose() {
             WebView.Dispose();
+        }
+
+        /// <summary>
+        /// Loads the page again: the main component and its inner views are recreated from their current sources
+        /// (the native objects, properties and plugins are kept). The javascript state of the views is lost.
+        /// </summary>
+        public void Reload() {
+            lock (devServerDependencies) {
+                devServerDependencies.Clear(); // dev mode: the dev server manifest may list other files now
+            }
+            WebView.LoadResource(loaderUrl);
         }
 
         /// <summary>
@@ -441,6 +468,9 @@ namespace ReactViewControl {
                     break;
 
                 case ResourceUrl.EmbeddedScheme:
+                    if (DevServerUri != null && TryRedirectToDevServer(resourceHandler)) {
+                        break;
+                    }
                     // webview already started BeginAsyncResponse
                     EmbeddedResourceRequested?.Invoke(resourceHandler);
                     break;
@@ -546,6 +576,31 @@ namespace ReactViewControl {
         }
 
         /// <summary>
+        /// Dev mode: embedded resources of the assembly the dev server builds (bundles, stylesheets, images) are served by it,
+        /// from the sources and the project folder. The other assemblies (the loader's, plugins, views of other projects)
+        /// stay embedded.
+        /// </summary>
+        private bool TryRedirectToDevServer(ResourceHandler resourceHandler) {
+            // embedded://webview/<assembly>[-<version>]/<path>: urls built from an assembly carry its version, urls built
+            // from a resource path (module sources, assets) do not. The dev server serves everything under /<assembly>/.
+            if (!Uri.TryCreate(resourceHandler.Url, UriKind.Absolute, out var uri) || uri.Segments.Length < 3) {
+                return false;
+            }
+            var assemblySegment = uri.Segments[1].TrimEnd('/');
+            var assemblyName = assemblySegment;
+            var versionSeparator = assemblySegment.LastIndexOf('-');
+            if (versionSeparator > 0 && Version.TryParse(assemblySegment.Substring(versionSeparator + 1), out _)) {
+                assemblyName = assemblySegment.Substring(0, versionSeparator);
+            }
+            if (string.Equals(assemblyName, ResourcesAssembly.GetName().Name, StringComparison.OrdinalIgnoreCase) || !DevServer.Serves(DevServerUri, assemblyName)) {
+                return false;
+            }
+            var path = assemblyName + "/" + string.Concat(uri.Segments.Skip(2)) + uri.Query;
+            resourceHandler.Redirect(new Uri(DevServerUri, path).ToString());
+            return true;
+        }
+
+        /// <summary>
         /// Converts an url to a full path url
         /// </summary>
         /// <param name="url"></param>
@@ -556,10 +611,33 @@ namespace ReactViewControl {
             }
 
             if (url.OrdinalStartsWith(ResourceUrl.PathSeparator)) {
+                if (DevServerUri != null && DevServer.Serves(DevServerUri, DevServer.AssemblyOf(url))) {
+                    // dev mode: /<assembly>/<path> is served by the dev server
+                    return new Uri(DevServerUri, url.TrimStart(ResourceUrl.PathSeparator.ToCharArray())).ToString();
+                }
                 return new ResourceUrl(ResourceUrl.EmbeddedScheme, url).ToString();
             }
 
             return new ResourceUrl(UserCallingAssembly, url).ToString();
+        }
+
+        private readonly Dictionary<string, IModuleDependenciesProvider> devServerDependencies = new Dictionary<string, IModuleDependenciesProvider>();
+
+        /// <summary>
+        /// Dependencies of a module: the ones it declares (from the .entry files embedded at build time), or, when the dev
+        /// server builds its assembly, the ones its manifest lists, the only consistent source once the bundles come from there.
+        /// </summary>
+        private (string[] js, string[] css) GetDependencies(IViewModule module) {
+            if (DevServerUri == null || !DevServer.Serves(DevServerUri, DevServer.AssemblyOf(module.MainJsSource))) {
+                return (module.DependencyJsSources, module.CssSources);
+            }
+            lock (devServerDependencies) {
+                if (!devServerDependencies.TryGetValue(module.MainJsSource, out var provider)) {
+                    provider = new DevServerDependenciesProvider(DevServerUri, module.MainJsSource);
+                    devServerDependencies[module.MainJsSource] = provider;
+                }
+                return (provider.GetJsDependencies(), provider.GetCssDependencies());
+            }
         }
 
         /// <summary>

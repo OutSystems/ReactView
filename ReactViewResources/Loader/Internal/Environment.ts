@@ -3,7 +3,8 @@
     isDebugModeEnabled,
     modulesFunctionName,
     nativeAPIObjectName,
-    customResourceBaseUrl
+    customResourceBaseUrl,
+    devServerBaseUrl // root url of the ReactView dev server when the host runs against one, e.g. http://localhost:8080/
 ] = (() => {
     const params = Array.from(new URLSearchParams(location.search).keys());
     return params.map(v => v === "false" ? "" : v);

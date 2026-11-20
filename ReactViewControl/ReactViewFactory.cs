@@ -45,5 +45,18 @@ namespace ReactViewControl {
         /// behaviour, where only the host released them.
         /// </summary>
         public virtual bool EnsureViewPluginsAreDisposed => true;
+
+        /// <summary>
+        /// Root url of the ReactView dev server (dotnet msbuild -t:ReactViewDevServer), e.g. http://localhost:8080/.
+        /// When set, the views are loaded from the dev server instead of the embedded resources and are hot reloaded
+        /// as their sources change. Development only; the pre-rendered views cache is disabled while it is set.
+        /// </summary>
+        public virtual Uri DevServerUri => null;
+
+        /// <summary>
+        /// Port the Chrome DevTools Protocol listens on (http://localhost:port/json lists the views), 0 to keep it closed.
+        /// Lets tools inspect, drive and screenshot the views. Development only; applies to the first view created.
+        /// </summary>
+        public virtual int RemoteDebuggingPort => 0;
     }
 }

@@ -24,8 +24,9 @@ namespace ReactViewControl {
             /// </summary>
             public void LoadComponent(IViewModule component, string frameName, bool hasStyleSheet, bool hasPlugins, bool loadScriptsOncePerDocument, bool ensureViewPluginsAreDisposed) {
                 var mainSource = ViewRender.ToFullUrl(NormalizeUrl(component.MainJsSource));
-                var dependencySources = component.DependencyJsSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
-                var cssSources = component.CssSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
+                var (jsDependencies, cssDependencies) = ViewRender.GetDependencies(component);
+                var dependencySources = jsDependencies.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
+                var cssSources = cssDependencies.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))).ToArray();
 
                 var componentSerialization = SerializeComponent(component);
                 var componentHash = ComputeHash(componentSerialization);
@@ -52,7 +53,7 @@ namespace ReactViewControl {
                     JavascriptSerializer.Serialize(mainSource),
                     JavascriptSerializer.Serialize(dependencySources),
                     JavascriptSerializer.Serialize(cssSources),
-                    JavascriptSerializer.Serialize(ReactView.PreloadedCacheEntriesSize),
+                    JavascriptSerializer.Serialize(ViewRender.DevServerUri != null ? 0 : ReactView.PreloadedCacheEntriesSize), // no stale pre-rendered html in dev mode
                     JavascriptSerializer.Serialize(hasStyleSheet),
                     JavascriptSerializer.Serialize(hasPlugins),
                     componentSerialization,
@@ -84,7 +85,7 @@ namespace ReactViewControl {
                         m.Name, // plugin name
                         ViewRender.ToFullUrl(NormalizeUrl(m.MainJsSource)), // plugin source
                         m.GetNativeObjectFullName(frameName), // native object name
-                        m.DependencyJsSources.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))) // plugin dependencies
+                        ViewRender.GetDependencies(m).js.Select(s => ViewRender.ToFullUrl(NormalizeUrl(s))) // plugin dependencies
                     })),
                     JavascriptSerializer.Serialize(frameName)
                 };
